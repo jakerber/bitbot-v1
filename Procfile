@@ -1,1 +1,1 @@
-web: python main.py --sim
+web: python server.py
