@@ -1,48 +1,52 @@
-"""Cryptocurrency module."""
+"""Cryptocurrency module for storing information about a cryptocurrency."""
 import random
 import time
-import trade
+
+import constants
+import logger
+import manager
 
 class Crypto(object):
     """Cryptocurrency object."""
     def __init__(self, ticker):
+        self.logger = logger.Logger(ticker)
         self.ticker = ticker
-        self.__lastPrice = None
-        self.__lastPriceTimestamp = None
+        self.balance = None
 
-        # set last price to current price
-        self.lastPrice = self.price
-
-    @property
-    def lastPrice(self):
-        """Last Cryptocurrency price property."""
-        return self.__lastPrice
-
-    @lastPrice.setter
-    def lastPrice(self, lastPrice):
-        """Last Cryptocurrency price property and timestamp setter."""
-        self.__lastPrice = lastPrice
-        self.__lastPriceTimestamp = time.time()
+        # use custom setter for prices to ensure timestamp is also updated
+        self.__buyPrice = None
+        self.__buyPriceTimestamp = None
+        self.__sellPrice = None
+        self.__sellPriceTimestamp = None
 
     @property
-    def lastPriceTimestamp(self):
-        """Timestamp of last Cryptocurrency price property."""
-        return self.__lastPriceTimestamp
+    def buyPrice(self):
+        """Cryptocurrency buy price property."""
+        return self.__buyPrice
 
-    def setLastPrice(self, lastPrice):
-        """Last Cryptocurrency last price and timestamp."""
-        self.lastPrice = lastPrice
-        self.lastPriceTimestamp = time.time()
-
-    @property
-    def balance(self):
-        """Cryptocurrency balance property."""
-        return trade.getBalance(self.ticker)
+    @buyPrice.setter
+    def buyPrice(self, newBuyPrice):
+        """Cryptocurrency buy price property setter."""
+        self.__buyPrice = newBuyPrice
+        self.__buyPriceTimestamp = time.time()
 
     @property
-    def price(self):
-        """Cryptocurrency price property."""
-        return trade.getPrice(self.ticker)  # + random.uniform(-100, 100)  # TODO: remove this
+    def sellPrice(self):
+        """Cryptocurrency sell price property."""
+        return self.__sellPrice
+
+    @sellPrice.setter
+    def sellPrice(self, newSellPrice):
+        """Cryptocurrency sell price property setter."""
+        self.__sellPrice = newSellPrice
+        self.__sellPriceTimestamp = time.time()
+
+    def update(self):
+        """Update current price and balance properties."""
+        self.buyPrice = manager.getPrice(self.ticker, priceType="ask")
+        self.sellPrice = manager.getPrice(self.ticker, priceType="bid")
+        self.balance = manager.getBalance(self.ticker)
+        self.logger.log("buy=$%f, sell=$%f" % (self.buyPrice, self.sellPrice))
 
     def __str__(self):
-        return "%s: price=%f, balance=%f" % (self.ticker, self.price, self.balance)
+        return "%s: price=%f, balance=%f" % (self.ticker, self.buyPrice, self.balance)
