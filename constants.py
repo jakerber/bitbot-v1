@@ -20,7 +20,7 @@ SIM_ACCOUNT_BALANCE = 1000.0
 SIM_BALANCES = {ticker: 0 for ticker in KRAKEN_CRYPTO_TICKERS.keys()}
 
 # delay between requests in seconds
-SLEEP_INTERVAL = 1800
+SLEEP_INTERVAL = 10
 
 # cryptos bitbot is allowed to trade with
 SUPPORTED_CRYPTOS = KRAKEN_CRYPTO_TICKERS.keys()
