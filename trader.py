@@ -29,6 +29,11 @@ class Trader:
         self.tradesExecuted = 0
         self.killSelf = False  # for threading
 
+    @property
+    def accountBalance(self):
+        """Account balance property."""
+        return manager.getAccountBalance()
+
     def considerBet(self):
         """Consider placing a bet on a cryptocurrency."""
         return algos.crunchNumbers(self.crypto)
@@ -42,11 +47,15 @@ class Trader:
         if not constants.IS_SIMULATION:
             raise RuntimeError("selling total balance is for simulation purposes only")
 
+        # update balance
+        self.crypto.updateBalance()
+
         # sell total balance
-        self.logger.log("selling all")
-        sellPrice = manager.sell(self.crypto.ticker, self.crypto.balance)
-        self.tradesExecuted += 1
-        self.logger.log("sold %f @ %f" % (self.crypto.balance, sellPrice), moneyExchanged=True)
+        if self.crypto.balance:
+            self.logger.log("selling all")
+            sellPrice = manager.sell(self.crypto.ticker, self.crypto.balance)
+            self.tradesExecuted += 1
+            self.logger.log("sold %f @ %f" % (self.crypto.balance, sellPrice), moneyExchanged=True)
 
     def trade(self):
         """Trade cryptocurrency based on price changes."""
@@ -56,9 +65,9 @@ class Trader:
             # pause time window
             time.sleep(constants.SLEEP_INTERVAL)
 
-            # update crypto data
+            # update cryptocurrency price data
             # used to reduce calls to api
-            self.crypto.update()
+            self.crypto.updatePrice()
 
             # stop trading if BitBot has demanded such
             if self.killSelf:
@@ -66,23 +75,38 @@ class Trader:
                 self.sellAll()
                 break  # breaking loop kills trading thread
 
-            # sell active bets if target price is met
+            # determine if price target of any active bets were met
             for activeBet in self.activeBets:
                 if self.crypto.sellPrice >= activeBet.priceTarget:
                     self.logger.log("price target of %f met" % activeBet.priceTarget)
+
+                    # sell bet that met price target
                     sellPrice = manager.sell(self.crypto.ticker, activeBet.amount)
                     activeBet.isActive = False
                     self.tradesExecuted += 1
                     self.logger.log("sold %f @ %f" % (activeBet.amount, sellPrice), moneyExchanged=True)
+                    self.logger.log("updated account balance = %f" % (self.accountBalance))
+
+                    # update cryptocurrency balance after sell
+                    self.crypto.updateBalance()
+
             self.activeBets = [bet for bet in self.activeBets if bet.isActive]
 
-            # place bet if algos say so
+            # consult algos to see if buy is smart move
             shouldBet, buyAmount, priceTarget = self.considerBet()
             if shouldBet:
                 buyPrice = manager.buy(self.crypto.ticker, buyAmount)
-                self.tradesExecuted += 1
-                self.activeBets.append(Bet(self.crypto.ticker, buyAmount, priceTarget))
-                self.logger.log("bought %f @ %f with price target %f" % (buyAmount, buyPrice, priceTarget), moneyExchanged=True)
+                if not buyPrice:
+                    self.logger.log("unable to buy")  # usually because of insufficient funds
+                else:
+                    self.tradesExecuted += 1
+                    bet = Bet(self.crypto.ticker, buyAmount, priceTarget)
+                    self.activeBets.append(bet)
+                    self.logger.log("bought %f @ %f with price target %f" % (buyAmount, buyPrice, priceTarget), moneyExchanged=True)
+                    self.logger.log("updated account balance = %f" % (self.accountBalance))
+
+                    # update cryptocurrency balance after buy
+                    self.crypto.updateBalance()
 
         # log final message
         self.logger.log("goodbye.")

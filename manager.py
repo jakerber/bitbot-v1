@@ -32,8 +32,16 @@ def buy(ticker, amount):
     LOGGER.log("buying %f of %s" % (amount, ticker))
     if constants.IS_SIMULATION:
         buyPrice = getPrice(ticker, priceType="ask")
+
+        # determine if enough funds are available to buy
+        buyDollarAmount = (buyPrice * amount)
+        if buyDollarAmount > constants.SIM_ACCOUNT_BALANCE:
+            LOGGER.log("unable to buy %s -- insufficient funds" % ticker)
+            return None
+
+        # update simulation balance constants
         constants.SIM_BALANCES[ticker] += amount
-        constants.SIM_ACCOUNT_BALANCE -= (buyPrice * amount)
+        constants.SIM_ACCOUNT_BALANCE -= buyDollarAmount
         return buyPrice
     else:
         return kraken.buy(ticker, amount)  # returns buy price
@@ -43,6 +51,8 @@ def sell(ticker, amount):
     LOGGER.log("selling %f of %s" % (amount, ticker))
     if constants.IS_SIMULATION:
         sellPrice = getPrice(ticker, priceType="bid")
+
+        # update simulation balance constants
         constants.SIM_BALANCES[ticker] -= amount
         constants.SIM_ACCOUNT_BALANCE += (sellPrice * amount)
         return sellPrice

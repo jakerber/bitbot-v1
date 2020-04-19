@@ -12,7 +12,7 @@ class Logger:
     def log(self, text, subcomponents=[], moneyExchanged=False, seperate=False):
         """Log a message to the console."""
         # open with seperator
-        if seperate:
+        if seperate or moneyExchanged:
             self._seperate()
 
         # log message with subcomponents
@@ -24,7 +24,7 @@ class Logger:
             self._logSubcomponent(subcomponent)
 
         # close with seperator
-        if seperate:
+        if seperate or moneyExchanged:
             self._seperate(close=True)
 
     def _logSubcomponent(self, subcomponent):

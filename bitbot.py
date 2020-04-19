@@ -12,7 +12,7 @@ class BitBot:
     def __init__(self):
         # static properties
         self.cryptos = constants.SUPPORTED_CRYPTOS
-        self.startingAccountBalance = self.currentAccountBalance
+        self.startingAccountBalance = self.accountBalance
         self.name = "BitBot (sim)" if constants.IS_SIMULATION else "BitBot"
 
         # dynamic properties
@@ -21,8 +21,8 @@ class BitBot:
         self.tradesExecuted = 0
 
     @property
-    def currentAccountBalance(self):
-        """Current account balance property."""
+    def accountBalance(self):
+        """Account balance property."""
         return manager.getAccountBalance()
 
     def go(self):
@@ -64,13 +64,13 @@ class BitBot:
     def _logStartup(self):
         """Log startup message with info on parameters."""
         logSubcomponents = ["cryptos allowed = %s" % ",".join(self.cryptos),
-                            "starting balance ($) = %f" % self.startingAccountBalance]
+                            "starting balance = $%f" % self.startingAccountBalance]
         self.logger.log("Starting up!", subcomponents=logSubcomponents, seperate=True)
 
     def _logShutdown(self):
         """Inform the user that BitBot is exiting."""
-        endingAccountBalance = self.currentAccountBalance
-        logSubcomponents = ["starting balance = %f" % self.startingAccountBalance,
-                            "ending balance = %f" % endingAccountBalance,
-                            "total profit = %f" % (endingAccountBalance - self.startingAccountBalance)]
+        endingAccountBalance = self.accountBalance
+        logSubcomponents = ["starting balance = $%f" % self.startingAccountBalance,
+                            "ending balance = $%f" % endingAccountBalance,
+                            "total profit = $%f" % (endingAccountBalance - self.startingAccountBalance)]
         self.logger.log("Shutting down.", subcomponents=logSubcomponents, seperate=True)

@@ -19,6 +19,9 @@ class Crypto(object):
         self.__sellPrice = None
         self.__sellPriceTimestamp = None
 
+        # update properties upon initialization
+        self.updateAll()
+
     @property
     def buyPrice(self):
         """Cryptocurrency buy price property."""
@@ -41,11 +44,22 @@ class Crypto(object):
         self.__sellPrice = newSellPrice
         self.__sellPriceTimestamp = time.time()
 
-    def update(self):
-        """Update current price and balance properties."""
+    def updateAll(self):
+        """Update all properties."""
+        self.updateBalance()
+        self.updatePrice()
+
+    def updateBalance(self):
+        """Update current balance property."""
+        newBalance = manager.getBalance(self.ticker)
+        if newBalance != self.balance:
+            self.logger.log("updated balance = %f" % newBalance)
+        self.balance = newBalance
+
+    def updatePrice(self):
+        """Update current price properties."""
         self.buyPrice = manager.getPrice(self.ticker, priceType="ask")
         self.sellPrice = manager.getPrice(self.ticker, priceType="bid")
-        self.balance = manager.getBalance(self.ticker)
         self.logger.log("buy=$%f, sell=$%f" % (self.buyPrice, self.sellPrice))
 
     def __str__(self):
