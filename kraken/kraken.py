@@ -4,8 +4,9 @@ import krakenex
 import constants
 
 kraken = krakenex.API()
-if not constants.IS_SIMULATION:  # TODO: remove this- key needs to be loaded by simulation
-    kraken.load_key(constants.KRAKEN_KEY_PATH)
+
+# TODO: uncomment this out- key needs to be loaded by simulation
+# kraken.load_key(constants.KRAKEN_KEY_PATH)
 
 def buy(ticker, amount):
     """Buy a cryptocurrency."""
