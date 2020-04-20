@@ -67,12 +67,14 @@ class SentimentAnalyzer:
 
         return cleanedWords
 
-    def isPositive(self, phrase):
-        """Determine if the sentiment of a phrase is positive or negative."""
+    def analyze(self, phrase):
+        """Analyze the probability that a phrase is of a given sentiment."""
         tokens = self.cleanWords(nltk.tokenize.word_tokenize(phrase))
         tokensForModel = self._tokenListToNBCDict(tokens)  # nltk.NaiveBayesClassifier compatible
-        sentiment = self.model.classify(tokensForModel)
-        return sentiment == self.positiveSentimentIndicator
+        probabilityDistribution = self.model.prob_classify(tokensForModel)
+        sentiment = probabilityDistribution.max()
+        probability = probabilityDistribution.prob(sentiment)
+        return sentiment, probability
 
     def generate(self):
         """Generate a sentiment model."""

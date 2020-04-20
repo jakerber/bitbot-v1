@@ -2,7 +2,7 @@
 import random
 import time
 
-from algos import algos
+from algos import crunch
 import constants
 import crypto
 import logger
@@ -36,7 +36,7 @@ class Trader:
 
     def considerBet(self):
         """Consider placing a bet on a cryptocurrency."""
-        return algos.crunchNumbers(self.crypto)
+        return crunch.crunchNumbers(self.crypto)
 
     def kill(self):
         """Set property to True to break continuous trading loop."""
@@ -92,7 +92,7 @@ class Trader:
 
             self.activeBets = [bet for bet in self.activeBets if bet.isActive]
 
-            # consult algos to see if buy is smart move
+            # consult algos to see if buying is a smart move
             shouldBet, buyAmount, priceTarget = self.considerBet()
             if shouldBet:
                 buyPrice = manager.buy(self.crypto.ticker, buyAmount)
