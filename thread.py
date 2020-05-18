@@ -1,7 +1,6 @@
 """Thread module for spawning threads."""
-import threading
-
 import logger
+import threading
 
 # lock/unlock with THREAD_LOCK.acquire() / .release()
 THREAD_LOCK = threading.Lock()

@@ -1,12 +1,11 @@
 """Trader module for buying and selling cryptocurrency."""
-import random
-import time
-
-from algos import crunch
 import constants
 import crypto
 import logger
 import manager
+import random
+import time
+from algos import crunch
 
 class Bet:
     """Bet object."""

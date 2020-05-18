@@ -1,6 +1,6 @@
-import random
-
+"""Algorithms that crunch numbers."""
 import constants
+import random
 
 def crunchNumbers(crypto):
     """Crunch the numbers and determine if buying this cryptocurrency is a smart move."""

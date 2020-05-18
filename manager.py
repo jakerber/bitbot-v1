@@ -21,8 +21,16 @@ def getBalance(ticker):
     else:
         return kraken.getBalance(ticker)
 
+def getAllPrices(ticker):
+    """Get all current prices of a cryptocurrency."""
+    if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+        raise RuntimeError("ticker %s not supported" % ticker)
+    return kraken.getAllPrices(ticker)
+
 def getPrice(ticker, priceType):
     """Get the current price of a cryptocurrency."""
+    if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+        raise RuntimeError("ticker %s not supported" % ticker)
     if priceType not in constants.KRAKEN_PRICE_TYPES:
         raise RuntimeError("price request for %s price is unsupported" % priceType)
     return kraken.getPrice(ticker, priceType)

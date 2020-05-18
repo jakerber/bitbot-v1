@@ -1,6 +1,9 @@
 """Application constants."""
 import os
 
+# database operations
+DATABASE_URL = os.environ["DATABASE_URL"]
+
 # kraken API constants
 KRAKEN_API_BASE = "https://api.kraken.com/0/"
 KRAKEN_CRYPTO_TICKERS = {"BTC": "XBT",
@@ -12,7 +15,9 @@ KRAKEN_KEY_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                ".kraken.key")
 KRAKEN_PRICE_CODE_TEMPLATE = "X%sZ%s"
 KRAKEN_PRICE_TYPES = {"ask": "a",
-                      "bid": "b"}
+                      "bid": "b",
+                      "low": "l",
+                      "open": "o"}
 
 # simulator constants
 IS_SIMULATION = False

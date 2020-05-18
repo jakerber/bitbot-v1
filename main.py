@@ -1,9 +1,8 @@
 """Entry point for BitBot."""
 import argparse
-import sys
-
 import bitbot
 import constants
+import sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="trade cryptos with BitBot")

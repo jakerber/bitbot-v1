@@ -1,0 +1,19 @@
+// script for clearing out the local bitbot database and inserting test data
+// run: "mongo < bitbot.test.mongo"
+
+use bitbot
+
+// remove all data in local database
+db.getCollectionNames().forEach(
+  function(collection_name) {
+    if(collection_name != 'system.indexes') {
+      db[collection_name].remove({})
+      db[collection_name].drop()
+    }
+  }
+);
+
+// insert test price data
+db.price.insertMany([
+	{ _id: new ObjectId("5a8607d4971c50fbf29726a2"), ticker: 'BTC', high: 9816.3, low: 9673.0, open: 9673.0, date: '2020-05-17 21:09:22.386423'}
+])

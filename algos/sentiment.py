@@ -1,6 +1,9 @@
 """Sentiment analyzer used to determine if a phrase is positive or negative."""
 import nltk
-import string, random, re, time
+import random
+import re
+import string
+import time
 
 TRAIN_VS_TEST = 0.8  # percentage of data to use to train- rest will be for testing
 MODEL_ACCURACY_THRESHOLD = 0.9

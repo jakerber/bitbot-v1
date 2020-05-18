@@ -1,6 +1,5 @@
 """Bitcoin trading bot module."""
 import time
-
 import trader
 import constants
 import logger

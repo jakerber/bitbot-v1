@@ -1,10 +1,9 @@
 """Cryptocurrency module for storing information about a cryptocurrency."""
-import random
-import time
-
 import constants
 import logger
 import manager
+import random
+import time
 
 class Crypto(object):
     """Cryptocurrency object."""
