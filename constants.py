@@ -2,7 +2,11 @@
 import os
 
 # database operations
-DATABASE_URL = os.environ["DATABASE_URL"]
+MONGODB_NAME = "bitbot"
+MONGODB_URI = os.environ.get("MONGODB_URI")
+MONGODB_URI_DEV = "mongodb://127.0.0.1:27017/%s" % MONGODB_NAME
+if not MONGODB_URI:
+    MONGODB_URI = MONGODB_URI_DEV
 
 # kraken API constants
 KRAKEN_API_BASE = "https://api.kraken.com/0/"
