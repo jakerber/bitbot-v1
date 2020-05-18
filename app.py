@@ -38,6 +38,7 @@ def snapshot(ticker):
 	try:
 		mongodb.insert(priceModel)
 	except Exception as err:
+		logger.log(repr(err))
 		return {"error": repr(err)}
 
 	logger.log("successfully inserted %s price snapshot: %s" % (ticker, repr(priceModel)))
