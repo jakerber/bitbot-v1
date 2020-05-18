@@ -6,7 +6,7 @@ import logger
 LOGGER = logger.Logger("Manager")
 
 def getAccountBalance():
-    """Get current account monetary balance."""
+    """Get current account balances."""
     LOGGER.log("fetching account balance")
     if constants.IS_SIMULATION:
         return constants.SIM_ACCOUNT_BALANCE
@@ -16,6 +16,8 @@ def getAccountBalance():
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
     LOGGER.log("fetching balance of %s" % ticker)
+    if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+        raise RuntimeError("ticker not supported: %s" % ticker)
     if constants.IS_SIMULATION:
         return constants.SIM_BALANCES[ticker]
     else:
@@ -30,9 +32,9 @@ def getAllPrices(ticker):
 def getPrice(ticker, priceType):
     """Get the current price of a cryptocurrency."""
     if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
-        raise RuntimeError("ticker %s not supported" % ticker)
+        raise RuntimeError("ticker not supported: %s" % ticker)
     if priceType not in constants.KRAKEN_PRICE_TYPES:
-        raise RuntimeError("price request for %s price is unsupported" % priceType)
+        raise RuntimeError("price type not supported: %s" % priceType)
     return kraken.getPrice(ticker, priceType)
 
 def buy(ticker, amount):

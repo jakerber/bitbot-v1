@@ -1,4 +1,5 @@
 """Simple flask app to send requests to BitBot."""
+import constants
 import datetime
 import flask
 import logger
@@ -27,13 +28,17 @@ def accountBalance():
 	return _successResp({"balance": balance})
 
 @app.route("/mre/<ticker>/<days>")
-def average(ticker, days):
+def mre(ticker, days):
 	"""Average price of a cryptocurrency."""
 	try:
 		days = int(days)
 		1 / days
 	except (ValueError, ZeroDivisionError):
 		return _failedResp("invalid number of days provided: %s" % days)
+
+	# ensure bitbot supports this crypto
+	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+		return _failedResp("ticker not supported: %s" % ticker)
 
 	# collect dates from past number of days
 	dates = []
@@ -43,11 +48,15 @@ def average(ticker, days):
 		dateDaysAgo = now - delta
 		dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
 
+	# fetch prices on dates
+	queryFilter = {"datetime": {"$in": dates}, "ticker": ticker}
+	entries = list(mongodb.find("price", queryFilter))
+	if not entries:
+		return _failedResp("no price data for %s" % ticker)
+
 	# sum prices from dates
 	priceSum = 0.0
 	datesUnused = set(dates)
-	queryFilter = {"datetime": {"$in": dates}, "ticker": ticker}
-	entries = list(mongodb.find("price", queryFilter))
 	for entry in entries:
 		datesUnused.remove(entry["datetime"])
 		priceSum += float(entry["open"])

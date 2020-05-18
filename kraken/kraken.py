@@ -9,21 +9,19 @@ def buy(ticker, amount):
     raise NotImplementedError  # returns sell price
 
 def getAccountBalance():
-    """Get current account monetary balance."""
+    """Get all account balances."""
     resp = _executeRequest(kraken.query_private, "Balance")
     balance = resp["result"]
     return balance
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
-    # execute kraken balance request
+    balances = getAccountBalance()
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
-    requestData = {"pair": "%sUSD" % krakenTicker}
-    resp = _executeRequest(kraken.query_private, "TradeBalance", requestData=requestData)
-
-    # return crypto balance
-    balance = resp["result"]
-    return balance
+    priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
+    if priceBalanceKey in balances:
+        return float(balances[priceBalanceKey])
+    return 0.0
 
 def getAllPrices(ticker):
     """Get all current prices of a cryptocurrency.

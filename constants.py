@@ -15,6 +15,7 @@ KRAKEN_CRYPTO_TICKERS = {"BTC": "XBT",
                          "LTC": "LTC"}
 KRAKEN_KEY = os.environ.get("KRAKEN_KEY")
 KRAKEN_SECRET = os.environ.get("KRAKEN_SECRET")
+KRAKEN_PRICE_BALANCE_TEMPLATE = "X%s"
 KRAKEN_PRICE_CODE_TEMPLATE = "X%sZ%s"
 KRAKEN_PRICE_TYPES = {"ask": "a",
                       "bid": "b",
