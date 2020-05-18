@@ -16,9 +16,9 @@ class Price(BitBotModel):
 
     def __init__(self, ticker, openPrice, highPrice, lowPrice):
         self.ticker = ticker
-        self.openPrice = openPrice
-        self.highPrice = highPrice
-        self.lowPrice = lowPrice
+        self.open = openPrice
+        self.high = highPrice
+        self.low = lowPrice
         self.datetime = str(datetime.datetime.now())
 
     def __repr__(self):
