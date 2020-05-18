@@ -3,6 +3,7 @@ import datetime
 import flask
 import logger
 import manager
+import math
 import os
 from db import db
 from db import models
@@ -25,7 +26,7 @@ def accountBalance():
 		return _failedResp(err)
 	return _successResp({"balance": balance})
 
-@app.route("/average/<ticker>/<days>")
+@app.route("/mre/<ticker>/<days>")
 def average(ticker, days):
 	"""Average price of a cryptocurrency."""
 	try:
@@ -37,7 +38,7 @@ def average(ticker, days):
 	# collect dates from past number of days
 	dates = []
 	now = datetime.datetime.now()
-	for daysAgo in range(1, days + 1):
+	for daysAgo in range(days):
 		delta = datetime.timedelta(days=daysAgo)
 		dateDaysAgo = now - delta
 		dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
@@ -46,18 +47,35 @@ def average(ticker, days):
 	priceSum = 0.0
 	datesUnused = set(dates)
 	queryFilter = {"datetime": {"$in": dates}, "ticker": ticker}
-	entries = mongodb.find("price", queryFilter)
+	entries = list(mongodb.find("price", queryFilter))
 	for entry in entries:
 		datesUnused.remove(entry["datetime"])
 		priceSum += float(entry["open"])
 
-	# calculate and return average
+	# calculate average price and standard deviation
 	averagePrice = priceSum / float(days)
+	deviationsSquaredSum = 0.0
+	for entry in entries:
+		price = float(entry["open"])
+		deviation = abs(price - averagePrice)
+		deviationsSquaredSum += deviation ** 2
+	standardDeviation = math.sqrt(deviationsSquaredSum / float(days))
+
+	# determine how far the current price deviates from the mean
+	currentPrice = manager.getPrice("BTC", "ask")
+	if standardDeviation:
+		currentPriceDeviation = abs(currentPrice - averagePrice) / standardDeviation
+	else:
+		currentPriceDeviation = 0
+
 	return _successResp({"days": days,
 						 "ticker": ticker,
 						 "average price": averagePrice,
 						 "days used": len(dates) - len(datesUnused),
-						 "dates unused": list(datesUnused)})
+						 "dates unused": list(datesUnused),
+						 "standard deviation": standardDeviation,
+						 "current price": currentPrice,
+						 "current price deviation": currentPriceDeviation})
 
 @app.route("/balance/<ticker>")
 def balance(ticker):
