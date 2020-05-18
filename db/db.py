@@ -15,3 +15,7 @@ class BitBotDB:
     def insert(self, model):
         """Insert data into a collection."""
         self.mongo.db[model.collectionName].insert_one(model.__dict__)
+
+    def find(self, collectionName, filter):
+        """Find an entry based on a data point."""
+        return self.mongo.db[collectionName].find(filter)

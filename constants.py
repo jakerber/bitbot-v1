@@ -13,10 +13,8 @@ KRAKEN_API_BASE = "https://api.kraken.com/0/"
 KRAKEN_CRYPTO_TICKERS = {"BTC": "XBT",
                          "ETH": "ETH",
                          "LTC": "LTC"}
-KRAKEN_KEY_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                               "kraken",
-                               "keys",
-                               ".kraken.key")
+KRAKEN_KEY = os.environ.get("KRAKEN_KEY")
+KRAKEN_SECRET = os.environ.get("KRAKEN_SECRET")
 KRAKEN_PRICE_CODE_TEMPLATE = "X%sZ%s"
 KRAKEN_PRICE_TYPES = {"ask": "a",
                       "bid": "b",

@@ -1,4 +1,5 @@
 """Simple flask app to send requests to BitBot."""
+import datetime
 import flask
 import logger
 import manager
@@ -15,8 +16,60 @@ mongodb = db.BitBotDB(app)
 # initialize logger
 logger = logger.Logger("app")
 
+@app.route("/balance")
+def accountBalance():
+	"""Get current Kraken account balance in USD."""
+	try:
+		balance = manager.getAccountBalance()
+	except Exception as err:
+		return _failedResp(err)
+	return _successResp({"balance": balance})
+
+@app.route("/average/<ticker>/<days>")
+def average(ticker, days):
+	"""Average price of a cryptocurrency."""
+	try:
+		days = int(days)
+		1 / days
+	except (ValueError, ZeroDivisionError):
+		return _failedResp("invalid number of days provided: %s" % days)
+
+	# collect dates from past number of days
+	dates = []
+	now = datetime.datetime.now()
+	for daysAgo in range(1, days + 1):
+		delta = datetime.timedelta(days=daysAgo)
+		dateDaysAgo = now - delta
+		dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
+
+	# sum prices from dates
+	priceSum = 0.0
+	datesUnused = set(dates)
+	queryFilter = {"datetime": {"$in": dates}, "ticker": ticker}
+	entries = mongodb.find("price", queryFilter)
+	for entry in entries:
+		datesUnused.remove(entry["datetime"])
+		priceSum += float(entry["open"])
+
+	# calculate and return average
+	averagePrice = priceSum / float(days)
+	return _successResp({"days": days,
+						 "ticker": ticker,
+						 "average price": averagePrice,
+						 "days used": len(dates) - len(datesUnused),
+						 "dates unused": list(datesUnused)})
+
+@app.route("/balance/<ticker>")
+def balance(ticker):
+	"""Get current balance of a cryptocurrency."""
+	try:
+		balance = manager.getBalance(ticker)
+	except Exception as err:
+		return _failedResp(err)
+	return _successResp({"ticker": ticker, "balance": balance})
+
 @app.route("/")
-def home():
+def root():
 	"""Root endpoint of the app."""
 	return "Hello, world!"
 
@@ -26,7 +79,7 @@ def snapshot(ticker):
 	try:
 		allPrices = manager.getAllPrices(ticker)
 	except Exception as err:
-		return {"error": repr(err)}
+		return _failedResp(err)
 
 	# fetch and relevant prices
 	openPrice = float(allPrices["o"])
@@ -39,10 +92,20 @@ def snapshot(ticker):
 		mongodb.insert(priceModel)
 	except Exception as err:
 		logger.log(repr(err))
-		return {"error": repr(err)}
+		return _failedResp(err)
 
 	logger.log("successfully inserted %s price snapshot: %s" % (ticker, repr(priceModel)))
-	return {"success": True, "repr": eval(repr(priceModel))}
+	return _successResp(eval(repr(priceModel)))
+
+def _successResp(resp):
+	"""Successful request response."""
+	return {"success": True, "resp": resp}
+
+def _failedResp(error):
+	"""Failed request response from an error."""
+	if isinstance(error, Exception):
+		error = repr(error)
+	return {"success": False, "error": error}
 
 
 if __name__ == "__main__":

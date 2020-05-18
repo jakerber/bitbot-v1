@@ -2,10 +2,7 @@
 import constants
 import krakenex
 
-kraken = krakenex.API()
-
-# TODO: uncomment this out- key needs to be loaded by simulation
-# kraken.load_key(constants.KRAKEN_KEY_PATH)
+kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 def buy(ticker, amount):
     """Buy a cryptocurrency."""
@@ -13,27 +10,20 @@ def buy(ticker, amount):
 
 def getAccountBalance():
     """Get current account monetary balance."""
-    raise NotImplementedError
-
-    # # execute kraken account balance request
-    # krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
-    # requestData = {"pair": "%sUSD" % krakenTicker}
-    # resp = _executeRequest(kraken.query_private, "TradeBalance", requestData=requestData)
-    #
-    # # return account balance
-    # balance = resp["result"]
-    # return balance
+    resp = _executeRequest(kraken.query_private, "Balance")
+    balance = resp["result"]
+    return balance
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
-    raise NotImplementedError
+    # execute kraken balance request
+    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
+    requestData = {"pair": "%sUSD" % krakenTicker}
+    resp = _executeRequest(kraken.query_private, "TradeBalance", requestData=requestData)
 
-    # # execute kraken cryptocurrency balance request
-    # resp = _executeRequest(kraken.query_private, "Balance")
-    #
-    # # return cryptocurrency balance
-    # balance = resp["result"]
-    # return balance
+    # return crypto balance
+    balance = resp["result"]
+    return balance
 
 def getAllPrices(ticker):
     """Get all current prices of a cryptocurrency.
@@ -82,12 +72,14 @@ def sell(ticker, amount):
 
 def _executeRequest(api, requestName, requestData={}):
     """Execute a request to the Kraken API."""
-    resp = api(requestName, requestData)
+    if requestData:
+        resp = api(requestName, requestData)
+    else:
+        resp = api(requestName)
 
     # raise error if necessary
-    error = resp["error"]
-    if error:
-        raise RuntimeError("unable to execute Kraken %s request. Err: %s" % (requestName, error))
+    if "error" in resp:
+        raise RuntimeError("unable to execute Kraken %s request: %s" % (requestName, resp["error"]))
 
     # return response
     return resp
