@@ -72,13 +72,10 @@ def sell(ticker, amount):
 
 def _executeRequest(api, requestName, requestData={}):
     """Execute a request to the Kraken API."""
-    if requestData:
-        resp = api(requestName, requestData)
-    else:
-        resp = api(requestName)
+    resp = api(requestName, requestData)
 
     # raise error if necessary
-    if "error" in resp:
+    if resp["error"] or "result" not in resp:
         raise RuntimeError("unable to execute Kraken %s request: %s" % (requestName, resp["error"]))
 
     # return response
