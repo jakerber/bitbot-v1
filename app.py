@@ -5,7 +5,7 @@ import flask
 import manager
 import math
 import os
-from algos import mre
+from algos import mean_reversion
 from db import db
 from db import models
 
@@ -156,7 +156,7 @@ def _getMRENumbers(ticker, days):
 	# calculate standard and current price deviations
 	prices = [entry["open"] for entry in entries]
 	currentPrice = manager.getPrice(ticker, "ask")
-	meanReversion = mre.MeanReversion(currentPrice, prices)
+	meanReversion = mean_reversion.MeanReversion(currentPrice, prices)
 	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
 	currentPriceDeviation = currentDeviation / standardDeviation
 
@@ -192,4 +192,4 @@ def _successResp(resp):
 
 
 if __name__ == "__main__":
-	app.run()
+	app.run(debug=True)

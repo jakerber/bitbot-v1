@@ -5,7 +5,7 @@ import sys
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        raise RuntimeError("function name must be provided")
+        raise RuntimeError("method name must be provided")
     methodName = sys.argv[1]
     method = getattr(app, methodName)
     args = sys.argv[2:]
