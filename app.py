@@ -51,7 +51,6 @@ def backfillCsv(filename):
 			# initialize new price model
 			newPriceModel = models.Price(ticker, openPrice, highPrice, lowPrice)
 			newPriceModel.date = date
-			newPriceModel.time = "00:00:00.000000"
 
 			# save to database
 			try:
