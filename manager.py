@@ -25,14 +25,14 @@ def getBalance(ticker):
 
 def getAllPrices(ticker):
     """Get all current prices of a cryptocurrency."""
-    LOGGER.log("fetching all prices")
+    LOGGER.log("fetching all prices of %s" % ticker)
     if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
         raise RuntimeError("ticker %s not supported" % ticker)
     return kraken.getAllPrices(ticker)
 
 def getPrice(ticker, priceType):
     """Get the current price of a cryptocurrency."""
-    LOGGER.log("fetching price of %s" % ticker)
+    LOGGER.log("fetching %s price of %s" % (priceType, ticker))
     if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceType not in constants.KRAKEN_PRICE_TYPES:
