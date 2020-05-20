@@ -2,7 +2,6 @@
 import constants
 import datetime
 import flask
-import logger
 import manager
 import math
 import os
@@ -15,9 +14,6 @@ app = flask.Flask(__name__)
 
 # initialize mongodb
 mongodb = db.BitBotDB(app)
-
-# initialize logger
-logger = logger.Logger("app")
 
 @app.route("/balance")
 def accountBalance():
@@ -61,54 +57,11 @@ def backfillCsv(filename):
 			try:
 				mongodb.insert(newPriceModel)
 			except Exception as err:
-				logger.log(repr(err))
 				return _failedResp("unable to insert price model: %s" % repr(err))
 			else:
 				entriesAdded += 1
 
 		return _successResp("successfully backfilled %i prices" % entriesAdded)
-
-
-@app.route("/mre/<ticker>/<days>")
-def meanReversion(ticker, days):
-	"""Average price of a cryptocurrency."""
-	try:
-		days = int(days)
-		1 / days
-	except (ValueError, ZeroDivisionError):
-		return _failedResp("invalid number of days provided: %s" % days)
-
-	# ensure bitbot supports this crypto
-	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
-		return _failedResp("ticker not supported: %s" % ticker)
-
-	# collect dates from past number of days
-	dates = []
-	now = datetime.datetime.now()
-	for daysAgo in range(days):
-		delta = datetime.timedelta(days=daysAgo)
-		dateDaysAgo = now - delta
-		dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
-
-	# fetch prices on dates
-	queryFilter = {"date": {"$in": dates}, "ticker": ticker}
-	entries = list(mongodb.find("price", queryFilter))
-	if not entries:
-		return _failedResp("no price data for %s" % ticker)
-
-	# calculate standard and current price deviations
-	prices = [entry["open"] for entry in entries]
-	currentPrice = manager.getPrice(ticker, "ask")
-	meanReversion = mre.MeanReversion(currentPrice, prices)
-	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
-	currentPriceDeviation = currentDeviation / standardDeviation
-
-	return _successResp({"lookback days": days,
-						 "ticker": ticker,
-						 "average price": averagePrice,
-						 "standard deviation": standardDeviation,
-						 "current price": currentPrice,
-						 "current price deviation": currentPriceDeviation})
 
 @app.route("/balance/<ticker>")
 def balance(ticker):
@@ -118,6 +71,42 @@ def balance(ticker):
 	except Exception as err:
 		return _failedResp(err)
 	return _successResp({"ticker": ticker, "balance": balance})
+
+@app.route("/crunch/<ticker>/<days>/<deviationThreshold>")
+def crunch(ticker, days, deviationThreshold):
+	"""Crunch numbers to decide if a cryptocurrency should be bought."""
+	isValid, days = _validateArgs(days, int)
+	if not isValid:
+		return _failedResp(days)
+	isValid, deviationThreshold = _validateArgs(deviationThreshold, float)
+	if not isValid:
+		return _failedResp(deviationThreshold)
+
+	# ensure bitbot supports this crypto
+	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+		return _failedResp("ticker not supported: %s" % ticker)
+
+	# determine if crypto should be bought
+	mreNumbers = _getMRENumbers(ticker, days)
+	shouldBuy = deviationThreshold >= mreNumbers["current_price_deviation"]
+	return _successResp({"should_buy": True,
+						 "deviation_threshold": deviationThreshold,
+						 "numbers": mreNumbers})
+
+
+@app.route("/mre/<ticker>/<days>")
+def meanReversion(ticker, days):
+	"""Average price of a cryptocurrency."""
+	isValid, days = _validateArgs(days, int)
+	if not isValid:
+		return _failedResp(days)
+
+	# ensure bitbot supports this crypto
+	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+		return _failedResp("ticker not supported: %s" % ticker)
+
+	# return mean reversion numbers
+	return _successResp(_getMRENumbers(ticker, days))
 
 @app.route("/")
 def root():
@@ -142,21 +131,66 @@ def snapshot(ticker):
 	try:
 		mongodb.insert(priceModel)
 	except Exception as err:
-		logger.log(repr(err))
 		return _failedResp(err)
 
-	logger.log("successfully inserted %s price snapshot: %s" % (ticker, repr(priceModel)))
 	return _successResp(eval(repr(priceModel)))
 
-def _successResp(resp):
-	"""Successful request response."""
-	return {"success": True, "resp": resp}
+###############################
+##  helper functions
+###############################
+
+def _getMRENumbers(ticker, days):
+	"""Get mean reversion numbers (standard deviation, etc.)."""
+	# collect dates from past number of days
+	dates = []
+	now = datetime.datetime.now()
+	for daysAgo in range(days):
+		delta = datetime.timedelta(days=daysAgo)
+		dateDaysAgo = now - delta
+		dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
+
+	# fetch prices on dates
+	queryFilter = {"date": {"$in": dates}, "ticker": ticker}
+	entries = list(mongodb.find("price", queryFilter))
+	if not entries:
+		return _failedResp("no price data for %s" % ticker)
+
+	# calculate standard and current price deviations
+	prices = [entry["open"] for entry in entries]
+	currentPrice = manager.getPrice(ticker, "ask")
+	meanReversion = mre.MeanReversion(currentPrice, prices)
+	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
+	currentPriceDeviation = currentDeviation / standardDeviation
+
+	return {"lookback_days": days,
+			"ticker": ticker,
+			"average_price": averagePrice,
+			"standard_deviation": standardDeviation,
+			"current_price": currentPrice,
+			"current_price_deviation": currentPriceDeviation}
+
+def _validateArgs(arg, typeFunc):
+	"""Validate an argument is of a given type."""
+	try:
+		val = typeFunc(arg)
+	except Exception as err:
+		return False, "parameter type not %s: %s" % (typeFunc.__name__, arg)
+	else:
+		return True, val
+
+###############################
+##  response formatting
+###############################
 
 def _failedResp(error):
 	"""Failed request response from an error."""
 	if isinstance(error, Exception):
 		error = repr(error)
 	return {"success": False, "error": error}
+
+def _successResp(resp):
+	"""Successful request response."""
+	return {"success": True, "resp": resp}
 
 
 if __name__ == "__main__":
