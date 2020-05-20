@@ -19,7 +19,8 @@ class Price(BitBotModel):
         self.open = openPrice
         self.high = highPrice
         self.low = lowPrice
-        self.datetime = str(datetime.datetime.now())
+        self.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.time = datetime.datetime.now().strftime("%H:%M:%S.%f")
 
     def __repr__(self):
         return str({prop: self.__dict__[prop] for prop in self.__dict__.keys()

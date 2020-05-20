@@ -2,6 +2,7 @@
 import app
 import sys
 
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise RuntimeError("function name must be provided")

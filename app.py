@@ -27,6 +27,46 @@ def accountBalance():
 		return _failedResp(err)
 	return _successResp({"balance": balance})
 
+@app.route("/backfill/<filename>")
+def backfillCsv(filename):
+	"""Backfill price history based on CSV dataset."""
+	filepath = "datasets/%s" % filename
+	if not os.path.exists(filepath):
+		return _failedResp("dataset does not exist: %s" % filename)
+
+	# parse prices from dataset
+	headerLine = True
+	entriesAdded = 0
+	with open(filepath) as priceHistoryFile:
+		for line in priceHistoryFile:
+			if headerLine:
+				headerLine = False
+				continue
+
+			# split fields in CSV
+			fields = line.split(",")
+			ticker = fields[0]
+			date = fields[1]
+			openPrice = float(fields[3])
+			highPrice = float(fields[4])
+			lowPrice = float(fields[5])
+
+			# initialize new price model
+			newPriceModel = models.Price(ticker, openPrice, highPrice, lowPrice)
+			newPriceModel.date = date
+			newPriceModel.time = "00:00:00.000000"
+
+			# save to database
+			try:
+				mongodb.insert(newPriceModel)
+			except Exception as err:
+				return _failedResp("unable to insert price model: %s" % repr(err))
+			else:
+				entriesAdded += 1
+
+		return _successResp("successfully backfilled %i prices" % entriesAdded)
+
+
 @app.route("/mre/<ticker>/<days>")
 def mre(ticker, days):
 	"""Average price of a cryptocurrency."""
