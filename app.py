@@ -6,6 +6,7 @@ import logger
 import manager
 import math
 import os
+from algos import mre
 from db import db
 from db import models
 
@@ -60,6 +61,7 @@ def backfillCsv(filename):
 			try:
 				mongodb.insert(newPriceModel)
 			except Exception as err:
+				logger.log(repr(err))
 				return _failedResp("unable to insert price model: %s" % repr(err))
 			else:
 				entriesAdded += 1
@@ -68,7 +70,7 @@ def backfillCsv(filename):
 
 
 @app.route("/mre/<ticker>/<days>")
-def mre(ticker, days):
+def meanReversion(ticker, days):
 	"""Average price of a cryptocurrency."""
 	try:
 		days = int(days)
@@ -89,39 +91,21 @@ def mre(ticker, days):
 		dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
 
 	# fetch prices on dates
-	queryFilter = {"datetime": {"$in": dates}, "ticker": ticker}
+	queryFilter = {"date": {"$in": dates}, "ticker": ticker}
 	entries = list(mongodb.find("price", queryFilter))
 	if not entries:
 		return _failedResp("no price data for %s" % ticker)
 
-	# sum prices from dates
-	priceSum = 0.0
-	datesUnused = set(dates)
-	for entry in entries:
-		datesUnused.remove(entry["datetime"])
-		priceSum += float(entry["open"])
+	# calculate standard and current price deviations
+	prices = [entry["open"] for entry in entries]
+	currentPrice = manager.getPrice(ticker, "ask")
+	meanReversion = mre.MeanReversion(currentPrice, prices)
+	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
+	currentPriceDeviation = currentDeviation / standardDeviation
 
-	# calculate average price and standard deviation
-	averagePrice = priceSum / float(days)
-	deviationsSquaredSum = 0.0
-	for entry in entries:
-		price = float(entry["open"])
-		deviation = abs(price - averagePrice)
-		deviationsSquaredSum += deviation ** 2
-	standardDeviation = math.sqrt(deviationsSquaredSum / float(days))
-
-	# determine how far the current price deviates from the mean
-	currentPrice = manager.getPrice("BTC", "ask")
-	if standardDeviation:
-		currentPriceDeviation = abs(currentPrice - averagePrice) / standardDeviation
-	else:
-		currentPriceDeviation = 0
-
-	return _successResp({"days": days,
+	return _successResp({"lookback days": days,
 						 "ticker": ticker,
 						 "average price": averagePrice,
-						 "days used": len(dates) - len(datesUnused),
-						 "dates unused": list(datesUnused),
 						 "standard deviation": standardDeviation,
 						 "current price": currentPrice,
 						 "current price deviation": currentPriceDeviation})
