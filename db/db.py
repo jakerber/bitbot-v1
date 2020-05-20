@@ -13,8 +13,12 @@ class BitBotDB:
         self.mongo = flask_pymongo.PyMongo(app)
 
     def insert(self, model):
-        """Insert data into a collection."""
+        """Insert single entry into a collection."""
         self.mongo.db[model.collectionName].insert_one(model.__dict__)
+
+    def insertMany(self, models):
+        """Insert many entries into a collection."""
+        self.mongo.db[models[0].collectionName].insert([model.__dict__ for model in models])
 
     def find(self, collectionName, filter):
         """Find an entry based on a data point."""

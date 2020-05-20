@@ -26,14 +26,14 @@ def accountBalance():
 
 @app.route("/backfill/<filename>")
 def backfillCsv(filename):
-	"""Backfill price history based on CSV dataset."""
+	"""Backfill price history based on CSV dataset (https://coindesk.com/price/bitcoin)."""
 	filepath = "datasets/%s" % filename
 	if not os.path.exists(filepath):
 		return _failedResp("dataset does not exist: %s" % filename, 400)  # 400 bad request
 
-	# parse prices from dataset
+	# aggregate prices from dataset
 	headerLine = True
-	entriesAdded = 0
+	newPriceModels = []
 	with open(filepath) as priceHistoryFile:
 		for line in priceHistoryFile:
 			if headerLine:
@@ -51,16 +51,21 @@ def backfillCsv(filename):
 			# initialize new price model
 			newPriceModel = models.Price(ticker, openPrice, highPrice, lowPrice)
 			newPriceModel.date = date
+			newPriceModels.append(newPriceModel)
 
-			# save to database
-			try:
-				mongodb.insert(newPriceModel)
-			except Exception as err:
-				return _failedResp("unable to insert price model: %s" % repr(err))
-			else:
-				entriesAdded += 1
+	# ensure prices don't already exist for this crypto
+	queryFilter = {"ticker": ticker}
+	entries = list(mongodb.find("price", queryFilter))
+	if entries:
+		return _failedResp("unable to backfill: %i price snapshots already exist for %s" % (len(entries), ticker), 400)  # 400 bad request
 
-		return _successResp("successfully backfilled %i prices" % entriesAdded)
+	# save to database
+	try:
+		mongodb.insertMany(newPriceModels)
+	except Exception as err:
+		return _failedResp("unable to insert price models: %s" % repr(err))
+	else:
+		return _successResp("successfully backfilled %i prices" % len(newPriceModels))
 
 @app.route("/balance/<ticker>")
 def balance(ticker):
@@ -115,12 +120,22 @@ def root():
 @app.route("/snapshot/<ticker>")
 def snapshot(ticker):
 	"""Store the price of a cryptocurrency."""
+	# ensure bitbot supports this crypto
+	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
+
+	# ensure price snapshot doesn't already exist for today
+	currentDate = datetime.datetime.now().strftime("%Y-%m-%d")
+	queryFilter = {"date": currentDate, "ticker": ticker}
+	entry = list(mongodb.find("price", queryFilter))
+	if entry:
+		return _failedResp("%s price snapshot already exists for %s: %s" % (ticker, currentDate, repr(entry[0])), 400)  # 400 bad request
+
+	# fetch relevant prices
 	try:
 		allPrices = manager.getAllPrices(ticker)
 	except Exception as err:
 		return _failedResp(err)
-
-	# fetch and relevant prices
 	openPrice = float(allPrices["o"])
 	highPrice = float(allPrices["h"][0])
 	lowPrice = float(allPrices["l"][0])
@@ -191,4 +206,4 @@ def _successResp(resp):
 
 
 if __name__ == "__main__":
-	app.run(debug=True)
+	app.run()
