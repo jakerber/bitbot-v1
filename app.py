@@ -29,7 +29,7 @@ def backfillCsv(filename):
 	"""Backfill price history based on CSV dataset."""
 	filepath = "datasets/%s" % filename
 	if not os.path.exists(filepath):
-		return _failedResp("dataset does not exist: %s" % filename)
+		return _failedResp("dataset does not exist: %s" % filename, 400)  # 400 bad request
 
 	# parse prices from dataset
 	headerLine = True
@@ -77,14 +77,14 @@ def crunch(ticker, days, deviationThreshold):
 	"""Crunch numbers to decide if a cryptocurrency should be bought."""
 	isValid, days = _validateArgs(days, int)
 	if not isValid:
-		return _failedResp(days)
+		return _failedResp(days, 400)  # 400 bad request
 	isValid, deviationThreshold = _validateArgs(deviationThreshold, float)
 	if not isValid:
-		return _failedResp(deviationThreshold)
+		return _failedResp(deviationThreshold, 400)  # 400 bad request
 
 	# ensure bitbot supports this crypto
 	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
-		return _failedResp("ticker not supported: %s" % ticker)
+		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# determine if crypto should be bought
 	mreNumbers = _getMRENumbers(ticker, days)
@@ -99,11 +99,11 @@ def meanReversion(ticker, days):
 	"""Average price of a cryptocurrency."""
 	isValid, days = _validateArgs(days, int)
 	if not isValid:
-		return _failedResp(days)
+		return _failedResp(days, 400)  # 400 bad request
 
 	# ensure bitbot supports this crypto
 	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
-		return _failedResp("ticker not supported: %s" % ticker)
+		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# return mean reversion numbers
 	return _successResp(_getMRENumbers(ticker, days))
@@ -152,8 +152,6 @@ def _getMRENumbers(ticker, days):
 	# fetch prices on dates
 	queryFilter = {"date": {"$in": dates}, "ticker": ticker}
 	entries = list(mongodb.find("price", queryFilter))
-	if not entries:
-		return _failedResp("no price data for %s" % ticker)
 
 	# calculate standard and current price deviations
 	prices = [entry["open"] for entry in entries]
@@ -182,15 +180,15 @@ def _validateArgs(arg, typeFunc):
 ##  response formatting
 ###############################
 
-def _failedResp(error):
+def _failedResp(error, statusCode=500):  # 500 internal server error
 	"""Failed request response from an error."""
 	if isinstance(error, Exception):
 		error = repr(error)
-	return {"success": False, "error": error}
+	return {"success": False, "error": error}, statusCode
 
 def _successResp(resp):
 	"""Successful request response."""
-	return {"success": True, "resp": resp}
+	return {"success": True, "resp": resp}, 200
 
 
 if __name__ == "__main__":

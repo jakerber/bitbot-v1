@@ -7,6 +7,10 @@ class MeanReversion:
         self.currentPrice = currentPrice
         self.pastPrices = pastPrices
 
+        # validate past prices exist
+        if not self.pastPrices:
+            raise RuntimeError("price history is required")
+
     def getPriceDeviation(self):
         """Calculate standard and current price deviation."""
         # calculate average
