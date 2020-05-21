@@ -1,1 +1,1 @@
-web: gunicorn bitbot:app
+web: gunicorn bitbot:bitbot
