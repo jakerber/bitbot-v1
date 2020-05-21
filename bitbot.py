@@ -32,6 +32,15 @@ def accountBalance():
 		return _failedResp(err)
 	return _successResp({"balance": balance})
 
+@app.route("/alerts/<ticker>")
+def alerts(ticker):
+	"""View all current alerts."""
+	# ensure bitbot supports this crypto
+	if ticker not in constants.SUPPORTED_CRYPTOS:
+		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
+
+	return _successResp(mongodb.find("alerts", filter={"ticker": ticker}))
+
 @app.route("/backfill/<filename>")
 def backfillCsv(filename):
 	"""Backfill price history based on CSV dataset (https://coindesk.com/price/bitcoin)."""
@@ -63,7 +72,7 @@ def backfillCsv(filename):
 
 	# ensure prices don't already exist for this crypto
 	queryFilter = {"ticker": ticker}
-	entries = list(mongodb.find("price", queryFilter))
+	entries = mongodb.find("price", queryFilter)
 	if entries:
 		return _failedResp("unable to backfill: %i price snapshots already exist for %s" % (len(entries), ticker), 400)  # 400 bad request
 
@@ -136,7 +145,7 @@ def snapshot(ticker):
 	# ensure price snapshot doesn't already exist for today
 	currentDate = datetime.datetime.now().strftime("%Y-%m-%d")
 	queryFilter = {"date": currentDate, "ticker": ticker}
-	entry = list(mongodb.find("price", queryFilter))
+	entry = mongodb.find("price", queryFilter)
 	if entry:
 		return _failedResp("%s price snapshot already exists for %s: %s" % (ticker, currentDate, repr(entry[0])), 400)  # 400 bad request
 
@@ -174,7 +183,7 @@ def _getMRENumbers(ticker):
 
 	# fetch prices on dates
 	queryFilter = {"date": {"$in": dates}, "ticker": ticker}
-	entries = list(mongodb.find("price", queryFilter))
+	entries = mongodb.find("price", queryFilter)
 
 	# calculate standard and current price deviations
 	prices = [entry["open"] for entry in entries]
