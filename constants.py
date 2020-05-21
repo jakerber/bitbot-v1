@@ -18,7 +18,8 @@ if not MONGODB_URI:
 KRAKEN_API_BASE = "https://api.kraken.com/0/"
 KRAKEN_CRYPTO_TICKERS = {"BTC": "XBT",
                          "ETH": "ETH",
-                         "LTC": "LTC"}
+                         "LTC": "LTC",
+                         "XRP": "XRP"}
 KRAKEN_KEY = os.environ.get("KRAKEN_KEY")
 KRAKEN_SECRET = os.environ.get("KRAKEN_SECRET")
 KRAKEN_PRICE_BALANCE_TEMPLATE = "X%s"
