@@ -26,5 +26,4 @@ class BitBotDB:
 
     def find(self, collectionName, filter):
         """Find an entry based on a data point."""
-        self.logger.log("searching %s collection by filter %s" % (collectionName, str(filter)))
         return self.mongo.db[collectionName].find(filter)
