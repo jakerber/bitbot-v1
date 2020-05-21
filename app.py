@@ -113,13 +113,26 @@ def crunch(ticker):
 
 @app.route("%s/mre/<ticker>" % constants.API_ROOT)
 def meanReversion(ticker):
-	"""Average price of a cryptocurrency."""
+	"""Get mean reversion data for a cryptocurrency."""
 	# ensure bitbot supports this crypto
 	if ticker not in constants.SUPPORTED_CRYPTOS:
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# return mean reversion numbers
 	return _successResp(_getMRENumbers(ticker))
+
+@app.route("%s/mre" % constants.API_ROOT)
+def meanReversionAll():
+	"""Get mean reversion data for all supported cryptocurrencies."""
+	mreNumbers = []
+	for ticker in constants.SUPPORTED_CRYPTOS:
+		try:
+			mreNumbers.append(_getMRENumbers(ticker))
+		except Exception as err:
+			mreNumbers.append({"ticker": ticker, "error": repr(err)})
+
+	# return all mean reversion numbers
+	return _successResp(mreNumbers)
 
 @app.route("/")
 def root():
