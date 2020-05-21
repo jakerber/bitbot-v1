@@ -149,6 +149,29 @@ def rootApi():
 	"""Root endpoint of the api."""
 	return "<h4>api root<h4>"
 
+@app.route("%s/simulation/<days>" % constants.API_ROOT)
+def simulation(days):
+	"""Run a simulation using historical price data."""
+	# # validate number of days
+	# try:
+	# 	days = int(days)
+	# 	1 / days
+	# except (ValueError, ZeroDivisionError) as err:
+	# 	return _failedResp("%s is not a valid number of days: %s" % (days, repr(err)), 400)  # 400 bad request
+	#
+	# # initialize simulation
+	# startingBalance = constants.SIM_ACCOUNT_BALANCE_USD
+	#
+	# # run simulation
+	# for day in range(days):
+	# 	numDaysAgo = days - day
+	# 	datetimeDaysAgo = datetime.datetime.now() - datetime.timedelta(days=numDaysAgo)
+	#
+	# 	# analyze mean reversion for all tickers
+	# 	for ticker in constants.SUPPORTED_CRYPTOS:
+	# 		mreNumbers = _getMRENumbers(ticker, now=datetimeDaysAgo)
+	return _failedResp("simulator is WIP")
+
 @app.route("%s/snapshot" % constants.API_ROOT)
 def snapshot():
 	"""Store the prices of all supported cryptocurrency."""
@@ -189,11 +212,11 @@ def snapshot():
 ##  helper functions
 ###############################
 
-def _getMRENumbers(ticker):
+def _getMRENumbers(ticker, now=None):
 	"""Get mean reversion numbers (standard deviation, etc.)."""
 	# collect dates from past number of days
 	dates = []
-	now = datetime.datetime.now()
+	now = now or datetime.datetime.now()  # allow sim to override current datetime
 	for daysAgo in range(constants.LOOKBACK_DAYS):
 		delta = datetime.timedelta(days=daysAgo)
 		dateDaysAgo = now - delta
