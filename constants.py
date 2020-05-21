@@ -28,11 +28,6 @@ KRAKEN_PRICE_TYPES = {"ask": "a",
                       "low": "l",
                       "open": "o"}
 
-# simulator constants
-IS_SIMULATION = False
-SIM_ACCOUNT_BALANCE = 1000.0
-SIM_BALANCES = {ticker: 0 for ticker in KRAKEN_CRYPTO_TICKERS.keys()}
-
 # delay between requests in seconds
 SLEEP_INTERVAL = 10
 
