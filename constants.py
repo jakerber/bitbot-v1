@@ -1,6 +1,11 @@
 """Application constants."""
 import os
 
+# bitbot constants
+CONFIDENCE_DECIMALS = 10
+MAX_CONFIDENCE = float("0." + ("9" * CONFIDENCE_DECIMALS))
+MIN_DEVIATION_THRESHOLD = float("0." + ("0" * (CONFIDENCE_DECIMALS - 1)) + "1")
+
 # database operations
 MONGODB_NAME = "bitbot"
 MONGODB_URI = os.environ.get("MONGODB_URI")
