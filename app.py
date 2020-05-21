@@ -86,7 +86,6 @@ def crunch(ticker):
 	# determine if crypto should be bought
 	mreNumbers = _getMRENumbers(ticker)
 	shouldBuy = mreNumbers["current_price_deviation"] >= constants.DEVIATION_THRESHOLD
-	confidence = round(min(abs((1.0 / constants.DEVIATION_THRESHOLD * mreNumbers["current_price_deviation"]) - 1.0), constants.MAX_CONFIDENCE), constants.CONFIDENCE_DECIMALS)
 
 	# add alert to db if should buy
 	if shouldBuy:
@@ -95,7 +94,6 @@ def crunch(ticker):
 		mongodb.insert(newAlert)
 
 	return _successResp({"should_buy": shouldBuy,
-						 "confidence": confidence,
 						 "deviation_threshold": constants.DEVIATION_THRESHOLD,
 						 "numbers": mreNumbers})
 

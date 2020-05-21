@@ -18,7 +18,7 @@ class Alert(BitBotModel):
     def __init__(self, ticker, price, alertType):
         self.ticker = ticker
         self.price = price
-        self.alertType = alertType
+        self.type = alertType
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
         self.time = datetime.datetime.now().strftime("%H:%M:%S.%f")
 
