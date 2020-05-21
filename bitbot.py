@@ -175,12 +175,17 @@ def _getMRENumbers(ticker):
 	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
 	currentDeviationPercent = currentDeviation / standardDeviation
 
-	return {"lookback_days": constants.LOOKBACK_DAYS,
-			"ticker": ticker,
-			"average_price": averagePrice,
-			"standard_deviation": standardDeviation,
+	return {"average_price": averagePrice,
+			"current_deviation": currentDeviation,
 			"current_price": currentPrice,
-			"percent_deviation": currentDeviationPercent}
+			"lookback_days": constants.LOOKBACK_DAYS,
+			"percent_deviation": currentDeviationPercent,
+			"standard_deviation": standardDeviation,
+			"ticker": ticker}
+
+
+
+
 
 ###############################
 ##  response formatting
