@@ -1,6 +1,9 @@
 """Application constants."""
 import os
 
+# api
+API_ROOT = "/api"
+
 # notifications
 MY_EMAIL = os.environ.get("MY_EMAIL")
 MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")

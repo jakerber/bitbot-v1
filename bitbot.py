@@ -23,7 +23,7 @@ logger = logger.Logger("BitBot")
 # initialize notifier
 notifier = notifier.Notifier()
 
-@app.route("/balance")
+@app.route("%s/balance" % constants.API_ROOT)
 def accountBalance():
 	"""Get current Kraken account balance in USD."""
 	try:
@@ -32,7 +32,7 @@ def accountBalance():
 		return _failedResp(err)
 	return _successResp({"balance": balance})
 
-@app.route("/backfill/<filename>")
+@app.route("%s/backfill/<filename>" % constants.API_ROOT)
 def backfillCsv(filename):
 	"""Backfill price history based on CSV dataset (https://coindesk.com/price/bitcoin)."""
 	filepath = "datasets/%s" % filename
@@ -75,7 +75,7 @@ def backfillCsv(filename):
 	else:
 		return _successResp("successfully backfilled %i prices" % len(newPriceModels))
 
-@app.route("/balance/<ticker>")
+@app.route("%s/balance/<ticker>" % constants.API_ROOT)
 def balance(ticker):
 	"""Get current balance of a cryptocurrency."""
 	try:
@@ -84,7 +84,7 @@ def balance(ticker):
 		return _failedResp(err)
 	return _successResp({"ticker": ticker, "balance": balance})
 
-@app.route("/crunch/<ticker>")
+@app.route("%s/crunch/<ticker>" % constants.API_ROOT)
 def crunch(ticker):
 	"""Crunch numbers to decide if a cryptocurrency should be bought."""
 	# ensure bitbot supports this crypto
@@ -104,14 +104,14 @@ def crunch(ticker):
 
 		# send email notification
 		emailSubject = "%s buy alert!" % ticker
-		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, mreNumbers["average_price"], ticker)
+		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, mreNumbers["average_price"], ticker)
 		notifier.email(emailSubject, emailBody)
 
 	return _successResp({"should_buy": shouldBuy,
 						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD,
 						 "numbers": mreNumbers})
 
-@app.route("/mre/<ticker>")
+@app.route("%s/mre/<ticker>" % constants.API_ROOT)
 def meanReversion(ticker):
 	"""Average price of a cryptocurrency."""
 	# ensure bitbot supports this crypto
@@ -124,9 +124,14 @@ def meanReversion(ticker):
 @app.route("/")
 def root():
 	"""Root endpoint of the app."""
-	return "Hello, world!"
+	return "<h4>bleep bloop<h4>"
 
-@app.route("/snapshot/<ticker>")
+@app.route("%s/" % constants.API_ROOT)
+def rootApi():
+	"""Root endpoint of the api."""
+	return "<h4>api root<h4>"
+
+@app.route("%s/snapshot/<ticker>" % constants.API_ROOT)
 def snapshot(ticker):
 	"""Store the price of a cryptocurrency."""
 	# ensure bitbot supports this crypto
