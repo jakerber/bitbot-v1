@@ -207,7 +207,7 @@ def _getMRENumbers(ticker):
 	currentPrice = assistant.getPrice(ticker, "ask")
 	meanReversion = mean_reversion.MeanReversion(currentPrice, prices)
 	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
-	currentPercentDeviation = currentDeviation / standardDeviation
+	currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
 
 	return {"average_price": averagePrice,
 			"current_deviation": currentDeviation,
