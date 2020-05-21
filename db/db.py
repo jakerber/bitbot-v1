@@ -4,6 +4,7 @@ import flask_pymongo
 import logger
 import os
 
+
 class BitBotDB:
     """BitBot database object."""
     def __init__(self, app):

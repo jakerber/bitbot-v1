@@ -3,6 +3,7 @@
 SEPERATOR = "------------------------------------------------"
 MONEY_EXCHANGE_INDICATOR = "***"
 
+
 class Logger:
     """Logger object."""
     def __init__(self, componentName):

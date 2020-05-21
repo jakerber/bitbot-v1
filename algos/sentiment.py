@@ -129,6 +129,7 @@ class SentimentAnalyzer:
         """Convert list of tokens to nltk.NaiveBayesClassifier token dictionary."""
         return {token: True for token in tokenList}
 
+
 if __name__ == "__main__":
     x = SentimentAnalyzer()
     x.isPositive("this is so bad")

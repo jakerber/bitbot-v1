@@ -2,6 +2,7 @@
 import logger
 import math
 
+
 class MeanReversion:
     """Mean reversion object."""
     def __init__(self, currentPrice, pastPrices):
