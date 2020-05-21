@@ -8,7 +8,19 @@ EXCLUDE_PROPS = ["_id"]  # do not include these in model representations
 class BitBotModel:
     """Parent model for all BitBot database collections."""
     def __repr__(self):
-        return self.__dict__
+        return str({prop: self.__dict__[prop] for prop in self.__dict__.keys()
+                    if prop not in ["_id"]})
+
+class Alert(BitBotModel):
+    """Model for the alert collection."""
+    collectionName = "alert"
+
+    def __init__(self, ticker, price, alertType):
+        self.ticker = ticker
+        self.price = price
+        self.alertType = alertType
+        self.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.time = datetime.datetime.now().strftime("%H:%M:%S.%f")
 
 class Price(BitBotModel):
     """Model for the price collection."""
@@ -20,7 +32,3 @@ class Price(BitBotModel):
         self.high = highPrice
         self.low = lowPrice
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
-
-    def __repr__(self):
-        return str({prop: self.__dict__[prop] for prop in self.__dict__.keys()
-    		        if prop not in ["_id"]})

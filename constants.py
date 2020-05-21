@@ -3,8 +3,9 @@ import os
 
 # bitbot constants
 CONFIDENCE_DECIMALS = 10
+DEVIATION_THRESHOLD = float(os.environ.get("DEVIATION_THRESHOLD"))
+LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS"))
 MAX_CONFIDENCE = float("0." + ("9" * CONFIDENCE_DECIMALS))
-MIN_DEVIATION_THRESHOLD = float("0." + ("0" * (CONFIDENCE_DECIMALS - 1)) + "1")
 
 # database operations
 MONGODB_NAME = "bitbot"

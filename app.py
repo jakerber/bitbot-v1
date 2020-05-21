@@ -76,43 +76,39 @@ def balance(ticker):
 		return _failedResp(err)
 	return _successResp({"ticker": ticker, "balance": balance})
 
-@app.route("/crunch/<ticker>/<days>/<deviationThreshold>")
-def crunch(ticker, days, deviationThreshold):
+@app.route("/crunch/<ticker>")
+def crunch(ticker):
 	"""Crunch numbers to decide if a cryptocurrency should be bought."""
-	isValid, days = _validateArgs(days, int)
-	if not isValid:
-		return _failedResp(days, 400)  # 400 bad request
-	isValid, deviationThreshold = _validateArgs(deviationThreshold, float)
-	if not isValid:
-		return _failedResp(deviationThreshold, 400)  # 400 bad request
-
 	# ensure bitbot supports this crypto
 	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# determine if crypto should be bought
-	mreNumbers = _getMRENumbers(ticker, days)
-	shouldBuy = mreNumbers["current_price_deviation"] >= deviationThreshold
-	confidence = round(min(abs((1.0 / (deviationThreshold or constants.MIN_DEVIATION_THRESHOLD) * mreNumbers["current_price_deviation"]) - 1.0), constants.MAX_CONFIDENCE), constants.CONFIDENCE_DECIMALS)
+	mreNumbers = _getMRENumbers(ticker)
+	shouldBuy = mreNumbers["current_price_deviation"] >= constants.DEVIATION_THRESHOLD
+	confidence = round(min(abs((1.0 / constants.DEVIATION_THRESHOLD * mreNumbers["current_price_deviation"]) - 1.0), constants.MAX_CONFIDENCE), constants.CONFIDENCE_DECIMALS)
+
+	# add alert to db if should buy
+	if shouldBuy:
+		currentPrice = mreNumbers["current_price"]
+		newAlert = models.Alert(ticker, currentPrice, alertType="buy")
+		mongodb.insert(newAlert)
+
 	return _successResp({"should_buy": shouldBuy,
 						 "confidence": confidence,
-						 "deviation_threshold": deviationThreshold,
+						 "deviation_threshold": constants.DEVIATION_THRESHOLD,
 						 "numbers": mreNumbers})
 
 
-@app.route("/mre/<ticker>/<days>")
-def meanReversion(ticker, days):
+@app.route("/mre/<ticker>")
+def meanReversion(ticker):
 	"""Average price of a cryptocurrency."""
-	isValid, days = _validateArgs(days, int)
-	if not isValid:
-		return _failedResp(days, 400)  # 400 bad request
-
 	# ensure bitbot supports this crypto
 	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# return mean reversion numbers
-	return _successResp(_getMRENumbers(ticker, days))
+	return _successResp(_getMRENumbers(ticker))
 
 @app.route("/")
 def root():
@@ -155,12 +151,12 @@ def snapshot(ticker):
 ##  helper functions
 ###############################
 
-def _getMRENumbers(ticker, days):
+def _getMRENumbers(ticker):
 	"""Get mean reversion numbers (standard deviation, etc.)."""
 	# collect dates from past number of days
 	dates = []
 	now = datetime.datetime.now()
-	for daysAgo in range(days):
+	for daysAgo in range(constants.LOOKBACK_DAYS):
 		delta = datetime.timedelta(days=daysAgo)
 		dateDaysAgo = now - delta
 		dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
@@ -176,21 +172,12 @@ def _getMRENumbers(ticker, days):
 	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
 	currentPriceDeviation = currentDeviation / standardDeviation
 
-	return {"lookback_days": days,
+	return {"lookback_days": constants.LOOKBACK_DAYS,
 			"ticker": ticker,
 			"average_price": averagePrice,
 			"standard_deviation": standardDeviation,
 			"current_price": currentPrice,
 			"current_price_deviation": currentPriceDeviation}
-
-def _validateArgs(arg, typeFunc):
-	"""Validate an argument is of a given type."""
-	try:
-		val = typeFunc(arg)
-	except Exception as err:
-		return False, "parameter type not %s: %s" % (typeFunc.__name__, arg)
-	else:
-		return True, val
 
 ###############################
 ##  response formatting
