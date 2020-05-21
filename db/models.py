@@ -3,13 +3,13 @@ import datetime
 import db
 import json
 
-EXCLUDE_PROPS = ["_id"]  # do not include these in model representations
+EXCLUDE_PROPS = ["id", "_id"]  # do not include these in model representations
 
 class BitBotModel:
     """Parent model for all BitBot database collections."""
     def __repr__(self):
         return str({prop: self.__dict__[prop] for prop in self.__dict__.keys()
-                    if prop not in ["_id"]})
+                    if prop not in EXCLUDE_PROPS})
 
 class Alert(BitBotModel):
     """Model for the alert collection."""
