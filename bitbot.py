@@ -103,8 +103,9 @@ def crunch(ticker):
 		mongodb.insert(newAlert)
 
 		# send email notification
+		emailSubject = "%s buy alert!" % ticker
 		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, mreNumbers["average_price"], ticker)
-		notifier.email("buy", emailBody)
+		notifier.email(emailSubject, emailBody)
 
 	return _successResp({"should_buy": shouldBuy,
 						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD,

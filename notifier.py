@@ -12,19 +12,14 @@ class Notifier:
     def __init__(self):
         self.logger = logger
 
-        # email notifications
-        self.myEmail = constants.MY_EMAIL
-        self.emailSubjectTemplate = "BitBot %s alert!"
-        self.mailgunFrom = "BitBot Notifier <bitbotnotifier@%s>" % constants.MAILGUN_DOMAIN
-
-    def email(self, alertName, body):
+    def email(self, subject, body):
         """Send an email notification."""
-        self.logger.log("sending %s alert via email to %s" % (alertName, constants.MY_EMAIL))
+        self.logger.log("sending alert via email to %s: %s" % (constants.MY_EMAIL, subject))
         resp = requests.post(constants.MAILGUN_API_URL + "/messages",
                              auth=("api", constants.MAILGUN_API_KEY),
-                             data={"from": self.mailgunFrom,
+                             data={"from": "BitBot Notifier <bitbotnotifier@%s>" % constants.MAILGUN_DOMAIN,
                                    "to": [constants.MY_EMAIL],
-                                   "subject": self.emailSubjectTemplate % alertName,
+                                   "subject": subject,
                                    "text": body})
 
         # log failures, if any
