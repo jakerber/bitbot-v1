@@ -40,7 +40,7 @@ KRAKEN_PRICE_TYPES = {"ask": "a",
 SIM_ACCOUNT_BALANCE_USD = 1000.0
 
 # bitbot constants
-BUY_AMOUNT_USD = float(os.environ.get("BUY_AMOUNT_USD"))
+BASE_BUY_USD = float(os.environ.get("BASE_BUY_USD"))
 CONFIDENCE_DECIMALS = 10
 LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS"))
 MAX_CONFIDENCE = float("0." + ("9" * CONFIDENCE_DECIMALS))
