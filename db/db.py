@@ -16,7 +16,7 @@ class BitBotDB:
 
     def insert(self, model):
         """Insert single entry into a collection."""
-        self.logger.log("inserting 1 model into %s collection" % model.collectionName)
+        self.logger.log("inserting 1 entry into %s collection" % model.collectionName)
         self.mongo.db[model.collectionName].insert_one(model.__dict__)
 
     def insertMany(self, models):
