@@ -5,6 +5,7 @@ import flask
 import logger
 import assistant
 import math
+import notifier
 import os
 from algos import mean_reversion
 from db import db
@@ -18,6 +19,9 @@ mongodb = db.BitBotDB(app)
 
 # initialize logger
 logger = logger.Logger("BitBot")
+
+# initialize notifier
+notifier = notifier.Notifier()
 
 @app.route("/balance")
 def accountBalance():
@@ -84,7 +88,7 @@ def balance(ticker):
 def crunch(ticker):
 	"""Crunch numbers to decide if a cryptocurrency should be bought."""
 	# ensure bitbot supports this crypto
-	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+	if ticker not in constants.SUPPORTED_CRYPTOS:
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# determine if crypto should be bought
@@ -98,6 +102,10 @@ def crunch(ticker):
 		newAlert = models.Alert(ticker, currentPrice, alertType="buy", priceTarget=mreNumbers["average_price"])
 		mongodb.insert(newAlert)
 
+		# send email notification
+		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, mreNumbers["average_price"], ticker)
+		notifier.email("buy", emailBody)
+
 	return _successResp({"should_buy": shouldBuy,
 						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD,
 						 "numbers": mreNumbers})
@@ -106,7 +114,7 @@ def crunch(ticker):
 def meanReversion(ticker):
 	"""Average price of a cryptocurrency."""
 	# ensure bitbot supports this crypto
-	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+	if ticker not in constants.SUPPORTED_CRYPTOS:
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# return mean reversion numbers
@@ -121,7 +129,7 @@ def root():
 def snapshot(ticker):
 	"""Store the price of a cryptocurrency."""
 	# ensure bitbot supports this crypto
-	if ticker not in constants.KRAKEN_CRYPTO_TICKERS.keys():
+	if ticker not in constants.SUPPORTED_CRYPTOS:
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# ensure price snapshot doesn't already exist for today

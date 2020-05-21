@@ -1,11 +1,11 @@
 """Application constants."""
 import os
 
-# bitbot constants
-CONFIDENCE_DECIMALS = 10
-LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS"))
-MAX_CONFIDENCE = float("0." + ("9" * CONFIDENCE_DECIMALS))
-PERCENT_DEVIATION_THRESHOLD = float(os.environ.get("PERCENT_DEVIATION_THRESHOLD"))
+# notifications
+MY_EMAIL = os.environ.get("MY_EMAIL")
+MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
+MAILGUN_DOMAIN = os.environ.get("MAILGUN_DOMAIN")
+MAILGUN_API_URL = "https://api.mailgun.net/v3/%s" % MAILGUN_DOMAIN
 
 # database operations
 MONGODB_NAME = "bitbot"
@@ -29,8 +29,9 @@ KRAKEN_PRICE_TYPES = {"ask": "a",
                       "low": "l",
                       "open": "o"}
 
-# delay between requests in seconds
-SLEEP_INTERVAL = 10
-
-# cryptos bitbot is allowed to trade with
+# bitbot constants
+CONFIDENCE_DECIMALS = 10
+LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS"))
+MAX_CONFIDENCE = float("0." + ("9" * CONFIDENCE_DECIMALS))
+PERCENT_DEVIATION_THRESHOLD = float(os.environ.get("PERCENT_DEVIATION_THRESHOLD"))
 SUPPORTED_CRYPTOS = KRAKEN_CRYPTO_TICKERS.keys()
