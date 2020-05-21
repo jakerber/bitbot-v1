@@ -84,32 +84,36 @@ def balance(ticker):
 		return _failedResp(err)
 	return _successResp({"ticker": ticker, "balance": balance})
 
-@app.route("%s/crunch/<ticker>" % constants.API_ROOT)
-def crunch(ticker):
-	"""Crunch numbers to decide if a cryptocurrency should be bought."""
-	# ensure bitbot supports this crypto
-	if ticker not in constants.SUPPORTED_CRYPTOS:
-		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
+@app.route("%s/crunch" % constants.API_ROOT)
+def crunch():
+	"""Crunch numbers to decide if cryptocurrency should be bought."""
+	# determine which cryptos should be bought
+	shouldBuys = []
+	for ticker in constants.SUPPORTED_CRYPTOS:
+		try:
+			mreNumbers = _getMRENumbers(ticker)
+		except Exception as err:
+			continue
+		shouldBuy = mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD
+		if shouldBuy:
+			shouldBuys.append(mreNumbers)
 
-	# determine if crypto should be bought
-	mreNumbers = _getMRENumbers(ticker)
-	shouldBuy = mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD
-
-	# add alert to db if should buy
-	if shouldBuy:
+	# add alert to db for all should buys
+	for mreNumbers in shouldBuys:
+		ticker = mreNumbers["ticker"]
 		currentPrice = mreNumbers["current_price"]
+		averagePrice = mreNumbers["average_price"]
 		logger.log("buy alert: %s @ %f" % (ticker, currentPrice), seperate=True)
-		newAlert = models.Alert(ticker, currentPrice, alertType="buy", priceTarget=mreNumbers["average_price"])
+		newAlert = models.Alert(ticker, currentPrice, alertType="buy", priceTarget=averagePrice)
 		mongodb.insert(newAlert)
 
 		# send email notification
 		emailSubject = "%s buy alert!" % ticker
-		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, mreNumbers["average_price"], ticker)
+		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, averagePrice, ticker)
 		notifier.email(emailSubject, emailBody)
 
-	return _successResp({"should_buy": shouldBuy,
-						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD,
-						 "numbers": mreNumbers})
+	return _successResp({"should_buys": shouldBuys,
+						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD})
 
 @app.route("%s/mre/<ticker>" % constants.API_ROOT)
 def meanReversion(ticker):
