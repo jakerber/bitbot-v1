@@ -32,15 +32,6 @@ def accountBalance():
 		return _failedResp(err)
 	return _successResp({"balance": balance})
 
-@app.route("/alerts/<ticker>")
-def alerts(ticker):
-	"""View all current alerts."""
-	# ensure bitbot supports this crypto
-	if ticker not in constants.SUPPORTED_CRYPTOS:
-		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
-
-	return _successResp(mongodb.find("alerts", filter={"ticker": ticker}))
-
 @app.route("/backfill/<filename>")
 def backfillCsv(filename):
 	"""Backfill price history based on CSV dataset (https://coindesk.com/price/bitcoin)."""
