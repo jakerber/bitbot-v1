@@ -103,6 +103,7 @@ def crunch():
 		currentPrice = mreNumbers["current_price"]
 		averagePrice = mreNumbers["average_price"]
 		alertType = "buy" if averagePrice > currentPrice else "sell"
+		mreNumbers["action"] = alertType
 		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
 		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget=averagePrice)
 		mongodb.insert(newAlert)
