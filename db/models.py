@@ -15,10 +15,11 @@ class Alert(BitBotModel):
     """Model for the alert collection."""
     collectionName = "alert"
 
-    def __init__(self, ticker, price, alertType):
+    def __init__(self, ticker, price, alertType, priceTarget=None):
         self.ticker = ticker
         self.price = price
         self.type = alertType
+        self.priceTarget = priceTarget or self.price
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
         self.time = datetime.datetime.now().strftime("%H:%M:%S.%f")
 

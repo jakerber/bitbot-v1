@@ -89,17 +89,17 @@ def crunch(ticker):
 
 	# determine if crypto should be bought
 	mreNumbers = _getMRENumbers(ticker)
-	shouldBuy = mreNumbers["current_deviation_percent"] >= constants.DEVIATION_THRESHOLD
+	shouldBuy = mreNumbers["percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD
 
 	# add alert to db if should buy
 	if shouldBuy:
 		currentPrice = mreNumbers["current_price"]
 		logger.log("buy alert: %s @ %f" % (ticker, currentPrice), seperate=True)
-		newAlert = models.Alert(ticker, currentPrice, alertType="buy")
+		newAlert = models.Alert(ticker, currentPrice, alertType="buy", priceTarget=mreNumbers["average_price"])
 		mongodb.insert(newAlert)
 
 	return _successResp({"should_buy": shouldBuy,
-						 "deviation_threshold": constants.DEVIATION_THRESHOLD,
+						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD,
 						 "numbers": mreNumbers})
 
 
@@ -180,7 +180,7 @@ def _getMRENumbers(ticker):
 			"average_price": averagePrice,
 			"standard_deviation": standardDeviation,
 			"current_price": currentPrice,
-			"current_deviation_percent": currentDeviationPercent}
+			"percent_deviation": currentDeviationPercent}
 
 ###############################
 ##  response formatting
