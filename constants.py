@@ -24,6 +24,7 @@ KRAKEN_CRYPTO_TICKERS = {"ADA": "ADA",
                          "ETH": "ETH",
                          "EOS": "EOS",
                          "LTC": "LTC",
+                         "XMR": "XMR",
                          "XRP": "XRP"}
 KRAKEN_KEY = os.environ.get("KRAKEN_KEY")
 KRAKEN_SECRET = os.environ.get("KRAKEN_SECRET")
