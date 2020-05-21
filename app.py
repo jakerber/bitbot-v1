@@ -88,31 +88,31 @@ def balance(ticker):
 def crunch():
 	"""Crunch numbers to decide if cryptocurrency should be bought."""
 	# determine which cryptos should be bought
-	shouldBuys = []
+	actionableMres = []
 	for ticker in constants.SUPPORTED_CRYPTOS:
 		try:
 			mreNumbers = _getMRENumbers(ticker)
 		except Exception as err:
 			continue
-		shouldBuy = mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD
-		if shouldBuy:
-			shouldBuys.append(mreNumbers)
+		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
+			actionableMres.append(mreNumbers)
 
-	# add alert to db for all should buys
-	for mreNumbers in shouldBuys:
+	# add alert to db for all actionable MRE numbers
+	for mreNumbers in actionableMres:
 		ticker = mreNumbers["ticker"]
 		currentPrice = mreNumbers["current_price"]
 		averagePrice = mreNumbers["average_price"]
-		logger.log("buy alert: %s @ %f" % (ticker, currentPrice), seperate=True)
-		newAlert = models.Alert(ticker, currentPrice, alertType="buy", priceTarget=averagePrice)
+		alertType = "buy" if averagePrice > currentPrice else "sell"
+		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
+		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget=averagePrice)
 		mongodb.insert(newAlert)
 
 		# send email notification
-		emailSubject = "%s buy alert!" % ticker
-		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, averagePrice, ticker)
+		emailSubject = "%s %s alert!" % (ticker, alertType)
+		emailBody = "This is an automated %s %s alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, alertType, ticker, currentPrice, averagePrice, ticker)
 		notifier.email(emailSubject, emailBody)
 
-	return _successResp({"actionable": shouldBuys,
+	return _successResp({"actionable": actionableMres,
 						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD})
 
 @app.route("%s/mre/<ticker>" % constants.API_ROOT)
