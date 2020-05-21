@@ -89,7 +89,7 @@ def crunch(ticker):
 
 	# determine if crypto should be bought
 	mreNumbers = _getMRENumbers(ticker)
-	shouldBuy = mreNumbers["current_price_deviation"] >= constants.DEVIATION_THRESHOLD
+	shouldBuy = mreNumbers["current_deviation_percent"] >= constants.DEVIATION_THRESHOLD
 
 	# add alert to db if should buy
 	if shouldBuy:
@@ -173,14 +173,14 @@ def _getMRENumbers(ticker):
 	currentPrice = assistant.getPrice(ticker, "ask")
 	meanReversion = mean_reversion.MeanReversion(currentPrice, prices)
 	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
-	currentPriceDeviation = currentDeviation / standardDeviation
+	currentDeviationPercent = currentDeviation / standardDeviation
 
 	return {"lookback_days": constants.LOOKBACK_DAYS,
 			"ticker": ticker,
 			"average_price": averagePrice,
 			"standard_deviation": standardDeviation,
 			"current_price": currentPrice,
-			"current_price_deviation": currentPriceDeviation}
+			"current_deviation_percent": currentDeviationPercent}
 
 ###############################
 ##  response formatting

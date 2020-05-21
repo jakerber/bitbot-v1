@@ -3,7 +3,7 @@ import os
 
 # bitbot constants
 CONFIDENCE_DECIMALS = 10
-DEVIATION_THRESHOLD = float(os.environ.get("DEVIATION_THRESHOLD"))
+DEVIATION_THRESHOLD = float(os.environ.get("PERCENT_DEVIATION_THRESHOLD"))
 LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS"))
 MAX_CONFIDENCE = float("0." + ("9" * CONFIDENCE_DECIMALS))
 
