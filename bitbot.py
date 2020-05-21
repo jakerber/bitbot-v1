@@ -102,7 +102,6 @@ def crunch(ticker):
 						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD,
 						 "numbers": mreNumbers})
 
-
 @app.route("/mre/<ticker>")
 def meanReversion(ticker):
 	"""Average price of a cryptocurrency."""
@@ -182,10 +181,6 @@ def _getMRENumbers(ticker):
 			"lookback_days": constants.LOOKBACK_DAYS,
 			"standard_deviation": standardDeviation,
 			"ticker": ticker}
-
-
-
-
 
 ###############################
 ##  response formatting
