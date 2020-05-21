@@ -93,7 +93,7 @@ def crunch(ticker, days, deviationThreshold):
 	# determine if crypto should be bought
 	mreNumbers = _getMRENumbers(ticker, days)
 	shouldBuy = mreNumbers["current_price_deviation"] >= deviationThreshold
-	return _successResp({"should_buy": True,
+	return _successResp({"should_buy": shouldBuy,
 						 "deviation_threshold": deviationThreshold,
 						 "numbers": mreNumbers})
 
