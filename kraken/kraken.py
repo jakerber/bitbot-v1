@@ -46,6 +46,8 @@ def getAllPrices(ticker):
 
     # return crypto price
     priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
+    if priceCode not in resp["result"]:
+        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
     allPrices = resp["result"][priceCode]
     return allPrices
 
@@ -59,6 +61,8 @@ def getPrice(ticker, priceType):
     # return crypto price
     priceTypeCode = constants.KRAKEN_PRICE_TYPES[priceType]
     priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
+    if priceCode not in resp["result"]:
+        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
     price = resp["result"][priceCode][priceTypeCode][0]
     if priceType == "open":  # open price is a single value, not an array
         price = resp["result"][priceCode][priceTypeCode]
