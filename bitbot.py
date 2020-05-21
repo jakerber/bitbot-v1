@@ -2,7 +2,8 @@
 import constants
 import datetime
 import flask
-import manager
+import logger
+import assistant
 import math
 import os
 from algos import mean_reversion
@@ -15,11 +16,14 @@ app = flask.Flask(__name__)
 # initialize mongodb
 mongodb = db.BitBotDB(app)
 
+# initialize logger
+logger = logger.Logger("BitBot")
+
 @app.route("/balance")
 def accountBalance():
 	"""Get current Kraken account balance in USD."""
 	try:
-		balance = manager.getAccountBalance()
+		balance = assistant.getAccountBalance()
 	except Exception as err:
 		return _failedResp(err)
 	return _successResp({"balance": balance})
@@ -71,7 +75,7 @@ def backfillCsv(filename):
 def balance(ticker):
 	"""Get current balance of a cryptocurrency."""
 	try:
-		balance = manager.getBalance(ticker)
+		balance = assistant.getBalance(ticker)
 	except Exception as err:
 		return _failedResp(err)
 	return _successResp({"ticker": ticker, "balance": balance})
@@ -90,6 +94,7 @@ def crunch(ticker):
 	# add alert to db if should buy
 	if shouldBuy:
 		currentPrice = mreNumbers["current_price"]
+		logger.log("buy alert: %s @ %f" % (ticker, currentPrice), seperate=True)
 		newAlert = models.Alert(ticker, currentPrice, alertType="buy")
 		mongodb.insert(newAlert)
 
@@ -129,7 +134,7 @@ def snapshot(ticker):
 
 	# fetch relevant prices
 	try:
-		allPrices = manager.getAllPrices(ticker)
+		allPrices = assistant.getAllPrices(ticker)
 	except Exception as err:
 		return _failedResp(err)
 	openPrice = float(allPrices["o"])
@@ -165,7 +170,7 @@ def _getMRENumbers(ticker):
 
 	# calculate standard and current price deviations
 	prices = [entry["open"] for entry in entries]
-	currentPrice = manager.getPrice(ticker, "ask")
+	currentPrice = assistant.getPrice(ticker, "ask")
 	meanReversion = mean_reversion.MeanReversion(currentPrice, prices)
 	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
 	currentPriceDeviation = currentDeviation / standardDeviation

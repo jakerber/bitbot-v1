@@ -1,9 +1,9 @@
-"""Manager module for fetching account and cryptocurrency info."""
+"""Assistant module for fetching account and cryptocurrency info."""
 from kraken import kraken
 import constants
 import logger
 
-LOGGER = logger.Logger("Manager")
+LOGGER = logger.Logger("Assistant")
 
 def getAccountBalance():
     """Get current account balances."""

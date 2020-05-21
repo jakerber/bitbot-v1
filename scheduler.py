@@ -1,5 +1,5 @@
 """Script to call app endpoints via the Heroku scheduler."""
-import app
+import bitbot
 import sys
 
 
