@@ -1,9 +1,11 @@
 """Mean reversion algos."""
+import logger
 import math
 
 class MeanReversion:
     """Mean reversion object."""
     def __init__(self, currentPrice, pastPrices):
+        self.logger = logger.Logger("MeanReversion")
         self.currentPrice = currentPrice
         self.pastPrices = pastPrices
 
@@ -13,6 +15,8 @@ class MeanReversion:
 
     def getPriceDeviation(self):
         """Calculate standard and current price deviation."""
+        self.logger.log("calculating price deviations")
+
         # calculate average
         priceSum = 0.0
         for price in self.pastPrices:
