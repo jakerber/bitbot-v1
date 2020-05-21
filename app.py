@@ -112,7 +112,7 @@ def crunch():
 		emailBody = "This is an automated %s buy alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, ticker, currentPrice, averagePrice, ticker)
 		notifier.email(emailSubject, emailBody)
 
-	return _successResp({"should_buys": shouldBuys,
+	return _successResp({"actionable": shouldBuys,
 						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD})
 
 @app.route("%s/mre/<ticker>" % constants.API_ROOT)
@@ -148,37 +148,41 @@ def rootApi():
 	"""Root endpoint of the api."""
 	return "<h4>api root<h4>"
 
-@app.route("%s/snapshot/<ticker>" % constants.API_ROOT)
-def snapshot(ticker):
-	"""Store the price of a cryptocurrency."""
-	# ensure bitbot supports this crypto
-	if ticker not in constants.SUPPORTED_CRYPTOS:
-		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
+@app.route("%s/snapshot" % constants.API_ROOT)
+def snapshot():
+	"""Store the prices of all supported cryptocurrency."""
+	snapshots = []
+	for ticker in constants.SUPPORTED_CRYPTOS:
 
-	# ensure price snapshot doesn't already exist for today
-	currentDate = datetime.datetime.now().strftime("%Y-%m-%d")
-	queryFilter = {"date": currentDate, "ticker": ticker}
-	entry = mongodb.find("price", queryFilter)
-	if entry:
-		return _failedResp("%s price snapshot already exists for %s: %s" % (ticker, currentDate, repr(entry[0])), 400)  # 400 bad request
+		# ensure price doesn't already exist for today
+		currentDate = datetime.datetime.now().strftime("%Y-%m-%d")
+		queryFilter = {"date": currentDate, "ticker": ticker}
+		entry = mongodb.find("price", queryFilter)
+		if entry:
+			error = "%s price snapshot already exists for %s: %s" % (ticker, currentDate, repr(entry[0]))
+			snapshots.append({"ticker": ticker, "success": False, "error": error})
+			continue
 
-	# fetch relevant prices
-	try:
-		allPrices = assistant.getAllPrices(ticker)
-	except Exception as err:
-		return _failedResp(err)
-	openPrice = float(allPrices["o"])
-	highPrice = float(allPrices["h"][0])
-	lowPrice = float(allPrices["l"][0])
+		# fetch relevant prices
+		try:
+			allPrices = assistant.getAllPrices(ticker)
+		except Exception as err:
+			snapshots.append({"ticker": ticker, "success": False, "error": repr(err)})
+			continue
+		openPrice = float(allPrices["o"])
+		highPrice = float(allPrices["h"][0])
+		lowPrice = float(allPrices["l"][0])
 
-	# store relevant prices in database
-	priceModel = models.Price(ticker, openPrice, highPrice, lowPrice)
-	try:
-		mongodb.insert(priceModel)
-	except Exception as err:
-		return _failedResp(err)
+		# store relevant prices in database
+		priceModel = models.Price(ticker, openPrice, highPrice, lowPrice)
+		try:
+			mongodb.insert(priceModel)
+		except Exception as err:
+			snapshots.append({"ticker": ticker, "success": False, "error": repr(err)})
+		else:
+			snapshots.append({"ticker": ticker, "success": True, "snapshot": repr(priceModel)})
 
-	return _successResp(eval(repr(priceModel)))
+	return _successResp(snapshots)
 
 ###############################
 ##  helper functions
