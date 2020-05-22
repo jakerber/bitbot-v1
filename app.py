@@ -100,7 +100,6 @@ def crunch():
 
 	# alert of actionable mean reversions
 	for actionableMre in actionableMres:
-		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
 		mreNumbers = actionableMre["mre"]
 		ticker = actionableMre["ticker"]
 		currentPrice = mreNumbers["current_price"]
@@ -114,6 +113,7 @@ def crunch():
 		else:
 			alertType = "sell"
 			priceTarget = currentPrice - (standardDeviation * constants.PERCENT_DEVIATION_THRESHOLD * constants.PRICE_TARGET_MULTIPLIER)
+		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
 		mreNumbers["action"] = alertType
 
 		# add alert to db
