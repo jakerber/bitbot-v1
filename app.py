@@ -7,6 +7,7 @@ import assistant
 import math
 import notifier
 import os
+import simulator
 from algos import mean_reversion
 from db import db
 from db import models
@@ -91,21 +92,32 @@ def crunch():
 	actionableMres = []
 	for ticker in constants.SUPPORTED_CRYPTOS:
 		try:
-			mreNumbers = _getMRENumbers(ticker)
+			mreNumbers = getMRENumbers(ticker)
 		except Exception as err:
 			continue
 		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
-			actionableMres.append(mreNumbers)
+			actionableMres.append({"ticker": ticker, "mre": mreNumbers})
 
-	# add alert to db for all actionable MRE numbers
-	for mreNumbers in actionableMres:
-		ticker = mreNumbers["ticker"]
+	# alert of actionable mean reversions
+	for actionableMre in actionableMres:
+		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
+		mreNumbers = actionableMre["mre"]
+		ticker = actionableMre["ticker"]
 		currentPrice = mreNumbers["current_price"]
 		averagePrice = mreNumbers["average_price"]
-		alertType = "buy" if averagePrice > currentPrice else "sell"
+		standardDeviation = mreNumbers["standard_deviation"]
+
+		# set price target to half of threshold away from average
+		if averagePrice > currentPrice:
+			alertType = "buy"
+			priceTarget = currentPrice + (standardDeviation * constants.PERCENT_DEVIATION_THRESHOLD * constants.PRICE_TARGET_MULTIPLIER)
+		else:
+			alertType = "sell"
+			priceTarget = currentPrice - (standardDeviation * constants.PERCENT_DEVIATION_THRESHOLD * constants.PRICE_TARGET_MULTIPLIER)
 		mreNumbers["action"] = alertType
-		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
-		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget=averagePrice)
+
+		# add alert to db
+		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget)
 		mongodb.insert(newAlert)
 
 		# send email notification
@@ -124,7 +136,7 @@ def meanReversion(ticker):
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
 	# return mean reversion numbers
-	return _successResp(_getMRENumbers(ticker))
+	return _successResp({"ticker": ticker, "mre": getMRENumbers(ticker)})
 
 @app.route("%s/mre" % constants.API_ROOT)
 def meanReversionAll():
@@ -132,7 +144,7 @@ def meanReversionAll():
 	mreNumbers = []
 	for ticker in constants.SUPPORTED_CRYPTOS:
 		try:
-			mreNumbers.append(_getMRENumbers(ticker))
+			mreNumbers.append({"ticker": ticker, "mre": getMRENumbers(ticker)})
 		except Exception as err:
 			mreNumbers.append({"ticker": ticker, "error": repr(err)})
 
@@ -149,28 +161,35 @@ def rootApi():
 	"""Root endpoint of the api."""
 	return "<h4>api root<h4>"
 
-@app.route("%s/simulation/<days>" % constants.API_ROOT)
-def simulation(days):
+@app.route("%s/simulate" % constants.API_ROOT)
+def simulateDocs():
+	"""Display arguments for simulate API."""
+	return _successResp({"name": "BitBot simulation API documentation",
+						 "api_path": "/simulate/<days>/<lookback_days>/<percent_deviation_threshold>/<price_target_multiplier>",
+						 "parameters": {"days": "numbers of days back from today to begin the simulation",
+										"lookback_days": "number of days back to look when calculating average price each day",
+										"percent_deviation_threshold": "percentage of the standard deviation the price needs to move to trigger a trade",
+										"price_target_multiplier": "number between 0 - 1 to multiply percent_deviation_threshold by when calculating target price"}})
+
+@app.route("%s/simulate/<days>/<lookbackDays>/<deviationThreshold>/<targetMultiplier>" % constants.API_ROOT)
+def simulate(days, lookbackDays, deviationThreshold, targetMultiplier):
 	"""Run a simulation using historical price data."""
-	# # validate number of days
-	# try:
-	# 	days = int(days)
-	# 	1 / days
-	# except (ValueError, ZeroDivisionError) as err:
-	# 	return _failedResp("%s is not a valid number of days: %s" % (days, repr(err)), 400)  # 400 bad request
-	#
-	# # initialize simulation
-	# startingBalance = constants.SIM_ACCOUNT_BALANCE_USD
-	#
-	# # run simulation
-	# for day in range(days):
-	# 	numDaysAgo = days - day
-	# 	datetimeDaysAgo = datetime.datetime.now() - datetime.timedelta(days=numDaysAgo)
-	#
-	# 	# analyze mean reversion for all tickers
-	# 	for ticker in constants.SUPPORTED_CRYPTOS:
-	# 		mreNumbers = _getMRENumbers(ticker, now=datetimeDaysAgo)
-	return _failedResp("simulator is WIP")
+	# validate inputs
+	try:
+		days = int(days)
+		lookbackDays = int(lookbackDays)
+		deviationThreshold = float(deviationThreshold)
+		targetMultiplier = float(targetMultiplier)
+		1 / days
+		1 / lookbackDays
+		1 / deviationThreshold
+		1 / targetMultiplier
+	except (ValueError, ZeroDivisionError) as err:
+		return _failedResp("input invalid: %s" % repr(err), 400)  # 400 bad request
+
+	# initialize and run simulation
+	startingDatetime = datetime.datetime.now() - datetime.timedelta(days=days)
+	return _successResp(simulator.Simulator(startingDatetime, lookbackDays, deviationThreshold, targetMultiplier).run())
 
 @app.route("%s/snapshot" % constants.API_ROOT)
 def snapshot():
@@ -212,7 +231,7 @@ def snapshot():
 ##  helper functions
 ###############################
 
-def _getMRENumbers(ticker, now=None):
+def getMRENumbers(ticker, now=None):
 	"""Get mean reversion numbers (standard deviation, etc.)."""
 	# collect dates from past number of days
 	dates = []
@@ -226,20 +245,10 @@ def _getMRENumbers(ticker, now=None):
 	queryFilter = {"date": {"$in": dates}, "ticker": ticker}
 	entries = mongodb.find("price", queryFilter)
 
-	# calculate standard and current price deviations
+	# calculate and return price deviations
 	prices = [entry["open"] for entry in entries]
 	currentPrice = assistant.getPrice(ticker, "ask")
-	meanReversion = mean_reversion.MeanReversion(currentPrice, prices)
-	averagePrice, standardDeviation, currentDeviation = meanReversion.getPriceDeviation()
-	currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
-
-	return {"average_price": averagePrice,
-			"current_deviation": currentDeviation,
-			"current_percent_deviation": currentPercentDeviation,
-			"current_price": currentPrice,
-			"lookback_days": constants.LOOKBACK_DAYS,
-			"standard_deviation": standardDeviation,
-			"ticker": ticker}
+	return mean_reversion.MeanReversion(currentPrice, prices).calculate()
 
 ###############################
 ##  response formatting
@@ -257,4 +266,4 @@ def _successResp(resp):
 
 
 if __name__ == "__main__":
-	app.run()
+	app.run(debug=True)

@@ -17,11 +17,11 @@ class Alert(BitBotModel):
     """Model for the alert collection."""
     collectionName = "alert"
 
-    def __init__(self, ticker, price, alertType, priceTarget=None):
+    def __init__(self, ticker, price, alertType, priceTarget):
         self.ticker = ticker
         self.price = price
         self.type = alertType
-        self.priceTarget = priceTarget or self.price
+        self.priceTarget = priceTarget
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
         self.time = datetime.datetime.now().strftime("%H:%M:%S.%f")
 
@@ -36,3 +36,16 @@ class Price(BitBotModel):
         self.high = highPrice
         self.low = lowPrice
         self.date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+
+class Trade(BitBotModel):
+    """Model for the trade collection."""
+
+    def __init__(self, ticker, quantity, price, tradeType, priceTarget):
+        self.ticker = ticker
+        self.quantity = quantity
+        self.price = price
+        self.tradeType = tradeType
+        self.priceTarget = priceTarget
+        self.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.time = datetime.datetime.now().strftime("%H:%M:%S.%f")

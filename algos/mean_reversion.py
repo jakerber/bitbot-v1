@@ -1,12 +1,22 @@
 """Mean reversion algos."""
-import logger
+import constants
 import math
+
+
+class PriceDeviation:
+    """Price Deviation object."""
+    def __init__(self, averagePrice, currentDeviation, currentPercentDeviation, currentPrice, standardDeviation):
+        self.average_price = averagePrice
+        self.current_deviation = currentDeviation
+        self.current_percent_deviation = currentPercentDeviation
+        self.current_price = currentPrice
+        self.lookback_days = constants.LOOKBACK_DAYS
+        self.standard_deviation = standardDeviation
 
 
 class MeanReversion:
     """Mean reversion object."""
     def __init__(self, currentPrice, pastPrices):
-        self.logger = logger.Logger("MeanReversion")
         self.currentPrice = currentPrice
         self.pastPrices = pastPrices
 
@@ -14,23 +24,22 @@ class MeanReversion:
         if not self.pastPrices:
             raise RuntimeError("price history is empty")
 
-    def getPriceDeviation(self):
+    def calculate(self):
         """Calculate standard and current price deviation."""
-        self.logger.log("calculating price deviations")
-
         # calculate average
         priceSum = 0.0
         for price in self.pastPrices:
             priceSum += price
         averagePrice = priceSum / len(self.pastPrices)
 
-        # calculate deviation
+        # calculate price deviations
         deviationsSquaredSum = 0.0
         for price in self.pastPrices:
             deviation = abs(price - averagePrice)
             deviationsSquaredSum += deviation ** 2
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.pastPrices))
 
-        # return average price and deviations
+        # return price deviations
         currentDeviation = abs(self.currentPrice - averagePrice)
-        return averagePrice, standardDeviation, currentDeviation
+        currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
+        return PriceDeviation(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation).__dict__
