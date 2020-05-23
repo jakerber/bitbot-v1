@@ -80,10 +80,10 @@ class Simulator:
                     standardDeviation = mreNumbers["standard_deviation"]
                     if price < averagePrice:
                         tradeType = "buy"
-                        priceTarget = price + (standardDeviation * self.percentDeviationThreshold * self.priceTargetMultiplier)
+                        priceTarget = price + (standardDeviation * self.priceTargetMultiplier)
                     else:
                         tradeType = "sell"
-                        priceTarget = price - (standardDeviation * self.percentDeviationThreshold * self.priceTargetMultiplier)
+                        priceTarget = price - (standardDeviation * self.priceTargetMultiplier)
                     quantity = constants.BASE_BUY_USD / price
                     self.trade(ticker, quantity, price, tradeType, priceTarget=priceTarget)
 

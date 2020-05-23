@@ -109,10 +109,10 @@ def crunch():
 		# set price target to half of threshold away from average
 		if averagePrice > currentPrice:
 			alertType = "buy"
-			priceTarget = currentPrice + (standardDeviation * constants.PERCENT_DEVIATION_THRESHOLD * constants.PRICE_TARGET_MULTIPLIER)
+			priceTarget = currentPrice + (standardDeviation * constants.PRICE_TARGET_MULTIPLIER)
 		else:
 			alertType = "sell"
-			priceTarget = currentPrice - (standardDeviation * constants.PERCENT_DEVIATION_THRESHOLD * constants.PRICE_TARGET_MULTIPLIER)
+			priceTarget = currentPrice - (standardDeviation * constants.PRICE_TARGET_MULTIPLIER)
 		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
 		mreNumbers["action"] = alertType
 		mreNumbers["target_price"] = priceTarget
@@ -170,7 +170,7 @@ def simulateDocs():
 						 "parameters": {"days": "numbers of days back from today to begin the simulation",
 										"lookback_days": "number of days back to look when calculating average price each day",
 										"percent_deviation_threshold": "percentage of the standard deviation the price needs to move to trigger a trade",
-										"price_target_multiplier": "number between 0 - 1 to multiply percent_deviation_threshold by when calculating target price"}})
+										"price_target_multiplier": "number to multiply standard deviation by when calculating target price"}})
 
 @app.route("%s/simulate/<days>/<lookbackDays>/<deviationThreshold>/<targetMultiplier>" % constants.API_ROOT)
 def simulate(days, lookbackDays, deviationThreshold, targetMultiplier):
