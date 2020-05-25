@@ -37,7 +37,7 @@ KRAKEN_PRICE_TYPES = {"ask": "a",
                       "open": "o"}
 
 # simulation constants
-SIM_ACCOUNT_BALANCE_USD = 1000.0
+SIM_ACCOUNT_BALANCE_USD = 10000.0
 
 # bitbot constants
 BASE_BUY_USD = float(os.environ.get("BASE_BUY_USD"))
