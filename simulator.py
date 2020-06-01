@@ -11,7 +11,7 @@ from db import models
 class SimulationResult:
     """Simulation result object."""
     def __init__(self, startingDate, startingBalanceUsd, endingBalanceUsd, profit, tradesExecuted,
-                 balances, marginUsed, lookbackDays, deviationThreshold, targetMultiplier):
+                 balances, marginUsed, lookbackDays, deviationThreshold):
         self.starting_date = str(startingDate)
         self.starting_balance_usd = startingBalanceUsd
         self.ending_balance_usd = endingBalanceUsd
@@ -21,13 +21,12 @@ class SimulationResult:
         self.margin_used = marginUsed
         self.lookback_days = lookbackDays
         self.percent_deviation_threshold = deviationThreshold
-        self.price_target_multiplier = targetMultiplier
         self.base_buy_usd = constants.BASE_BUY_USD
 
 
 class Simulator:
     """Trade simulator object."""
-    def __init__(self, startingDatetime, lookbackDays, deviationThreshold, targetMultiplier):
+    def __init__(self, startingDatetime, lookbackDays, deviationThreshold):
         self.logger = logger.Logger("Simulator")
 
         # provided arguments
@@ -39,7 +38,6 @@ class Simulator:
         self.mongodb = app.mongodb
         self.startingBalanceUsd = constants.SIM_ACCOUNT_BALANCE_USD
         self.endingDatetime = datetime.datetime.now()
-        self.priceTargetMultiplier = targetMultiplier
 
         # dynamic properties
         self.balances = {"USD": self.startingBalanceUsd}
@@ -80,31 +78,10 @@ class Simulator:
                     standardDeviation = mreNumbers["standard_deviation"]
                     if price < averagePrice:
                         tradeType = "buy"
-                        priceTarget = price + (standardDeviation * self.priceTargetMultiplier)
                     else:
                         tradeType = "sell"
-                        priceTarget = price - (standardDeviation * self.priceTargetMultiplier)
                     quantity = constants.BASE_BUY_USD / price
-                    self.trade(ticker, quantity, price, tradeType, priceTarget=priceTarget)
-
-                # determine if limits have been met on any pending trades
-                for pendingTrade in [trade for trade in self.tradesExecuted[ticker] if not trade["limit_met"]]:
-                    if pendingTrade["trade"]["tradeType"] == "buy":
-                        priceType = "bid"
-                        newTradeType = "sell"
-                        limitMet = lambda price: price >= pendingTrade["trade"]["priceTarget"]
-                    else:
-                        priceType = "ask"
-                        newTradeType = "buy"
-                        limitMet = lambda price: price <= pendingTrade["trade"]["priceTarget"]
-
-                    # execute follow-up trade if price target is met
-                    pendingTradeTicker = pendingTrade["trade"]["ticker"]
-                    currentPrice = self._getCurrentPriceFromHistory(pendingTradeTicker)
-                    if limitMet(currentPrice):
-                        pendingTradeQuantity = pendingTrade["trade"]["quantity"]
-                        self.trade(pendingTradeTicker, pendingTradeQuantity, currentPrice, newTradeType)
-                        pendingTrade["limit_met"] = True
+                    self.trade(ticker, quantity, price, tradeType, priceTarget=averagePrice)
 
             # proceed to next day
             self.currentDatetime += datetime.timedelta(days=1)
@@ -119,14 +96,11 @@ class Simulator:
                                 self.balances,
                                 self.marginUsed,
                                 self.lookbackDays,
-                                self.percentDeviationThreshold,
-                                self.priceTargetMultiplier).__dict__
+                                self.percentDeviationThreshold).__dict__
 
-    def trade(self, ticker, quantity, price, tradeType, priceTarget=None):
+    def trade(self, ticker, quantity, price, tradeType, priceTarget):
         """Simulate a trade."""
-        logMessage = "%sing %f %s @ $%f" % (tradeType, quantity, ticker, price)
-        if priceTarget:
-            logMessage += ", target=$%f" % priceTarget
+        logMessage = "%sing %f %s @ $%f, target=$%f" % (tradeType, quantity, ticker, price, priceTarget)
         self.logger.log(logMessage)
 
         # instantiate trade
@@ -151,8 +125,7 @@ class Simulator:
                 self.balances[ticker] -= quantity
 
         # store executed trade
-        limitMet = priceTarget is None
-        self.tradesExecuted[ticker].append({"trade": newTrade.__dict__, "limit_met": limitMet})
+        self.tradesExecuted[ticker].append(newTrade.__dict__)
 
     def _calculateBalanceUSD(self):
         """Calculate current account balance in USD given all cryptocurrency balances."""

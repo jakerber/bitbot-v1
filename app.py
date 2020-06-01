@@ -106,24 +106,21 @@ def crunch():
 		averagePrice = mreNumbers["average_price"]
 		standardDeviation = mreNumbers["standard_deviation"]
 
-		# set price target to half of threshold away from average
+		# determine if buy or sell
 		if averagePrice > currentPrice:
 			alertType = "buy"
-			priceTarget = currentPrice + (standardDeviation * constants.PRICE_TARGET_MULTIPLIER)
 		else:
 			alertType = "sell"
-			priceTarget = currentPrice - (standardDeviation * constants.PRICE_TARGET_MULTIPLIER)
 		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
 		mreNumbers["action"] = alertType
-		mreNumbers["target_price"] = priceTarget
 
 		# add alert to db
-		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget)
+		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget=averagePrice)
 		mongodb.insert(newAlert)
 
 		# send email notification
 		emailSubject = "%s %s alert!" % (ticker, alertType)
-		emailBody = "This is an automated %s %s alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, alertType, ticker, currentPrice, priceTarget, ticker)
+		emailBody = "This is an automated %s %s alert. %s is currently priced at $%f with a price target of $%f. Please visit https://bit-bot-ai.herokuapp.com/api/mre/%s or check alerts in the BitBot database for more info." % (ticker, alertType, ticker, currentPrice, averagePrice, ticker)
 		notifier.email(emailSubject, emailBody)
 
 	return _successResp({"actionable": actionableMres,
@@ -166,31 +163,28 @@ def rootApi():
 def simulateDocs():
 	"""Display arguments for simulate API."""
 	return _successResp({"name": "BitBot simulation API documentation",
-						 "api_path": "/simulate/<days>/<lookback_days>/<percent_deviation_threshold>/<price_target_multiplier>",
+						 "api_path": "/simulate/<days>/<lookback_days>/<percent_deviation_threshold>",
 						 "parameters": {"days": "numbers of days back from today to begin the simulation",
 										"lookback_days": "number of days back to look when calculating average price each day",
-										"percent_deviation_threshold": "percentage of the standard deviation the price needs to move to trigger a trade",
-										"price_target_multiplier": "number to multiply standard deviation by when calculating target price"}})
+										"percent_deviation_threshold": "percentage of the standard deviation the price needs to move to trigger a trade"}})
 
-@app.route("%s/simulate/<days>/<lookbackDays>/<deviationThreshold>/<targetMultiplier>" % constants.API_ROOT)
-def simulate(days, lookbackDays, deviationThreshold, targetMultiplier):
+@app.route("%s/simulate/<days>/<lookbackDays>/<deviationThreshold>" % constants.API_ROOT)
+def simulate(days, lookbackDays, deviationThreshold):
 	"""Run a simulation using historical price data."""
 	# validate inputs
 	try:
 		days = int(days)
 		lookbackDays = int(lookbackDays)
 		deviationThreshold = float(deviationThreshold)
-		targetMultiplier = float(targetMultiplier)
 		1 / days
 		1 / lookbackDays
 		1 / deviationThreshold
-		1 / targetMultiplier
 	except (ValueError, ZeroDivisionError) as err:
 		return _failedResp("input invalid: %s" % repr(err), 400)  # 400 bad request
 
 	# initialize and run simulation
 	startingDatetime = datetime.datetime.now() - datetime.timedelta(days=days)
-	return _successResp(simulator.Simulator(startingDatetime, lookbackDays, deviationThreshold, targetMultiplier).run())
+	return _successResp(simulator.Simulator(startingDatetime, lookbackDays, deviationThreshold).run())
 
 @app.route("%s/snapshot" % constants.API_ROOT)
 def snapshot():
