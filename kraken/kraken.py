@@ -6,7 +6,7 @@ kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 def buy(ticker, amount):
     """Buy a cryptocurrency."""
-    raise NotImplementedError  # returns sell price
+    raise NotImplementedError
 
 def getAccountBalance():
     """Get all account balances."""
@@ -70,7 +70,7 @@ def getPrice(ticker, priceType):
 
 def sell(ticker, amount):
     """Sell a cryptocurrency."""
-    raise NotImplementedError  # returns sell price
+    raise NotImplementedError
 
 def _executeRequest(api, requestName, requestData={}):
     """Execute a request to the Kraken API."""
