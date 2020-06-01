@@ -24,6 +24,10 @@ logger = logger.Logger("BitBot")
 # initialize notifier
 notifier = notifier.Notifier()
 
+#################################
+##  Public APIs
+#################################
+
 @app.route("%s/balance" % constants.API_ROOT)
 def accountBalance():
 	"""Get current Kraken account balance in USD."""
@@ -85,42 +89,6 @@ def balance(ticker):
 		return _failedResp(err)
 	return _successResp({"ticker": ticker, "balance": balance})
 
-@app.route("%s/crunch" % constants.API_ROOT)
-def crunch():
-	"""Crunch numbers to decide if cryptocurrency should be bought."""
-	# determine which cryptos should be bought
-	actionableMres = []
-	for ticker in constants.SUPPORTED_CRYPTOS:
-		try:
-			mreNumbers = getMRENumbers(ticker)
-		except Exception as err:
-			continue
-		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
-			actionableMres.append({"ticker": ticker, "mre": mreNumbers})
-
-	# alert of actionable mean reversions
-	for actionableMre in actionableMres:
-		mreNumbers = actionableMre["mre"]
-		ticker = actionableMre["ticker"]
-		currentPrice = mreNumbers["current_price"]
-		averagePrice = mreNumbers["average_price"]
-		standardDeviation = mreNumbers["standard_deviation"]
-
-		# determine if buy or sell
-		if averagePrice > currentPrice:
-			alertType = "buy"
-		else:
-			alertType = "sell"
-		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
-		mreNumbers["action"] = alertType
-
-		# add alert to db
-		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget=averagePrice)
-		mongodb.insert(newAlert)
-
-	return _successResp({"actionable": actionableMres,
-						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD})
-
 @app.route("%s/mre/<ticker>" % constants.API_ROOT)
 def meanReversion(ticker):
 	"""Get mean reversion data for a cryptocurrency."""
@@ -181,7 +149,45 @@ def simulate(days, lookbackDays, deviationThreshold):
 	startingDatetime = datetime.datetime.now() - datetime.timedelta(days=days)
 	return _successResp(simulator.Simulator(startingDatetime, lookbackDays, deviationThreshold).run())
 
-@app.route("%s/snapshot" % constants.API_ROOT)
+#################################
+##  Private APIs
+#################################
+
+def crunch():
+	"""Crunch numbers to decide if cryptocurrency should be bought."""
+	# determine which cryptos should be bought
+	actionableMres = []
+	for ticker in constants.SUPPORTED_CRYPTOS:
+		try:
+			mreNumbers = getMRENumbers(ticker)
+		except Exception as err:
+			continue
+		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
+			actionableMres.append({"ticker": ticker, "mre": mreNumbers})
+
+	# alert of actionable mean reversions
+	for actionableMre in actionableMres:
+		mreNumbers = actionableMre["mre"]
+		ticker = actionableMre["ticker"]
+		currentPrice = mreNumbers["current_price"]
+		averagePrice = mreNumbers["average_price"]
+		standardDeviation = mreNumbers["standard_deviation"]
+
+		# determine if buy or sell
+		if averagePrice > currentPrice:
+			alertType = "buy"
+		else:
+			alertType = "sell"
+		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
+		mreNumbers["action"] = alertType
+
+		# add alert to db
+		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget=averagePrice)
+		mongodb.insert(newAlert)
+
+	return _successResp({"actionable": actionableMres,
+						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD})
+
 def snapshot():
 	"""Store the prices of all supported cryptocurrency."""
 	snapshots = []
@@ -218,7 +224,7 @@ def snapshot():
 	return _successResp(snapshots)
 
 ###############################
-##  helper functions
+##  Helper functions
 ###############################
 
 def getMRENumbers(ticker, now=None):
@@ -241,7 +247,7 @@ def getMRENumbers(ticker, now=None):
 	return mean_reversion.MeanReversion(currentPrice, prices).calculate()
 
 ###############################
-##  response formatting
+##  Response formatting
 ###############################
 
 def _failedResp(error, statusCode=500):  # 500 internal server error
