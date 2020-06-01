@@ -40,6 +40,7 @@ class Price(BitBotModel):
 
 class Trade(BitBotModel):
     """Model for the trade collection."""
+    collectionName = "trade"
 
     def __init__(self, ticker, quantity, price, tradeType, priceTarget):
         self.ticker = ticker
