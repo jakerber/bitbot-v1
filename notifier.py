@@ -14,7 +14,7 @@ class Notifier:
 
     def email(self, subject, body):
         """Send an email notification."""
-        self.logger.log("sending alert via email to %s: %s" % (constants.MY_EMAIL, subject))
+        self.logger.log("sending notification via email to %s: %s" % (constants.MY_EMAIL, subject))
         resp = requests.post(constants.MAILGUN_API_URL + "/messages",
                              auth=("api", constants.MAILGUN_API_KEY),
                              data={"from": "BitBot Notifier <bitbotnotifier@%s>" % constants.MAILGUN_DOMAIN,
