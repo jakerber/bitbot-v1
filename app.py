@@ -89,28 +89,28 @@ def balance(ticker):
 		return _failedResp(err)
 	return _successResp({"ticker": ticker, "balance": balance})
 
-@app.route("%s/mre/<ticker>" % constants.API_ROOT)
-def meanReversion(ticker):
-	"""Get mean reversion data for a cryptocurrency."""
+@app.route("%s/analyze/<ticker>" % constants.API_ROOT)
+def analyze(ticker):
+	"""Analyze the price deviations of a cryptocurrency."""
 	# ensure bitbot supports this crypto
 	if ticker not in constants.SUPPORTED_CRYPTOS:
 		return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
 
-	# return mean reversion numbers
-	return _successResp({"ticker": ticker, "mre": getMRENumbers(ticker)})
+	# return price deviation analysis
+	return _successResp({"ticker": ticker, "analysis": getMeanReversionAnalysis(ticker).__dict__})
 
-@app.route("%s/mre" % constants.API_ROOT)
-def meanReversionAll():
-	"""Get mean reversion data for all supported cryptocurrencies."""
-	mreNumbers = []
+@app.route("%s/analyze" % constants.API_ROOT)
+def analyzeAll():
+	"""Analyze the price deviations of all supported cryptocurrencies."""
+	analysis = []
 	for ticker in constants.SUPPORTED_CRYPTOS:
 		try:
-			mreNumbers.append({"ticker": ticker, "mre": getMRENumbers(ticker)})
+			analysis.append({"ticker": ticker, "analysis": getMeanReversionAnalysis(ticker).__dict__})
 		except Exception as err:
-			mreNumbers.append({"ticker": ticker, "error": repr(err)})
+			analysis.append({"ticker": ticker, "error": repr(err)})
 
-	# return all mean reversion numbers
-	return _successResp(mreNumbers)
+	# return price deviation analysis
+	return _successResp(analysis)
 
 @app.route("/")
 def root():
@@ -127,19 +127,19 @@ def rootApi():
 #################################
 
 def trade():
-	"""Crunch numbers to decide if cryptocurrency should be traded."""
-	# calculate mean reversion for all supported cryptos
+	"""Trade cryptocurrency to achieve profit."""
+	# analyze price deviation from the mean for all supported cryptos
 	ordersExecuted = {}
 	for ticker in constants.SUPPORTED_CRYPTOS:
 		try:
-			mreNumbers = getMRENumbers(ticker)
+			analysis = getMeanReversionAnalysis(ticker)
 		except Exception as err:
 			continue
 
 		# trade if price deviation thresholds are met
-		if shouldTrade(mreNumbers["current_percent_deviation"]):
-			currentPrice = mreNumbers["current_price"]
-			averagePrice = mreNumbers["average_price"]
+		if shouldTrade(analysis.current_percent_deviation):
+			currentPrice = analysis.current_price
+			averagePrice = analysis.average_price
 			tradeAmount = constants.BASE_BUY_USD / currentPrice
 			if averagePrice > currentPrice:
 				tradeFunc = assistant.buy
@@ -216,8 +216,8 @@ def snapshotPrices():
 ##  Helper functions
 ###############################
 
-def getMRENumbers(ticker):
-	"""Get mean reversion numbers (standard deviation, etc.)."""
+def getMeanReversionAnalysis(ticker):
+	"""Get mean reversion analysis (standard deviation, etc.)."""
 	# collect dates from past number of days
 	dates = []
 	now = datetime.datetime.now()
@@ -233,7 +233,7 @@ def getMRENumbers(ticker):
 	# calculate and return price deviations
 	prices = [entry["open"] for entry in entries]
 	currentPrice = assistant.getPrice(ticker, "ask")
-	return mean_reversion.MeanReversion(currentPrice, prices).calculate()
+	return mean_reversion.MeanReversion(currentPrice, prices).analyze()
 
 def shouldTrade(currentPercentDeviation):
 	"""Determine if a cryptocurrency should be traded."""

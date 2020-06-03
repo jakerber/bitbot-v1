@@ -24,8 +24,8 @@ class MeanReversion:
         if not self.pastPrices:
             raise RuntimeError("price history is empty")
 
-    def calculate(self):
-        """Calculate standard and current price deviation."""
+    def analyze(self):
+        """Analyze the current price deviation from the mean."""
         # calculate averages and sum the deviations squared
         priceSum = 0.0
         movingAverage = 0.0
@@ -43,4 +43,4 @@ class MeanReversion:
         # return price deviations
         currentDeviation = abs(self.currentPrice - averagePrice)
         currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
-        return PriceDeviation(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation).__dict__
+        return PriceDeviation(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation)
