@@ -138,13 +138,16 @@ def trade():
 
 		# trade if price deviation thresholds are met
 		if shouldTrade(analysis.current_percent_deviation):
-			tradeAmount = constants.BASE_BUY_USD / analysis.current_price
 			if analysis.average_price > analysis.current_price:
 				tradeFunc = assistant.buy
 				priceTarget = analysis.current_price + analysis.standard_deviation
 			else:
 				tradeFunc = assistant.short
 				priceTarget = analysis.current_price - analysis.standard_deviation
+
+			# determine amount to trade
+			tradeAmountUSD = getTradeAmountUSD(analysis.current_percent_deviation)
+			tradeAmount = tradeAmountUSD / analysis.current_price
 
 			# safetly execute trade
 			try:
@@ -210,6 +213,13 @@ def snapshotPrices():
 ###############################
 ##  Helper functions
 ###############################
+
+def getTradeAmountUSD(currentPercentDeviation):
+	"""Determine how much of the cryptocurrency should be traded."""
+	maxDeviationAboveMin = constants.PERCENT_DEVIATION_THRESHOLD_MAX - constants.PERCENT_DEVIATION_THRESHOLD_MIN
+	currentDeviationAboveMin = currentPercentDeviation - constants.PERCENT_DEVIATION_THRESHOLD_MIN
+	multiplier = min(currentDeviationAboveMin / maxDeviationAboveMin, 1.0)
+	return constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
 
 def getMeanReversionAnalysis(ticker):
 	"""Get mean reversion analysis (standard deviation, etc.)."""
