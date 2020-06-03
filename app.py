@@ -236,7 +236,8 @@ def getMeanReversionAnalysis(ticker):
 
 	# fetch prices on dates
 	queryFilter = {"date": {"$in": dates}, "ticker": ticker}
-	entries = mongodb.find("price", queryFilter)
+	querySort = ("date", constants.MONGODB_SORT_ASC)
+	entries = mongodb.find("price", filter=queryFilter, sort=querySort)
 
 	# calculate and return price deviations
 	prices = [entry["open"] for entry in entries]

@@ -25,6 +25,8 @@ class BitBotDB:
         self.mongo.db[models[0].collectionName].insert([model.__dict__ for model in models])
         self.logger.log("inserted %s entries into %s collection" % (len(models), models[0].collectionName))
 
-    def find(self, collectionName, filter={}):
+    def find(self, collectionName, filter={}, sort=()):
         """Find an entry based on a data point."""
+        if sort:
+            return list(self.mongo.db[collectionName].find(filter).sort(*sort))
         return list(self.mongo.db[collectionName].find(filter))
