@@ -57,7 +57,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 
 def buy(ticker, amount, priceLimit, priceTarget):
     """Buy a cryptocurrency."""
-    logger.log("buying %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget))
+    logger.log("buying %f of %s @ price $%f (target $%f)" % (amount, ticker, priceLimit, priceTarget))
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceTarget < priceLimit:
@@ -66,7 +66,7 @@ def buy(ticker, amount, priceLimit, priceTarget):
 
 def short(ticker, amount, priceLimit, priceTarget):
     """Short a cryptocurrency."""
-    logger.log("shorting %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget))
+    logger.log("shorting %f of %s @ price $%f (target $%f)" % (amount, ticker, priceLimit, priceTarget))
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceTarget > priceLimit:
