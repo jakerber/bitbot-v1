@@ -15,6 +15,8 @@ class Notifier:
     def email(self, subject, body):
         """Send an email notification."""
         self.logger.log("sending notification via email to %s: %s" % (constants.MY_EMAIL, subject))
+
+        # request email notification via mailgun API
         resp = requests.post(constants.MAILGUN_API_URL + "/messages",
                              auth=("api", constants.MAILGUN_API_KEY),
                              data={"from": "BitBot Notifier <bitbotnotifier@%s>" % constants.MAILGUN_DOMAIN,
@@ -22,10 +24,14 @@ class Notifier:
                                    "subject": subject,
                                    "text": body})
 
-        # log failures, if any
-        if resp.status_code != 200:
-            try:
-                errorMessage = resp.json()["message"]
-            except Exception:
-                errorMessage = "error unknown"
-            self.logger.log("unable to send email notification: %s" % errorMessage)
+        # log success
+        if resp.status_code == 200:
+            self.logger.log("email notification sent successfully")
+            return
+
+        # log failure, if any
+        try:
+            errorMessage = resp.json()["message"]
+        except Exception:
+            errorMessage = "error unknown"
+        self.logger.log("unable to send email notification: %s" % errorMessage)

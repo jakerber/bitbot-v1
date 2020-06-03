@@ -17,13 +17,13 @@ class BitBotDB:
 
     def insert(self, model):
         """Insert single entry into a collection."""
-        self.logger.log("inserting 1 entry into %s collection" % model.collectionName)
         self.mongo.db[model.collectionName].insert_one(model.__dict__)
+        self.logger.log("inserted 1 entry into %s collection" % model.collectionName)
 
     def insertMany(self, models):
         """Insert many entries into a collection."""
-        self.logger.log("inserting %s models into %s collection" % (len(models), models[0].collectionName))
         self.mongo.db[models[0].collectionName].insert([model.__dict__ for model in models])
+        self.logger.log("inserted %s entries into %s collection" % (len(models), models[0].collectionName))
 
     def find(self, collectionName, filter={}):
         """Find an entry based on a data point."""
