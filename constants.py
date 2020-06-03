@@ -12,6 +12,7 @@ MAILGUN_API_URL = "https://api.mailgun.net/v3/%s" % MAILGUN_DOMAIN
 
 # database operations
 MONGODB_NAME = "bitbot"
+MONGODB_EXCLUDE_PROPS = ["id", "_id"]
 MONGODB_URI = os.environ.get("MONGODB_URI")
 MONGODB_URI_DEV = "mongodb://127.0.0.1:27017/%s" % MONGODB_NAME
 if not MONGODB_URI:

@@ -2,6 +2,7 @@
 import constants
 import datetime
 import flask
+import json
 import logger
 import assistant
 import math
@@ -32,7 +33,7 @@ notifier = notifier.Notifier()
 def accountBalance():
 	"""Get current Kraken account balance in USD."""
 	try:
-		balance = assistant.getAccountBalance()
+		balance = assistant.getAccountBalances()
 	except Exception as err:
 		return _failedResp(err)
 	return _successResp({"balance": balance})
@@ -153,7 +154,7 @@ def simulate(days, lookbackDays, deviationThreshold):
 ##  Private APIs
 #################################
 
-def crunch():
+def trade():
 	"""Crunch numbers to decide if cryptocurrency should be bought."""
 	# determine which cryptos should be bought
 	actionableMres = []
@@ -188,7 +189,32 @@ def crunch():
 	return _successResp({"actionable": actionableMres,
 						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD})
 
-def snapshot():
+def sendDailySummary():
+	"""Sends a daily activity summary email."""
+	accountBalances = assistant.getAccountBalances()
+	accountValue = assistant.getAccountValue()
+
+	# fetch trades that were executed today
+	datetimeDayAgo = datetime.datetime.now() - datetime.timedelta(days=1)
+	tradesExecuted = assistant.getTradeHistory(startDatetime=datetimeDayAgo)
+
+	# only send summary email if trades were executed today
+	if not tradesExecuted:
+		return
+
+	# construct daily summary
+	dailySummary = {"balances": accountBalances,
+					"total value": accountValue,
+					"trades executed": tradesExecuted}
+
+	# notify via email
+	emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
+	emailBody = json.dumps(dailySummary, indent=4)
+	notifier.email(emailSubject, emailBody)
+
+	return dailySummary
+
+def snapshotPrices():
 	"""Store the prices of all supported cryptocurrency."""
 	snapshots = []
 	for ticker in constants.SUPPORTED_CRYPTOS:

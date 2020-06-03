@@ -5,10 +5,15 @@ import logger
 
 LOGGER = logger.Logger("Assistant")
 
-def getAccountBalance():
+def getAccountBalances():
     """Get current account balances."""
     LOGGER.log("fetching account balance")
-    return kraken.getAccountBalance()
+    return kraken.getAccountBalances()
+
+def getAccountValue():
+    """Get current value of account in USD."""
+    LOGGER.log("fetching account value")
+    return kraken.getAccountValue()
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
@@ -32,6 +37,11 @@ def getPrice(ticker, priceType):
     if priceType not in constants.KRAKEN_PRICE_TYPES:
         raise RuntimeError("price type not supported: %s" % priceType)
     return kraken.getPrice(ticker, priceType)
+
+def getTradeHistory(startDatetime=None, endDatetime=None):
+    """Get trade history."""
+    LOGGER.log("fetching trade history (%s -> %s)" % (startDatetime, endDatetime))
+    return kraken.getTradeHistory(startDatetime, endDatetime)
 
 def buy(ticker, amount):
     """Buy a cryptocurrency."""

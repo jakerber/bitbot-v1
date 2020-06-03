@@ -8,19 +8,25 @@ def buy(ticker, amount):
     """Buy a cryptocurrency."""
     raise NotImplementedError
 
-def getAccountBalance():
+def getAccountBalances():
     """Get all account balances."""
     resp = _executeRequest(kraken.query_private, "Balance")
-    balance = resp["result"]
-    return balance
+    for balance in resp["result"]:
+        resp["result"][balance] = float(resp["result"][balance])
+    return resp["result"]
+
+def getAccountValue():
+    """Get total value of account in USD."""
+    resp = _executeRequest(kraken.query_private, "TradeBalance")
+    return float(resp["result"]["tb"])
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
-    balances = getAccountBalance()
+    balances = getAccountBalances()
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
     if priceBalanceKey in balances:
-        return float(balances[priceBalanceKey])
+        return balances[priceBalanceKey]
     return 0.0
 
 def getAllPrices(ticker):
@@ -67,6 +73,16 @@ def getPrice(ticker, priceType):
     if priceType == "open":  # open price is a single value, not an array
         price = resp["result"][priceCode][priceTypeCode]
     return float(price)
+
+def getTradeHistory(startDatetime=None, endDatetime=None):
+    """Get trade history for this account."""
+    requestData = {}
+    if startDatetime:
+        requestData["start"] = startDatetime.timestamp()
+    if endDatetime:
+        requestData["end"] = endDatetime.timestamp()
+    resp = _executeRequest(kraken.query_private, "TradesHistory", requestData=requestData)
+    return resp["result"]
 
 def sell(ticker, amount):
     """Sell a cryptocurrency."""
