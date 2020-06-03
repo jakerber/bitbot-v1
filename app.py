@@ -138,17 +138,17 @@ def trade():
 
 		# trade if price deviation thresholds are met
 		if shouldTrade(analysis.current_percent_deviation):
-			currentPrice = analysis.current_price
-			averagePrice = analysis.average_price
-			tradeAmount = constants.BASE_BUY_USD / currentPrice
-			if averagePrice > currentPrice:
+			tradeAmount = constants.BASE_BUY_USD / analysis.current_price
+			if analysis.average_price > analysis.current_price:
 				tradeFunc = assistant.buy
+				priceTarget = analysis.current_price + analysis.standard_deviation
 			else:
 				tradeFunc = assistant.short
+				priceTarget = analysis.current_price - analysis.standard_deviation
 
 			# safetly execute trade
 			try:
-				orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=currentPrice, priceTarget=averagePrice)
+				orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=analysis.current_price, priceTarget=priceTarget)
 				logger.log(orderDescription)
 				logger.log("trade successfully executed", moneyExchanged=True)
 			except Exception as err:
