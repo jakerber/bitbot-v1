@@ -167,12 +167,13 @@ def trade():
 		# trade if standard deviation threshold is met
 		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
 			currentPrice = mreNumbers["current_price"]
-			if mreNumbers["average_price"] > currentPrice:
+			averagePrice = mreNumbers["average_price"]
+			if averagePrice > currentPrice:
 				buyAmount = constants.BASE_BUY_USD / currentPrice
-				orderDescription = assistant.buy(ticker, buyAmount, priceLimit=currentPrice)
+				orderDescription = assistant.buy(ticker, buyAmount, priceLimit=currentPrice, priceTarget=averagePrice)
 			else:
 				sellAmount = constants.BASE_BUY_USD / currentPrice
-				orderDescription = assistant.sell(ticker, sellAmount, priceLimit=currentPrice)
+				orderDescription = assistant.sell(ticker, sellAmount, priceLimit=currentPrice, priceTarget=averagePrice)
 			ordersExecuted[ticker] = {"order description": orderDescription,
 									  "current percent deviation": mreNumbers["current_percent_deviation"],
 									  "percent deviation threshold": constants.PERCENT_DEVIATION_THRESHOLD}

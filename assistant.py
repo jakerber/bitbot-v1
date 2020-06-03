@@ -55,16 +55,20 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 ##  Trading
 ############################
 
-def buy(ticker, amount, priceLimit):
+def buy(ticker, amount, priceLimit, priceTarget):
     """Buy a cryptocurrency."""
-    LOGGER.log("buying %f of %s @ price %f" % (amount, ticker, priceLimit), moneyExchanged=True)
+    LOGGER.log("buying %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget), moneyExchanged=True)
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
-    return kraken.buy(ticker, amount, priceLimit)
+    if priceTarget < priceLimit:
+        raise RuntimeError("price target (%f) must be above price limit (%f)" % (priceTarget, priceLimit))
+    return kraken.buy(ticker, amount, priceLimit, priceTarget)
 
-def sell(ticker, amount, priceLimit):
+def sell(ticker, amount, priceLimit, priceTarget):
     """Sell a cryptocurrency."""
-    LOGGER.log("selling %f of %s @ price %f" % (amount, ticker, priceLimit), moneyExchanged=True)
+    LOGGER.log("selling %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget), moneyExchanged=True)
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
-    return kraken.sell(ticker, amount, priceLimit)
+    if priceTarget > priceLimit:
+        raise RuntimeError("price target (%f) must be below price limit (%f)" % (priceTarget, priceLimit))
+    return kraken.sell(ticker, amount, priceLimit, priceTarget)

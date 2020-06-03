@@ -94,15 +94,17 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 ##  Trading
 ############################
 
-def buy(ticker, amount, priceLimit):
+def buy(ticker, amount, priceLimit, priceTarget):
     """Buy a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD % krakenTicker
     requestData = {"pair": cryptoPair,
                    "type": "buy",
                    "ordertype": "limit",
-                   "price": str(priceLimit),
-                   "volume": amount}
+                   "price": priceLimit,
+                   "volume": amount,
+                   "close[ordertype]": "limit",
+                   "close[price]": priceTarget}
 
     # add kraken buy order
     try:
@@ -118,15 +120,17 @@ def buy(ticker, amount, priceLimit):
 
     return resp["result"]["descr"]
 
-def sell(ticker, amount, priceLimit):
+def sell(ticker, amount, priceLimit, priceTarget):
     """Sell a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     requestData = {"pair": cryptoPair,
                    "type": "sell",
                    "ordertype": "limit",
-                   "price": str(priceLimit),
-                   "volume": amount}
+                   "price": priceLimit,
+                   "volume": amount,
+                   "close[ordertype]": "limit",
+                   "close[price]": priceTarget}
 
     # add kraken sell order
     try:
