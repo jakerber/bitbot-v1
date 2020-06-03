@@ -3,7 +3,7 @@ from kraken import kraken
 import constants
 import logger
 
-LOGGER = logger.Logger("Assistant")
+logger = logger.Logger("Assistant")
 
 ############################
 ##  Prices
@@ -11,14 +11,14 @@ LOGGER = logger.Logger("Assistant")
 
 def getAllPrices(ticker):
     """Get all current prices of a cryptocurrency."""
-    LOGGER.log("fetching all prices of %s" % ticker)
+    logger.log("fetching all prices of %s" % ticker)
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker %s not supported" % ticker)
     return kraken.getAllPrices(ticker)
 
 def getPrice(ticker, priceType):
     """Get the current price of a cryptocurrency."""
-    LOGGER.log("fetching %s price of %s" % (priceType, ticker))
+    logger.log("fetching %s price of %s" % (priceType, ticker))
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceType not in constants.KRAKEN_PRICE_TYPES:
@@ -31,24 +31,24 @@ def getPrice(ticker, priceType):
 
 def getAccountBalances():
     """Get current account balances."""
-    LOGGER.log("fetching account balance")
+    logger.log("fetching account balance")
     return kraken.getAccountBalances()
 
 def getAccountValue():
     """Get current value of account in USD."""
-    LOGGER.log("fetching account value")
+    logger.log("fetching account value")
     return kraken.getAccountValue()
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
-    LOGGER.log("fetching balance of %s" % ticker)
+    logger.log("fetching balance of %s" % ticker)
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
     return kraken.getBalance(ticker)
 
 def getTradeHistory(startDatetime=None, endDatetime=None):
     """Get trade history."""
-    LOGGER.log("fetching trade history (%s -> %s)" % (startDatetime, endDatetime))
+    logger.log("fetching trade history (%s -> %s)" % (startDatetime, endDatetime))
     return kraken.getTradeHistory(startDatetime, endDatetime)
 
 ############################
@@ -57,7 +57,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 
 def buy(ticker, amount, priceLimit, priceTarget):
     """Buy a cryptocurrency."""
-    LOGGER.log("buying %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget), moneyExchanged=True)
+    logger.log("buying %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget))
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceTarget < priceLimit:
@@ -66,7 +66,7 @@ def buy(ticker, amount, priceLimit, priceTarget):
 
 def sell(ticker, amount, priceLimit, priceTarget):
     """Sell a cryptocurrency."""
-    LOGGER.log("selling %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget), moneyExchanged=True)
+    logger.log("selling %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget))
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceTarget > priceLimit:

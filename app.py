@@ -169,14 +169,20 @@ def trade():
 			currentPrice = mreNumbers["current_price"]
 			averagePrice = mreNumbers["average_price"]
 			if averagePrice > currentPrice:
-				buyAmount = constants.BASE_BUY_USD / currentPrice
-				orderDescription = assistant.buy(ticker, buyAmount, priceLimit=currentPrice, priceTarget=averagePrice)
+				tradeFunc = assistant.buy
 			else:
-				sellAmount = constants.BASE_BUY_USD / currentPrice
-				orderDescription = assistant.sell(ticker, sellAmount, priceLimit=currentPrice, priceTarget=averagePrice)
-			ordersExecuted[ticker] = {"order description": orderDescription,
-									  "current percent deviation": mreNumbers["current_percent_deviation"],
-									  "percent deviation threshold": constants.PERCENT_DEVIATION_THRESHOLD}
+				tradeFunc = assistant.sell
+			amount = constants.BASE_BUY_USD / currentPrice
+
+			# safetly execute trade
+			try:
+				orderDescription = tradeFunc(ticker, amount, priceLimit=currentPrice, priceTarget=averagePrice)
+				logger.log("trade successfully executed", moneyExchanged=True)
+				ordersExecuted[ticker] = {"order description": orderDescription,
+										  "current percent deviation": mreNumbers["current_percent_deviation"],
+										  "percent deviation threshold": constants.PERCENT_DEVIATION_THRESHOLD}
+			except Exception as err:
+				logger.log("unable to execute %s trade: %s" % (ticker, repr(err)))
 
 	return _successResp({"orders executed": ordersExecuted})
 
