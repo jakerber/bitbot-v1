@@ -145,6 +145,11 @@ def trade():
 				tradeFunc = assistant.short
 				priceTarget = analysis.current_price - analysis.standard_deviation
 
+				# ensure margin trading is allowed before shorting
+				if not constants.ALLOW_MARGIN_TRADING:
+					logger.log("unable to short %s: margin trading is not allowed" % ticker)
+					continue
+
 			# determine amount to trade
 			tradeAmountUSD = getTradeAmountUSD(analysis.current_percent_deviation)
 			tradeAmount = tradeAmountUSD / analysis.current_price

@@ -71,10 +71,4 @@ def short(ticker, amount, priceLimit, priceTarget):
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceTarget > priceLimit:
         raise RuntimeError("price target (%f) must be below price limit (%f)" % (priceTarget, priceLimit))
-
-    # determine if margin should be used
-    useMargin = getBalance(ticker) < amount
-    if useMargin and not constants.ALLOW_MARGIN_TRADING:
-        raise RuntimeError("insufficient funds and margin trading is not allowed")
-
-    return kraken.short(ticker, amount, priceLimit, priceTarget, useMargin)
+    return kraken.short(ticker, amount, priceLimit, priceTarget)
