@@ -5,13 +5,14 @@ import math
 
 class PriceDeviation:
     """Price Deviation object."""
-    def __init__(self, averagePrice, currentDeviation, currentPercentDeviation, currentPrice, standardDeviation):
+    def __init__(self, averagePrice, currentDeviation, currentPercentDeviation, currentPrice, standardDeviation, targetPrice):
         self.average_price = averagePrice
         self.current_deviation = currentDeviation
         self.current_percent_deviation = currentPercentDeviation
         self.current_price = currentPrice
         self.lookback_days = constants.LOOKBACK_DAYS
         self.standard_deviation = standardDeviation
+        self.target_price = targetPrice
 
 
 class MeanReversion:
@@ -36,11 +37,12 @@ class MeanReversion:
             priceDeviation = abs(price - movingAverage)
             deviationsSquaredSum += priceDeviation ** 2
 
-        # calculate standard deviation
+        # calculate standard and current price deviations
         averagePrice = movingAverage
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.pastPrices))
-
-        # return price deviations
         currentDeviation = abs(self.currentPrice - averagePrice)
         currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
-        return PriceDeviation(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation)
+        targetPrice = self.currentPrice + standardDeviation if self.currentPrice < averagePrice else self.currentPrice - standardDeviation
+
+        # return price deviation instance
+        return PriceDeviation(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)

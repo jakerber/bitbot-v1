@@ -140,10 +140,8 @@ def trade():
 		if shouldTrade(analysis.current_percent_deviation):
 			if analysis.average_price > analysis.current_price:
 				tradeFunc = assistant.buy
-				priceTarget = analysis.current_price + analysis.standard_deviation
 			else:
 				tradeFunc = assistant.short
-				priceTarget = analysis.current_price - analysis.standard_deviation
 
 				# ensure margin trading is allowed before shorting
 				if not constants.ALLOW_MARGIN_TRADING:
@@ -156,7 +154,7 @@ def trade():
 
 			# safetly execute trade
 			try:
-				orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=analysis.current_price, priceTarget=priceTarget)
+				orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=analysis.current_price, priceTarget=analysis.target_price)
 				logger.log("trade executed successfully")
 				logger.log(orderDescription, moneyExchanged=True)
 			except Exception as err:
