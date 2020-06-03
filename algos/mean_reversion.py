@@ -26,17 +26,18 @@ class MeanReversion:
 
     def calculate(self):
         """Calculate standard and current price deviation."""
-        # calculate average
+        # calculate averages and sum the deviations squared
         priceSum = 0.0
-        for price in self.pastPrices:
-            priceSum += price
-        averagePrice = priceSum / len(self.pastPrices)
-
-        # calculate price deviations
+        movingAverage = 0.0
         deviationsSquaredSum = 0.0
-        for price in self.pastPrices:
-            deviation = abs(price - averagePrice)
-            deviationsSquaredSum += deviation ** 2
+        for i, price in enumerate(self.pastPrices, 1):
+            priceSum += price
+            movingAverage = priceSum / i
+            priceDeviation = abs(price - movingAverage)
+            deviationsSquaredSum += priceDeviation ** 2
+
+        # calculate standard deviation
+        averagePrice = movingAverage
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.pastPrices))
 
         # return price deviations
