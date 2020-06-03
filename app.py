@@ -164,8 +164,8 @@ def trade():
 		except Exception as err:
 			continue
 
-		# trade if standard deviation threshold is met
-		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
+		# trade if standard deviation thresholds are met
+		if shouldTrade(mreNumbers["current_percent_deviation"]):
 			currentPrice = mreNumbers["current_price"]
 			averagePrice = mreNumbers["average_price"]
 			tradeAmount = constants.BASE_BUY_USD / currentPrice
@@ -262,6 +262,10 @@ def getMRENumbers(ticker, now=None):
 	prices = [entry["open"] for entry in entries]
 	currentPrice = assistant.getPrice(ticker, "ask")
 	return mean_reversion.MeanReversion(currentPrice, prices).calculate()
+
+def shouldTrade(currentPercentDeviation):
+	"""Determine if a cryptocurrency should be traded."""
+	return constants.PERCENT_DEVIATION_THRESHOLD_MAX >= currentPercentDeviation >= constants.PERCENT_DEVIATION_THRESHOLD_MIN
 
 ###############################
 ##  Response formatting
