@@ -121,7 +121,7 @@ def buy(ticker, amount, priceLimit, priceTarget):
 
     return resp["result"]["descr"]
 
-def short(ticker, amount, priceLimit, priceTarget):
+def short(ticker, amount, priceLimit, priceTarget, useMargin):
     """Short a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
@@ -130,9 +130,12 @@ def short(ticker, amount, priceLimit, priceTarget):
                    "ordertype": "limit",
                    "price": priceLimit,
                    "volume": amount,
-                   "leverage": DEFAULT_LEVERAGE,
                    "close[ordertype]": "limit",
                    "close[price]": priceTarget}
+
+    # include leverage if using margin
+    if useMargin:
+        requestData["leverage"] = DEFAULT_LEVERAGE
 
     # add kraken sell order
     try:

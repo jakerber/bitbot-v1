@@ -146,18 +146,13 @@ def trade():
 			else:
 				tradeFunc = assistant.short
 
-				# ensure margin trading is allowed before shorting crypto
-				if not constants.ALLOW_MARGIN_TRADING:
-					logger.log("unable to short %s: margin trading is not allowed" % ticker)
-					continue
-
 			# safetly execute trade
 			try:
 				orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=currentPrice, priceTarget=averagePrice)
 				logger.log(orderDescription)
 				logger.log("trade successfully executed", moneyExchanged=True)
 			except Exception as err:
-				logger.log("unable to execute %s trade: %s" % (ticker, repr(err)))
+				logger.log("unable to execute %s trade: %s" % (ticker, str(err)))
 
 def sendDailySummary():
 	"""Sends a daily activity summary email."""
