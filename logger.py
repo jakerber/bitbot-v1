@@ -1,6 +1,6 @@
 """Logger module for printing information to the console."""
 
-SEPERATOR = "------------------------------------------------"
+SEPERATOR = "------------------------------------------------------------------"
 MONEY_EXCHANGE_INDICATOR = "***"
 
 
