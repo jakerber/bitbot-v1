@@ -1,4 +1,4 @@
-"""Simple flask app to send requests to BitBot."""
+"""BitBot APIs."""
 import constants
 import datetime
 import flask
@@ -8,7 +8,6 @@ import assistant
 import math
 import notifier
 import os
-import simulator
 from algos import mean_reversion
 from db import db
 from db import models
@@ -123,39 +122,12 @@ def rootApi():
 	"""Root endpoint of the api."""
 	return "<h4>api root<h4>"
 
-@app.route("%s/simulate" % constants.API_ROOT)
-def simulateDocs():
-	"""Display arguments for simulate API."""
-	return _successResp({"name": "BitBot simulation API documentation",
-						 "api_path": "/simulate/<days>/<lookback_days>/<percent_deviation_threshold>",
-						 "parameters": {"days": "numbers of days back from today to begin the simulation",
-										"lookback_days": "number of days back to look when calculating average price each day",
-										"percent_deviation_threshold": "percentage of the standard deviation the price needs to move to trigger a trade"}})
-
-@app.route("%s/simulate/<days>/<lookbackDays>/<deviationThreshold>" % constants.API_ROOT)
-def simulate(days, lookbackDays, deviationThreshold):
-	"""Run a simulation using historical price data."""
-	# validate inputs
-	try:
-		days = int(days)
-		lookbackDays = int(lookbackDays)
-		deviationThreshold = float(deviationThreshold)
-		1 / days
-		1 / lookbackDays
-		1 / deviationThreshold
-	except (ValueError, ZeroDivisionError) as err:
-		return _failedResp("input invalid: %s" % repr(err), 400)  # 400 bad request
-
-	# initialize and run simulation
-	startingDatetime = datetime.datetime.now() - datetime.timedelta(days=days)
-	return _successResp(simulator.Simulator(startingDatetime, lookbackDays, deviationThreshold).run())
-
 #################################
 ##  Private APIs
 #################################
 
 def trade():
-	"""Crunch numbers to decide if cryptocurrency should be bought."""
+	"""Crunch numbers to decide if cryptocurrency should be traded."""
 	# calculate mean reversion for all supported cryptos
 	ordersExecuted = {}
 	for ticker in constants.SUPPORTED_CRYPTOS:
@@ -164,7 +136,7 @@ def trade():
 		except Exception as err:
 			continue
 
-		# trade if standard deviation thresholds are met
+		# trade if price deviation thresholds are met
 		if shouldTrade(mreNumbers["current_percent_deviation"]):
 			currentPrice = mreNumbers["current_price"]
 			averagePrice = mreNumbers["average_price"]
@@ -244,11 +216,11 @@ def snapshotPrices():
 ##  Helper functions
 ###############################
 
-def getMRENumbers(ticker, now=None):
+def getMRENumbers(ticker):
 	"""Get mean reversion numbers (standard deviation, etc.)."""
 	# collect dates from past number of days
 	dates = []
-	now = now or datetime.datetime.now()  # allow sim to override current datetime
+	now = datetime.datetime.now()
 	for daysAgo in range(constants.LOOKBACK_DAYS):
 		delta = datetime.timedelta(days=daysAgo)
 		dateDaysAgo = now - delta

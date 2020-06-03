@@ -39,9 +39,6 @@ KRAKEN_PRICE_TYPES = {"ask": "a",
                       "low": "l",
                       "open": "o"}
 
-# simulation constants
-SIM_ACCOUNT_BALANCE_USD = 10000.0
-
 # bitbot constants
 ALLOW_MARGIN_TRADING = os.environ.get("ALLOW_MARGIN_TRADING") == "True"
 BASE_BUY_USD = float(os.environ.get("BASE_BUY_USD"))
