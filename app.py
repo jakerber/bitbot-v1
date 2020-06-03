@@ -182,14 +182,10 @@ def trade():
 			# safetly execute trade
 			try:
 				orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=currentPrice, priceTarget=averagePrice)
+				logger.log(orderDescription)
 				logger.log("trade successfully executed", moneyExchanged=True)
-				ordersExecuted[ticker] = {"order description": orderDescription,
-										  "current percent deviation": mreNumbers["current_percent_deviation"],
-										  "percent deviation threshold": constants.PERCENT_DEVIATION_THRESHOLD}
 			except Exception as err:
 				logger.log("unable to execute %s trade: %s" % (ticker, repr(err)))
-
-	return _successResp({"orders executed": ordersExecuted})
 
 def sendDailySummary():
 	"""Sends a daily activity summary email."""
@@ -211,10 +207,8 @@ def sendDailySummary():
 
 	# notify via email
 	emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
-	emailBody = json.dumps(dailySummary, indent=4)
+	emailBody = json.dumps(dailySummary, indent=6)
 	notifier.email(emailSubject, emailBody)
-
-	return _successResp({"daily summary": dailySummary})
 
 def snapshotPrices():
 	"""Store the prices of all supported cryptocurrency."""
@@ -226,15 +220,14 @@ def snapshotPrices():
 		queryFilter = {"date": currentDate, "ticker": ticker}
 		entry = mongodb.find("price", queryFilter)
 		if entry:
-			error = "%s price snapshot already exists for %s: %s" % (ticker, currentDate, repr(entry[0]))
-			snapshots.append({"ticker": ticker, "success": False, "error": error})
+			logger.log("%s price snapshot already exists for %s: %s" % (ticker, currentDate, repr(entry[0])))
 			continue
 
 		# fetch relevant prices
 		try:
 			allPrices = assistant.getAllPrices(ticker)
 		except Exception as err:
-			snapshots.append({"ticker": ticker, "success": False, "error": repr(err)})
+			logger.log("unable to fetch prices of %s: %s" % (ticker, repr(err)))
 			continue
 		openPrice = float(allPrices["o"])
 		highPrice = float(allPrices["h"][0])
@@ -245,11 +238,7 @@ def snapshotPrices():
 		try:
 			mongodb.insert(priceModel)
 		except Exception as err:
-			snapshots.append({"ticker": ticker, "success": False, "error": repr(err)})
-		else:
-			snapshots.append({"ticker": ticker, "success": True, "snapshot": repr(priceModel)})
-
-	return _successResp(snapshots)
+			logger.log("unable to add %s price snapshot to the database: %s" % (ticker, repr(err)))
 
 ###############################
 ##  Helper functions
