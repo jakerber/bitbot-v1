@@ -4,30 +4,11 @@ import krakenex
 
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
-def buy(ticker, amount):
-    """Buy a cryptocurrency."""
-    raise NotImplementedError
+UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 
-def getAccountBalances():
-    """Get all account balances."""
-    resp = _executeRequest(kraken.query_private, "Balance")
-    for balance in resp["result"]:
-        resp["result"][balance] = float(resp["result"][balance])
-    return resp["result"]
-
-def getAccountValue():
-    """Get total value of account in USD."""
-    resp = _executeRequest(kraken.query_private, "TradeBalance")
-    return float(resp["result"]["tb"])
-
-def getBalance(ticker):
-    """Get the current balance of a cryptocurrency."""
-    balances = getAccountBalances()
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
-    priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
-    if priceBalanceKey in balances:
-        return balances[priceBalanceKey]
-    return 0.0
+############################
+##  Prices
+############################
 
 def getAllPrices(ticker):
     """Get all current prices of a cryptocurrency.
@@ -51,7 +32,7 @@ def getAllPrices(ticker):
     resp = _executeRequest(kraken.query_public, "Ticker", requestData=requestData)
 
     # return crypto price
-    priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
+    priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     if priceCode not in resp["result"]:
         priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
     allPrices = resp["result"][priceCode]
@@ -66,13 +47,38 @@ def getPrice(ticker, priceType):
 
     # return crypto price
     priceTypeCode = constants.KRAKEN_PRICE_TYPES[priceType]
-    priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
+    priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     if priceCode not in resp["result"]:
-        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
+        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     price = resp["result"][priceCode][priceTypeCode][0]
     if priceType == "open":  # open price is a single value, not an array
         price = resp["result"][priceCode][priceTypeCode]
     return float(price)
+
+############################
+##  Account info
+############################
+
+def getAccountBalances():
+    """Get all account balances."""
+    resp = _executeRequest(kraken.query_private, "Balance")
+    for balance in resp["result"]:
+        resp["result"][balance] = float(resp["result"][balance])
+    return resp["result"]
+
+def getAccountValue():
+    """Get total value of account in USD."""
+    resp = _executeRequest(kraken.query_private, "TradeBalance")
+    return float(resp["result"]["tb"])
+
+def getBalance(ticker):
+    """Get the current balance of a cryptocurrency."""
+    balances = getAccountBalances()
+    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
+    priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
+    if priceBalanceKey in balances:
+        return balances[priceBalanceKey]
+    return 0.0
 
 def getTradeHistory(startDatetime=None, endDatetime=None):
     """Get trade history for this account."""
@@ -84,9 +90,61 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
     resp = _executeRequest(kraken.query_private, "TradesHistory", requestData=requestData)
     return resp["result"]
 
-def sell(ticker, amount):
+############################
+##  Trading
+############################
+
+def buy(ticker, amount, priceLimit):
+    """Buy a cryptocurrency."""
+    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
+    cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD % krakenTicker
+    requestData = {"pair": cryptoPair,
+                   "type": "buy",
+                   "ordertype": "limit",
+                   "price": str(priceLimit),
+                   "volume": amount}
+
+    # add kraken buy order
+    try:
+        resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
+    except RuntimeError as err:
+        if UNKNOWN_ASSET_PAIR_ERROR not in str(err):
+            raise
+
+        # retry with secondary pairing if asset pair is unknown
+        else:
+            requestData["pair"] = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
+            resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
+
+    return resp["result"]["descr"]
+
+def sell(ticker, amount, priceLimit):
     """Sell a cryptocurrency."""
-    raise NotImplementedError
+    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
+    cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
+    requestData = {"pair": cryptoPair,
+                   "type": "sell",
+                   "ordertype": "limit",
+                   "price": str(priceLimit),
+                   "volume": amount}
+
+    # add kraken sell order
+    try:
+        resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
+    except RuntimeError as err:
+        if UNKNOWN_ASSET_PAIR_ERROR not in str(err):
+            raise
+
+        # retry with secondary pairing if asset pair is unknown
+        else:
+            requestData["pair"] = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
+            resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
+
+    return resp["result"]["descr"]
+
+############################
+##  Helper methods
+############################
 
 def _executeRequest(api, requestName, requestData={}):
     """Execute a request to the Kraken API."""

@@ -156,38 +156,28 @@ def simulate(days, lookbackDays, deviationThreshold):
 
 def trade():
 	"""Crunch numbers to decide if cryptocurrency should be bought."""
-	# determine which cryptos should be bought
-	actionableMres = []
+	# calculate mean reversion for all supported cryptos
+	ordersExecuted = {}
 	for ticker in constants.SUPPORTED_CRYPTOS:
 		try:
 			mreNumbers = getMRENumbers(ticker)
 		except Exception as err:
 			continue
+
+		# trade if standard deviation threshold is met
 		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
-			actionableMres.append({"ticker": ticker, "mre": mreNumbers})
+			currentPrice = mreNumbers["current_price"]
+			if mreNumbers["average_price"] > currentPrice:
+				buyAmount = constants.BASE_BUY_USD / currentPrice
+				orderDescription = assistant.buy(ticker, buyAmount, priceLimit=currentPrice)
+			else:
+				sellAmount = constants.BASE_BUY_USD / currentPrice
+				orderDescription = assistant.sell(ticker, sellAmount, priceLimit=currentPrice)
+			ordersExecuted[ticker] = {"order description": orderDescription,
+									  "current percent deviation": mreNumbers["current_percent_deviation"],
+									  "percent deviation threshold": constants.PERCENT_DEVIATION_THRESHOLD}
 
-	# alert of actionable mean reversions
-	for actionableMre in actionableMres:
-		mreNumbers = actionableMre["mre"]
-		ticker = actionableMre["ticker"]
-		currentPrice = mreNumbers["current_price"]
-		averagePrice = mreNumbers["average_price"]
-		standardDeviation = mreNumbers["standard_deviation"]
-
-		# determine if buy or sell
-		if averagePrice > currentPrice:
-			alertType = "buy"
-		else:
-			alertType = "sell"
-		logger.log("%s alert: %s @ %f" % (alertType, ticker, currentPrice), seperate=True)
-		mreNumbers["action"] = alertType
-
-		# add alert to db
-		newAlert = models.Alert(ticker, currentPrice, alertType, priceTarget=averagePrice)
-		mongodb.insert(newAlert)
-
-	return _successResp({"actionable": actionableMres,
-						 "percent_deviation_threshold": constants.PERCENT_DEVIATION_THRESHOLD})
+	return _successResp({"orders executed": ordersExecuted})
 
 def sendDailySummary():
 	"""Sends a daily activity summary email."""
@@ -212,7 +202,7 @@ def sendDailySummary():
 	emailBody = json.dumps(dailySummary, indent=4)
 	notifier.email(emailSubject, emailBody)
 
-	return dailySummary
+	return _successResp({"daily summary": dailySummary})
 
 def snapshotPrices():
 	"""Store the prices of all supported cryptocurrency."""
