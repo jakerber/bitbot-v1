@@ -168,15 +168,20 @@ def trade():
 		if mreNumbers["current_percent_deviation"] >= constants.PERCENT_DEVIATION_THRESHOLD:
 			currentPrice = mreNumbers["current_price"]
 			averagePrice = mreNumbers["average_price"]
+			tradeAmount = constants.BASE_BUY_USD / currentPrice
 			if averagePrice > currentPrice:
 				tradeFunc = assistant.buy
 			else:
-				tradeFunc = assistant.sell
-			amount = constants.BASE_BUY_USD / currentPrice
+				tradeFunc = assistant.short
+
+				# ensure margin trading is allowed before shorting crypto
+				if not constants.ALLOW_MARGIN_TRADING:
+					logger.log("unable to short %s: margin trading is not allowed" % ticker)
+					continue
 
 			# safetly execute trade
 			try:
-				orderDescription = tradeFunc(ticker, amount, priceLimit=currentPrice, priceTarget=averagePrice)
+				orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=currentPrice, priceTarget=averagePrice)
 				logger.log("trade successfully executed", moneyExchanged=True)
 				ordersExecuted[ticker] = {"order description": orderDescription,
 										  "current percent deviation": mreNumbers["current_percent_deviation"],

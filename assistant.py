@@ -64,11 +64,11 @@ def buy(ticker, amount, priceLimit, priceTarget):
         raise RuntimeError("price target (%f) must be above price limit (%f)" % (priceTarget, priceLimit))
     return kraken.buy(ticker, amount, priceLimit, priceTarget)
 
-def sell(ticker, amount, priceLimit, priceTarget):
-    """Sell a cryptocurrency."""
-    logger.log("selling %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget))
+def short(ticker, amount, priceLimit, priceTarget):
+    """Short a cryptocurrency."""
+    logger.log("shorting %f of %s @ price %f (target %f)" % (amount, ticker, priceLimit, priceTarget))
     if ticker not in constants.SUPPORTED_CRYPTOS:
         raise RuntimeError("ticker not supported: %s" % ticker)
     if priceTarget > priceLimit:
         raise RuntimeError("price target (%f) must be below price limit (%f)" % (priceTarget, priceLimit))
-    return kraken.sell(ticker, amount, priceLimit, priceTarget)
+    return kraken.short(ticker, amount, priceLimit, priceTarget)

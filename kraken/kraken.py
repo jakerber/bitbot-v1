@@ -4,6 +4,7 @@ import krakenex
 
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
+DEFAULT_LEVERAGE = "2"
 UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 
 ############################
@@ -120,8 +121,8 @@ def buy(ticker, amount, priceLimit, priceTarget):
 
     return resp["result"]["descr"]
 
-def sell(ticker, amount, priceLimit, priceTarget):
-    """Sell a cryptocurrency."""
+def short(ticker, amount, priceLimit, priceTarget):
+    """Short a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     requestData = {"pair": cryptoPair,
@@ -129,6 +130,7 @@ def sell(ticker, amount, priceLimit, priceTarget):
                    "ordertype": "limit",
                    "price": priceLimit,
                    "volume": amount,
+                   "leverage": DEFAULT_LEVERAGE,
                    "close[ordertype]": "limit",
                    "close[price]": priceTarget}
 
