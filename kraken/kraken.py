@@ -70,7 +70,7 @@ def getAccountBalances():
 def getAccountValue():
     """Get total value of account in USD."""
     resp = _executeRequest(kraken.query_private, "TradeBalance")
-    return float(resp["result"]["tb"])
+    return float(resp["result"]["e"])
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
