@@ -35,7 +35,7 @@ def getAllPrices(ticker):
     # return crypto price
     priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     if priceCode not in resp["result"]:
-        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE % (krakenTicker, "USD")
+        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     allPrices = resp["result"][priceCode]
     return allPrices
 

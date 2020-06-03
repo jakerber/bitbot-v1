@@ -200,14 +200,14 @@ def sendDailySummary():
 	if not tradesExecuted:
 		return
 
-	# construct daily summary
-	dailySummary = {"balances": accountBalances,
-					"total value": accountValue,
-					"trades executed": tradesExecuted}
-
 	# notify via email
 	emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
-	emailBody = json.dumps(dailySummary, indent=6)
+	emailBody = "Account value:"
+	emailBody += "\n$%f" % accountValue
+	emailBody += "\n\nAccount balances:"
+	emailBody += "\n" + json.dumps(accountBalances, indent=6)
+	emailBody += "\n\nTrades executed:"
+	emailBody += "\n" + json.dumps(tradesExecuted, indent=6)
 	notifier.email(emailSubject, emailBody)
 
 def snapshotPrices():
