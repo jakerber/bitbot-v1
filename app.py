@@ -95,12 +95,12 @@ def equity():
 @app.route("/")
 def root():
     """Root endpoint of the app."""
-    return "<h4>bleep bloop<h4>"
+    return "<h1>bleep bloop<h1>"
 
 @app.route("%s/" % constants.API_ROOT)
 def rootApi():
     """Root endpoint of the api."""
-    return "<h4>api root<h4>"
+    return "<h1>api root<h1>"
 
 #################################
 ##  Private APIs
