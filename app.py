@@ -90,7 +90,7 @@ def equity():
         value = assistant.getAccountValue()
     except Exception as err:
         return _failedResp(err)
-    return _successResp({"balances": balances, "value": value})
+    return _successResp({"balances": balances, "value_usd": value})
 
 @app.route("/")
 def root():
