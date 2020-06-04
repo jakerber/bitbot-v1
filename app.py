@@ -28,14 +28,16 @@ notifier = notifier.Notifier()
 ##  Public APIs
 #################################
 
-@app.route("%s/balance" % constants.API_ROOT)
-def accountBalance():
-    """Get current Kraken account balance in USD."""
-    try:
-        balance = assistant.getAccountBalances()
-    except Exception as err:
-        return _failedResp(err)
-    return _successResp({"balance": balance})
+@app.route("%s/analyze" % constants.API_ROOT)
+def analyze():
+    """Analyze the price deviations of all supported cryptocurrencies."""
+    analysis = []
+    for ticker in constants.SUPPORTED_CRYPTOS:
+        try:
+            analysis.append({"ticker": ticker, "analysis": getMeanReversionAnalysis(ticker).__dict__})
+        except Exception as err:
+            analysis.append({"ticker": ticker, "error": repr(err)})
+    return _successResp(analysis)
 
 @app.route("%s/backfill/<filename>" % constants.API_ROOT)
 def backfillCsv(filename):
@@ -80,37 +82,15 @@ def backfillCsv(filename):
     else:
         return _successResp("successfully backfilled %i prices" % len(newPriceModels))
 
-@app.route("%s/balance/<ticker>" % constants.API_ROOT)
-def balance(ticker):
-    """Get current balance of a cryptocurrency."""
+@app.route("%s/equity" % constants.API_ROOT)
+def equity():
+    """Get current Kraken account balance in USD."""
     try:
-        balance = assistant.getBalance(ticker)
+        balances = assistant.getAccountBalances()
+        value = assistant.getAccountValue()
     except Exception as err:
         return _failedResp(err)
-    return _successResp({"ticker": ticker, "balance": balance})
-
-@app.route("%s/analyze/<ticker>" % constants.API_ROOT)
-def analyze(ticker):
-    """Analyze the price deviations of a cryptocurrency."""
-    # ensure bitbot supports this crypto
-    if ticker not in constants.SUPPORTED_CRYPTOS:
-        return _failedResp("ticker not supported: %s" % ticker, 400)  # 400 bad request
-
-    # return price deviation analysis
-    return _successResp({"ticker": ticker, "analysis": getMeanReversionAnalysis(ticker).__dict__})
-
-@app.route("%s/analyze" % constants.API_ROOT)
-def analyzeAll():
-    """Analyze the price deviations of all supported cryptocurrencies."""
-    analysis = []
-    for ticker in constants.SUPPORTED_CRYPTOS:
-        try:
-            analysis.append({"ticker": ticker, "analysis": getMeanReversionAnalysis(ticker).__dict__})
-        except Exception as err:
-            analysis.append({"ticker": ticker, "error": repr(err)})
-
-    # return price deviation analysis
-    return _successResp(analysis)
+    return _successResp({"balances": balances, "value": value})
 
 @app.route("/")
 def root():

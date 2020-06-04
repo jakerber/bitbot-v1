@@ -2,7 +2,7 @@
 import os
 
 # api
-API_ROOT = "/api"
+API_ROOT = "/api/v1"
 
 # notifications
 MY_EMAIL = os.environ.get("MY_EMAIL")
