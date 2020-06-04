@@ -88,9 +88,10 @@ def equity():
     try:
         balances = assistant.getAccountBalances()
         value = assistant.getAccountValue()
+        marginUsed = assistant.getMarginUsed()
     except Exception as err:
         return _failedResp(err)
-    return _successResp({"balances": balances, "value_usd": value})
+    return _successResp({"balances": balances, "value_usd": value, "margin_used_usd": marginUsed})
 
 @app.route("/")
 def root():

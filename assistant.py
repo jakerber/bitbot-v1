@@ -46,6 +46,11 @@ def getBalance(ticker):
         raise RuntimeError("ticker not supported: %s" % ticker)
     return kraken.getBalance(ticker)
 
+def getMarginUsed():
+    """Get the current margin used for all open positions."""
+    logger.log("fetching margin used")
+    return kraken.getMarginUsed()
+
 def getTradeHistory(startDatetime=None, endDatetime=None):
     """Get trade history."""
     logger.log("fetching trade history (%s -> %s)" % (startDatetime, endDatetime))

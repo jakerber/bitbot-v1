@@ -82,6 +82,11 @@ def getBalance(ticker):
         return balances[priceBalanceKey]
     return 0.0
 
+def getMarginUsed():
+    """Get the current margin used for all open positions."""
+    resp = _executeRequest(kraken.query_private, "TradeBalance")
+    return float(resp["result"]["m"])
+
 def getTradeHistory(startDatetime=None, endDatetime=None):
     """Get trade history for this account."""
     requestData = {}
@@ -135,6 +140,10 @@ def short(ticker, amount, priceLimit, priceTarget):
                    "close[ordertype]": "limit",
                    "close[price]": priceTarget}
 
+    # ensure sufficient margin is available to open short position
+    if not sufficientMargin(amount * priceLimit):
+        raise RuntimeError("insufficient margin available: short would reduce margin level below %.f%%" % constants.KRAKEN_MARGIN_LEVEL_LIMIT)
+
     # add kraken sell order
     try:
         resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
@@ -152,6 +161,14 @@ def short(ticker, amount, priceLimit, priceTarget):
 ############################
 ##  Helper methods
 ############################
+
+def sufficientMargin(shortAmountUSD):
+    """Determine if there is enough margin available to open a short position."""
+    currentEquity = getAccountValue()
+    currentMarginUsed = getMarginUsed()
+    usedMarginAfterShort = currentMarginUsed + shortAmountUSD
+    marginLevelAfterShort = (currentEquity / usedMarginAfterShort) * 100
+    return marginLevelAfterShort > constants.KRAKEN_MARGIN_LEVEL_LIMIT
 
 def _executeRequest(api, requestName, requestData={}):
     """Execute a request to the Kraken API."""
