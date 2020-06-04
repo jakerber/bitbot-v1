@@ -1,4 +1,4 @@
-"""BitBot notification module."""
+"""BitBot notifications module."""
 import constants
 import logger
 import requests
@@ -7,7 +7,7 @@ import requests
 logger = logger.Logger("Notifier")
 
 class Notifier:
-    """Object to send notifications users."""
+    """Object to send notifications to users."""
     def __init__(self):
         self.logger = logger
 
