@@ -145,6 +145,7 @@ def sendDailySummary():
     """Sends a daily activity summary email."""
     accountBalances = assistant.getAccountBalances()
     accountValue = assistant.getAccountValue()
+    marginUsed = assistant.getMarginUsed()
 
     # fetch trades that were executed today
     datetimeDayAgo = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -158,6 +159,8 @@ def sendDailySummary():
     emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
     emailBody = "Account value:"
     emailBody += "\n$%f" % accountValue
+    emailBody += "\n\nMargin used:"
+    emailBody += "\n$%f" % marginUsed
     emailBody += "\n\nAccount balances:"
     emailBody += "\n" + json.dumps(accountBalances, indent=6)
     emailBody += "\n\nTrades executed:"
