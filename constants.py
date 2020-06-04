@@ -22,6 +22,7 @@ if not MONGODB_URI:
 
 # kraken API constants
 KRAKEN_API_BASE = "https://api.kraken.com/0/"
+KRAKEN_API_CALL_INTERVAL_SEC = 0.1
 KRAKEN_CRYPTO_TICKERS = {"ADA": "ADA",
                          "BTC": "XBT",
                          "ETH": "ETH",

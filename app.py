@@ -84,7 +84,7 @@ def backfillCsv(filename):
 
 @app.route("%s/equity" % constants.API_ROOT)
 def equity():
-    """Get current Kraken account balance in USD."""
+    """Get current account balance in USD."""
     try:
         balances = assistant.getAccountBalances()
         value = assistant.getAccountValue()

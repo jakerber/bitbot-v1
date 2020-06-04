@@ -1,6 +1,7 @@
 """BitBot Krakenex API wrapper module."""
 import constants
 import krakenex
+import time
 
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
@@ -159,6 +160,9 @@ def _executeRequest(api, requestName, requestData={}):
     # raise error if necessary
     if resp["error"] or "result" not in resp:
         raise RuntimeError("unable to execute Kraken %s request: %s" % (requestName, resp["error"]))
+
+    # pause to avoid spamming exchange
+    time.sleep(constants.KRAKEN_API_CALL_INTERVAL_SEC)
 
     # return response
     return resp
