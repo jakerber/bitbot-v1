@@ -19,8 +19,3 @@ db.price.insertMany([
   { "_id" : ObjectId("5ec216ddd78482b076ca0ca0"), "ticker" : "BTC", "open" : 9362.6366461472, "high" : 9583.062439468, "low" : 9219.3622046505, "date" : "2020-05-16" },
   { "_id" : ObjectId("5ec216ddd78482b076ca0ca1"), "ticker" : "BTC", "open" : 9418.913715302, "high" : 9879.7120397774, "low" : 9327.7638326824, "date" : "2020-05-17" }
 ])
-
-// insert buy alert for bitcoin
-db.alert.insertMany([
-  { "_id" : ObjectId("5ec5f0c36a7925be5a6ad949"), "ticker" : "BTC", "price" : 9475.1, "type" : "buy", "priceTarget" : 9525.610972619434, "date" : "2020-05-20", "time" : "23:08:51.500275" }
-])
