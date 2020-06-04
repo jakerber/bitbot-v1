@@ -1,4 +1,4 @@
-"""Module for sending BitBot notifications."""
+"""BitBot notification module."""
 import constants
 import logger
 import requests
@@ -6,9 +6,8 @@ import requests
 # initialize logger
 logger = logger.Logger("Notifier")
 
-
 class Notifier:
-    """Notifier object."""
+    """Object to send notifications users."""
     def __init__(self):
         self.logger = logger
 
@@ -24,12 +23,10 @@ class Notifier:
                                    "subject": subject,
                                    "text": body})
 
-        # log success
+        # log notification status
         if resp.status_code == 200:
             self.logger.log("email notification sent successfully")
             return
-
-        # log failure, if any
         try:
             errorMessage = resp.json()["message"]
         except Exception:

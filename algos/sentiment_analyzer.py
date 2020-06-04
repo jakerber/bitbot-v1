@@ -1,4 +1,4 @@
-"""Sentiment analyzer used to determine if a phrase is positive or negative."""
+"""Sentiment analysis algo module."""
 import nltk
 import random
 import re
@@ -26,9 +26,8 @@ def _timeBlock(description=None):
     if description:
         print("%s..." % description)
 
-
 class SentimentAnalyzer:
-    """SentimentAnalyzer object."""
+    """Object to analyze the sentiment of a phrase."""
     def __init__(self):
         self.model = None
         self.positiveSentimentIndicator = "Positive"
@@ -128,8 +127,3 @@ class SentimentAnalyzer:
     def _tokenListToNBCDict(self, tokenList):
         """Convert list of tokens to nltk.NaiveBayesClassifier token dictionary."""
         return {token: True for token in tokenList}
-
-
-if __name__ == "__main__":
-    x = SentimentAnalyzer()
-    x.isPositive("this is so bad")

@@ -1,12 +1,11 @@
-"""Database operations for BitBot."""
+"""BitBot database operations module."""
 import constants
 import flask_pymongo
 import logger
 import os
 
-
 class BitBotDB:
-    """BitBot database object."""
+    """Object to communication with the BitBot database."""
     def __init__(self, app):
         self.app = app
         self.logger = logger.Logger("MongoDB")

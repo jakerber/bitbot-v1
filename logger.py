@@ -1,11 +1,10 @@
-"""Logger module for printing information to the console."""
+"""BitBot logger module."""
 
 SEPERATOR = "------------------------------------------------------------------"
 MONEY_EXCHANGE_INDICATOR = "***"
 
-
 class Logger:
-    """Logger object."""
+    """Object to log events to the console."""
     def __init__(self, componentName):
         self.componentName = componentName
         self.prefix = "{%s} ::" % self.componentName

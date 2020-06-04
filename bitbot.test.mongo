@@ -1,4 +1,4 @@
-// script for clearing out the local bitbot database and inserting test data
+// Script for clearing out the local BitBot database and inserting test data
 // run: "mongo < bitbot.test.mongo"
 
 use bitbot

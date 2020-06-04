@@ -1,4 +1,4 @@
-"""Wrapper around Krakenex API."""
+"""BitBot Krakenex API wrapper module."""
 import constants
 import krakenex
 

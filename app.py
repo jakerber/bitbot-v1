@@ -1,4 +1,4 @@
-"""BitBot APIs."""
+"""BitBot APIs module."""
 import constants
 import datetime
 import flask

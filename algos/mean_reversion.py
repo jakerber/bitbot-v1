@@ -1,10 +1,9 @@
-"""Mean reversion algos."""
+"""Mean reversion algo module."""
 import constants
 import math
 
-
 class PriceDeviation:
-    """Price Deviation object."""
+    """Object to store results from price deviation analysis."""
     def __init__(self, averagePrice, currentDeviation, currentPercentDeviation, currentPrice, standardDeviation, targetPrice):
         self.average_price = averagePrice
         self.current_deviation = currentDeviation
@@ -14,9 +13,8 @@ class PriceDeviation:
         self.standard_deviation = standardDeviation
         self.target_price = targetPrice
 
-
 class MeanReversion:
-    """Mean reversion object."""
+    """Object to analyze price deviation from the mean."""
     def __init__(self, currentPrice, pastPrices):
         self.currentPrice = currentPrice
         self.pastPrices = pastPrices

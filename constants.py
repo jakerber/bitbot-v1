@@ -1,4 +1,4 @@
-"""Application constants."""
+"""BitBot constants module."""
 import os
 
 # api
@@ -41,7 +41,7 @@ KRAKEN_PRICE_TYPES = {"ask": "a",
                       "low": "l",
                       "open": "o"}
 
-# bitbot constants
+# trading constants
 ALLOW_MARGIN_TRADING = os.environ.get("ALLOW_MARGIN_TRADING") == "True"
 BASE_BUY_USD = float(os.environ.get("BASE_BUY_USD"))
 LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS"))

@@ -1,4 +1,4 @@
-"""Assistant module for fetching account and cryptocurrency info."""
+"""BitBot assistant information retrieval module."""
 from kraken import kraken
 import constants
 import logger
