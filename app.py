@@ -21,6 +21,9 @@ logger = logger.Logger("BitBot")
 # initialize mongodb connection
 mongodb = db.BitBotDB(app)
 
+# initialize assistant
+assistant = assistant.Assistant(mongodb)
+
 # initialize notifier
 notifier = notifier.Notifier()
 
@@ -34,7 +37,9 @@ def analyze():
     analysis = []
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
-            analysis.append({"ticker": ticker, "analysis": getMeanReversionAnalysis(ticker).__dict__})
+            currentPrice = assistant.getPrice(ticker, "ask")
+            priceHistory = assistant.getPriceHistory(ticker)
+            analysis.append({"ticker": ticker, "analysis": mean_reversion.MeanReversion(currentPrice, priceHistory).analyze().__dict__})
         except Exception as err:
             analysis.append({"ticker": ticker, "error": repr(err)})
     return _successResp(analysis)
@@ -113,7 +118,9 @@ def trade():
     ordersExecuted = {}
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
-            analysis = getMeanReversionAnalysis(ticker)
+            currentPrice = assistant.getPrice(ticker, "ask")
+            priceHistory = assistant.getPriceHistory(ticker)
+            analysis = mean_reversion.MeanReversion(currentPrice, priceHistory).analyze()
         except Exception as err:
             continue
 
@@ -207,12 +214,6 @@ def getTradeAmountUSD(currentPercentDeviation):
     currentDeviationAboveMin = currentPercentDeviation - constants.PERCENT_DEVIATION_THRESHOLD_MIN
     multiplier = min(currentDeviationAboveMin / maxDeviationAboveMin, 1.0)
     return constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
-
-def getMeanReversionAnalysis(ticker):
-    """Get mean reversion analysis (standard deviation, etc.)."""
-    currentPrice = assistant.getPrice(ticker, "ask")
-    priceHistory = assistant.getPriceHistory(ticker)
-    return mean_reversion.MeanReversion(currentPrice, priceHistory).analyze()
 
 def shouldTrade(currentPercentDeviation):
     """Determine if a cryptocurrency should be traded."""
