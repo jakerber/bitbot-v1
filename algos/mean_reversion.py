@@ -2,7 +2,7 @@
 import constants
 import math
 
-class PriceDeviation:
+class MeanReversionAnalysis:
     """Object to store results from price deviation analysis."""
     def __init__(self, averagePrice, currentDeviation, currentPercentDeviation, currentPrice, standardDeviation, targetPrice):
         self.average_price = averagePrice
@@ -38,5 +38,5 @@ class MeanReversion:
         currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
         targetPrice = self.currentPrice + standardDeviation if self.currentPrice < averagePrice else self.currentPrice - standardDeviation
 
-        # return price deviation instance
-        return PriceDeviation(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
+        # return analysis
+        return MeanReversionAnalysis(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
