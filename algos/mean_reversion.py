@@ -42,7 +42,12 @@ class MeanReversion:
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
         currentDeviation = abs(self.currentPrice - averagePrice)
         currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
-        targetPrice = self.currentPrice + standardDeviation if self.currentPrice < averagePrice else self.currentPrice - standardDeviation
+
+        # predict target price
+        if self.currentPrice < averagePrice:
+            targetPrice = min(self.currentPrice + standardDeviation, averagePrice)
+        else:
+            targetPrice = max(self.currentPrice - standardDeviation, averagePrice)
 
         # return analysis
         return MeanReversionAnalysis(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
