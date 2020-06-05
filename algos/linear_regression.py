@@ -4,8 +4,8 @@ from sklearn import linear_model
 
 class LinearRegression:
     """Object to represent a linear regression model."""
-    def __init__(self, ticker, priceHistory):
-        self.ticker = ticker
+    def __init__(self, currentPrice, priceHistory):
+        self.currentPrice = currentPrice
         self.priceHistory = priceHistory
 
         # generate model
@@ -19,6 +19,10 @@ class LinearRegression:
             self.dataset["day"].append(i)
             self.dataset["price"].append(price)
 
+        # add current price to dataset
+        self.dataset["day"].append(len(self.priceHistory))
+        self.dataset["price"].append(self.currentPrice)
+
         # instantiate pandas dataframe
         self.dataframe = pandas.DataFrame.from_dict(self.dataset)
         self.days = self.dataframe.iloc[:, 0].values.reshape(-1, 1)
@@ -29,6 +33,6 @@ class LinearRegression:
         self.model.fit(self.days, self.prices)
 
     def predict(self, daysFromNow):
-        """Predict the future price."""
+        """Predict future prices."""
         daysFromNow += constants.LOOKBACK_DAYS
         return self.model.predict([[daysFromNow]])

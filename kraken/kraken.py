@@ -142,7 +142,7 @@ def short(ticker, amount, priceLimit, priceTarget):
 
     # ensure sufficient margin is available to open short position
     if not sufficientMargin(amount * priceLimit):
-        raise RuntimeError("insufficient margin available: short would reduce margin level below %.f%%" % constants.MARGIN_LEVEL_LIMIT)
+        raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
 
     # add kraken sell order
     try:

@@ -24,15 +24,21 @@ class MeanReversion:
         # calculate averages and sum the deviations squared
         priceSum = 0.0
         movingAverage = 0.0
+        self.movingAverages = []  # expose for visualization
         deviationsSquaredSum = 0.0
         for i, price in enumerate(self.priceHistory, 1):
             priceSum += price
             movingAverage = priceSum / i
+            self.movingAverages.append([movingAverage])  # aggregate for visualization
             priceDeviation = abs(price - movingAverage)
             deviationsSquaredSum += priceDeviation ** 2
 
+        # finalize average price using moving average
+        priceSum += self.currentPrice
+        averagePrice = priceSum / constants.LOOKBACK_DAYS
+        self.movingAverages.append([averagePrice])  # aggregate for visualization
+
         # calculate standard and current price deviations
-        averagePrice = movingAverage
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
         currentDeviation = abs(self.currentPrice - averagePrice)
         currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0

@@ -1,13 +1,16 @@
 """BitBot APIs module."""
+import assistant
+import base64
 import constants
 import datetime
 import flask
+import io
 import json
 import logger
-import assistant
 import math
 import notifier
 import os
+import visualizer
 from algos import mean_reversion
 from db import db
 from db import models
@@ -97,6 +100,22 @@ def equity():
     except Exception as err:
         return _failedResp(err)
     return _successResp({"balances": balances, "value_usd": value, "margin_used_usd": marginUsed})
+
+@app.route("%s/visualize/<ticker>" % constants.API_ROOT)
+def visualize(ticker):
+    """View visualization of current price prediction."""
+    if ticker not in constants.SUPPORTED_CRYPTOS:
+        return _failedResp("ticker not supported: %s" % ticker, statusCode=400)  # 400 bad request
+
+    # generate visualization
+    currentPrice = assistant.getPrice(ticker, "ask")
+    priceHistory = assistant.getPriceHistory(ticker)
+    visualization = visualizer.visualize(ticker, currentPrice, priceHistory)
+
+    # display visualization
+    image = io.BytesIO()
+    visualization.print_png(image)
+    return flask.Response(image.getvalue(), mimetype="image/png")
 
 @app.route("/")
 def root():
