@@ -15,11 +15,11 @@ from db import models
 # initialize flask app
 app = flask.Flask(__name__)
 
-# initialize mongodb
-mongodb = db.BitBotDB(app)
-
 # initialize logger
 logger = logger.Logger("BitBot")
+
+# initialize mongodb connection
+mongodb = db.BitBotDB(app)
 
 # initialize notifier
 notifier = notifier.Notifier()
@@ -210,23 +210,9 @@ def getTradeAmountUSD(currentPercentDeviation):
 
 def getMeanReversionAnalysis(ticker):
     """Get mean reversion analysis (standard deviation, etc.)."""
-    # collect dates from past number of days
-    dates = []
-    now = datetime.datetime.now()
-    for daysAgo in range(constants.LOOKBACK_DAYS):
-        delta = datetime.timedelta(days=daysAgo)
-        dateDaysAgo = now - delta
-        dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
-
-    # fetch prices on dates
-    queryFilter = {"date": {"$in": dates}, "ticker": ticker}
-    querySort = ("date", constants.MONGODB_SORT_ASC)
-    entries = mongodb.find("price", filter=queryFilter, sort=querySort)
-
-    # calculate and return price deviations
-    prices = [entry["open"] for entry in entries]
     currentPrice = assistant.getPrice(ticker, "ask")
-    return mean_reversion.MeanReversion(currentPrice, prices).analyze()
+    priceHistory = assistant.getPriceHistory(ticker)
+    return mean_reversion.MeanReversion(currentPrice, priceHistory).analyze()
 
 def shouldTrade(currentPercentDeviation):
     """Determine if a cryptocurrency should be traded."""

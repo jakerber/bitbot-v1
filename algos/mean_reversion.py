@@ -15,13 +15,9 @@ class PriceDeviation:
 
 class MeanReversion:
     """Object to analyze price deviation from the mean."""
-    def __init__(self, currentPrice, pastPrices):
+    def __init__(self, currentPrice, priceHistory):
         self.currentPrice = currentPrice
-        self.pastPrices = pastPrices
-
-        # validate past prices exist
-        if not self.pastPrices:
-            raise RuntimeError("price history is empty")
+        self.priceHistory = priceHistory
 
     def analyze(self):
         """Analyze the current price deviation from the mean."""
@@ -29,7 +25,7 @@ class MeanReversion:
         priceSum = 0.0
         movingAverage = 0.0
         deviationsSquaredSum = 0.0
-        for i, price in enumerate(self.pastPrices, 1):
+        for i, price in enumerate(self.priceHistory, 1):
             priceSum += price
             movingAverage = priceSum / i
             priceDeviation = abs(price - movingAverage)
@@ -37,7 +33,7 @@ class MeanReversion:
 
         # calculate standard and current price deviations
         averagePrice = movingAverage
-        standardDeviation = math.sqrt(deviationsSquaredSum / len(self.pastPrices))
+        standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
         currentDeviation = abs(self.currentPrice - averagePrice)
         currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
         targetPrice = self.currentPrice + standardDeviation if self.currentPrice < averagePrice else self.currentPrice - standardDeviation
