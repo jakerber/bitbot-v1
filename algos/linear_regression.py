@@ -31,8 +31,9 @@ class LinearRegression:
         # generate sklearn linear regression model
         self.model = linear_model.LinearRegression()
         self.model.fit(self.days, self.prices)
+        self.trend = self.model.predict(self.days)
 
-    def predict(self, daysFromNow):
+    def predict(self, daysFromNow=0):
         """Predict future prices."""
         daysFromNow += constants.LOOKBACK_DAYS
         return self.model.predict([[daysFromNow]])

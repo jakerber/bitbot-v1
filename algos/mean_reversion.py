@@ -1,6 +1,7 @@
 """Mean reversion algo module."""
 import constants
 import math
+from algos import linear_regression
 
 class MeanReversionAnalysis:
     """Object to store results from price deviation analysis."""
@@ -21,33 +22,41 @@ class MeanReversion:
 
     def analyze(self):
         """Analyze the current price deviation from the mean."""
-        # calculate averages and sum the deviations squared
+        # calculate moving averages
         priceSum = 0.0
         movingAverage = 0.0
         self.movingAverages = []  # expose for visualization
-        deviationsSquaredSum = 0.0
         for i, price in enumerate(self.priceHistory, 1):
             priceSum += price
             movingAverage = priceSum / i
             self.movingAverages.append([movingAverage])  # aggregate for visualization
-            priceDeviation = abs(price - movingAverage)
-            deviationsSquaredSum += priceDeviation ** 2
 
-        # finalize average price using moving average
+        # determine average price using moving averages
         priceSum += self.currentPrice
         averagePrice = priceSum / constants.LOOKBACK_DAYS
         self.movingAverages.append([averagePrice])  # aggregate for visualization
 
-        # calculate standard and current price deviations
-        standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
-        currentDeviation = abs(self.currentPrice - averagePrice)
-        currentPercentDeviation = currentDeviation / standardDeviation if standardDeviation else 0.0
+        # generate linear regression model
+        model = linear_regression.LinearRegression(self.currentPrice, self.priceHistory)
 
-        # predict target price
-        if self.currentPrice < averagePrice:
-            targetPrice = min(self.currentPrice + standardDeviation, averagePrice)
+        # calculate standard deviation using linear regression model
+        deviationsSquaredSum = 0.0
+        for i, historicalPrice in enumerate(self.priceHistory):
+            trendPrice = model.trend[i][0]
+            priceDeviation = abs(historicalPrice - trendPrice)
+            deviationsSquaredSum += priceDeviation ** 2
+        standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
+
+        # calculate current price deviation from current trend price
+        trendPrice = model.trend[-1][0]
+        currentDeviation = abs(self.currentPrice - trendPrice)
+        currentPercentDeviation = currentDeviation / standardDeviation
+
+        # determine target price from percent deviation
+        if self.currentPrice < trendPrice:
+            targetPrice = min(self.currentPrice + standardDeviation, trendPrice)
         else:
-            targetPrice = max(self.currentPrice - standardDeviation, averagePrice)
+            targetPrice = max(self.currentPrice - standardDeviation, trendPrice)
 
         # return analysis
         return MeanReversionAnalysis(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
