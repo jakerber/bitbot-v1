@@ -145,7 +145,7 @@ def trade():
 
         # trade if price deviation thresholds are met
         if shouldTrade(analysis.current_percent_deviation):
-            if analysis.average_price > analysis.current_price:
+            if analysis.target_price > analysis.current_price:
                 tradeFunc = assistant.buy
             else:
                 tradeFunc = assistant.short

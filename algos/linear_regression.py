@@ -1,4 +1,5 @@
 """Linear regression algo module."""
+import constants
 import pandas
 from sklearn import linear_model
 
@@ -36,4 +37,4 @@ class LinearRegression:
     def predict(self, daysFromNow=0):
         """Predict future prices."""
         daysFromNow += constants.LOOKBACK_DAYS
-        return self.model.predict([[daysFromNow]])
+        return self.model.predict([[daysFromNow]])[0][0]

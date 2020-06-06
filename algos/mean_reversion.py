@@ -52,11 +52,12 @@ class MeanReversion:
         currentDeviation = abs(self.currentPrice - trendPrice)
         currentPercentDeviation = currentDeviation / standardDeviation
 
-        # determine target price from percent deviation
+        # determine target price from standard deviation
+        trendPriceTomorrow = model.predict(1)  # 1 day from now
         if self.currentPrice < trendPrice:
-            targetPrice = min(self.currentPrice + standardDeviation, trendPrice)
+            targetPrice = min(self.currentPrice + standardDeviation, trendPriceTomorrow)
         else:
-            targetPrice = max(self.currentPrice - standardDeviation, trendPrice)
+            targetPrice = max(self.currentPrice - standardDeviation, trendPriceTomorrow)
 
         # return analysis
         return MeanReversionAnalysis(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
