@@ -229,14 +229,13 @@ def snapshotPrices():
 
 def getTradeAmountUSD(currentPercentDeviation):
     """Determine how much of the cryptocurrency should be traded."""
-    maxDeviationAboveMin = constants.PERCENT_DEVIATION_THRESHOLD_MAX - constants.PERCENT_DEVIATION_THRESHOLD_MIN
-    currentDeviationAboveMin = currentPercentDeviation - constants.PERCENT_DEVIATION_THRESHOLD_MIN
-    multiplier = min(currentDeviationAboveMin / maxDeviationAboveMin, 1.0)
+    deviationAboveThreshold = currentPercentDeviation - constants.PERCENT_DEVIATION_THRESHOLD
+    multiplier = min(deviationAboveThreshold, constants.TRADE_MULTIPLIER_MAX)
     return constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
 
 def shouldTrade(currentPercentDeviation):
     """Determine if a cryptocurrency should be traded."""
-    return currentPercentDeviation >= constants.PERCENT_DEVIATION_THRESHOLD_MIN
+    return currentPercentDeviation >= constants.PERCENT_DEVIATION_THRESHOLD
 
 ###############################
 ##  Response formatting
