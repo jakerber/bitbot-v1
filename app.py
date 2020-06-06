@@ -236,7 +236,7 @@ def getTradeAmountUSD(currentPercentDeviation):
 
 def shouldTrade(currentPercentDeviation):
     """Determine if a cryptocurrency should be traded."""
-    return constants.PERCENT_DEVIATION_THRESHOLD_MAX >= currentPercentDeviation >= constants.PERCENT_DEVIATION_THRESHOLD_MIN
+    return currentPercentDeviation >= constants.PERCENT_DEVIATION_THRESHOLD_MIN
 
 ###############################
 ##  Response formatting
