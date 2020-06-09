@@ -24,6 +24,7 @@ def visualize(ticker, currentPrice, priceHistory):
     pyplot.ylabel("price ($)")
     startingDate = (datetime.datetime.now() - datetime.timedelta(days=constants.LOOKBACK_DAYS)).strftime("%Y-%m-%d")
     pyplot.xlabel("days after %s (%i days ago)" % (startingDate, constants.LOOKBACK_DAYS))
+    pyplot.grid(color="silver", linestyle="--", linewidth=0.5, alpha=0.5)
 
     # plot price history and trend lines
     trend = regression.model.predict(regression.days)
