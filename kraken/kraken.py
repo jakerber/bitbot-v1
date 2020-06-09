@@ -47,14 +47,17 @@ def getPrice(ticker, priceType):
     requestData = {"pair": "%sUSD" % krakenTicker}
     resp = _executeRequest(kraken.query_public, "Ticker", requestData=requestData)
 
-    # return crypto price
+    # determine how to interpret results
     priceTypeCode = constants.KRAKEN_PRICE_TYPES[priceType]
     priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     if priceCode not in resp["result"]:
         priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-    price = resp["result"][priceCode][priceTypeCode][0]
+
+    # return crypto price
     if priceType == "open":  # open price is a single value, not an array
         price = resp["result"][priceCode][priceTypeCode]
+    else:
+        price = resp["result"][priceCode][priceTypeCode][0]
     return float(price)
 
 ############################
@@ -101,17 +104,21 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 ##  Trading
 ############################
 
-def buy(ticker, amount, priceLimit, priceTarget):
+def buy(ticker, amount, priceTarget):
     """Buy a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD % krakenTicker
     requestData = {"pair": cryptoPair,
                    "type": "buy",
-                   "ordertype": "limit",
-                   "price": priceLimit,
+                   "ordertype": "market",
                    "volume": amount,
                    "close[ordertype]": "limit",
                    "close[price]": priceTarget}
+
+    # verify target price is above ask price
+    askPrice = self.getPrice(ticker, "ask")
+    if not priceTarget > askPrice:
+        raise RuntimeError("unable to buy %s: target price ($%.3f) must be above ask price ($%.3f)" % (ticker, priceTarget, askPrice))
 
     # add kraken buy order
     try:
@@ -127,21 +134,25 @@ def buy(ticker, amount, priceLimit, priceTarget):
 
     return resp["result"]["descr"]
 
-def short(ticker, amount, priceLimit, priceTarget):
+def short(ticker, amount, priceTarget):
     """Short a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     requestData = {"pair": cryptoPair,
                    "type": "sell",
-                   "ordertype": "limit",
-                   "price": priceLimit,
+                   "ordertype": "market",
                    "volume": amount,
                    "leverage": DEFAULT_LEVERAGE,
                    "close[ordertype]": "limit",
                    "close[price]": priceTarget}
 
+    # verify target price is below bid price
+    bidPrice = self.getPrice(ticker, "bid")
+    if not priceTarget < bidPrice:
+        raise RuntimeError("unable to short %s: target price ($%.3f) must be below bid price ($%.3f)" % (ticker, priceTarget, bidPrice))
+
     # ensure sufficient margin is available to open short position
-    if not sufficientMargin(amount * priceLimit):
+    if not sufficientMargin(amount * bidPrice):
         raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
 
     # add kraken sell order

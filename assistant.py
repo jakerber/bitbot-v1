@@ -97,20 +97,16 @@ class Assistant:
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, priceLimit, priceTarget):
+    def buy(self, ticker, amount, priceTarget):
         """Buy a cryptocurrency."""
-        self.logger.log("buying %f of %s @ price $%f (target $%f)" % (amount, ticker, priceLimit, priceTarget))
+        self.logger.log("buying %f of %s @ target $%f" % (amount, ticker, priceTarget))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        if priceTarget < priceLimit:
-            raise RuntimeError("price target (%f) must be above price limit (%f)" % (priceTarget, priceLimit))
-        return kraken.buy(ticker, amount, priceLimit, priceTarget)
+        return kraken.buy(ticker, amount, priceTarget)
 
-    def short(self, ticker, amount, priceLimit, priceTarget):
+    def short(self, ticker, amount, priceTarget):
         """Short a cryptocurrency."""
-        self.logger.log("shorting %f of %s @ price $%f (target $%f)" % (amount, ticker, priceLimit, priceTarget))
+        self.logger.log("shorting %f of %s @ target $%f" % (amount, ticker, priceTarget))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        if priceTarget > priceLimit:
-            raise RuntimeError("price target (%f) must be below price limit (%f)" % (priceTarget, priceLimit))
-        return kraken.short(ticker, amount, priceLimit, priceTarget)
+        return kraken.short(ticker, amount, priceTarget)

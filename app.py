@@ -161,7 +161,7 @@ def trade():
 
             # safetly execute trade
             try:
-                orderDescription = tradeFunc(ticker, tradeAmount, priceLimit=analysis.current_price, priceTarget=analysis.target_price)
+                orderDescription = tradeFunc(ticker, tradeAmount, priceTarget=analysis.target_price)
                 logger.log("trade executed successfully")
                 logger.log(orderDescription, moneyExchanged=True)
             except Exception as err:
