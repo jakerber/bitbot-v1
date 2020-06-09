@@ -177,10 +177,6 @@ def sendDailySummary():
     datetimeDayAgo = datetime.datetime.now() - datetime.timedelta(days=1)
     tradesExecuted = assistant.getTradeHistory(startDatetime=datetimeDayAgo)
 
-    # only send summary email if trades were executed today
-    if not tradesExecuted:
-        return
-
     # notify via email
     emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
     emailBody = "Account value:"
