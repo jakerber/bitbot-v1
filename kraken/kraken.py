@@ -6,6 +6,7 @@ import time
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 DEFAULT_LEVERAGE = "2"
+ORDER_EXPIRATION = "+%i" % constants.ORDER_EXPIRATION_SECONDS
 UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 
 ############################
@@ -112,11 +113,12 @@ def buy(ticker, amount, priceTarget):
                    "type": "buy",
                    "ordertype": "market",
                    "volume": amount,
+                   "expiretm": ORDER_EXPIRATION,
                    "close[ordertype]": "limit",
                    "close[price]": priceTarget}
 
     # verify target price is above ask price
-    askPrice = self.getPrice(ticker, "ask")
+    askPrice = getPrice(ticker, "ask")
     if not priceTarget > askPrice:
         raise RuntimeError("unable to buy %s: target price ($%.3f) must be above ask price ($%.3f)" % (ticker, priceTarget, askPrice))
 
@@ -143,11 +145,12 @@ def short(ticker, amount, priceTarget):
                    "ordertype": "market",
                    "volume": amount,
                    "leverage": DEFAULT_LEVERAGE,
+                   "expiretm": ORDER_EXPIRATION,
                    "close[ordertype]": "limit",
                    "close[price]": priceTarget}
 
     # verify target price is below bid price
-    bidPrice = self.getPrice(ticker, "bid")
+    bidPrice = getPrice(ticker, "bid")
     if not priceTarget < bidPrice:
         raise RuntimeError("unable to short %s: target price ($%.3f) must be below bid price ($%.3f)" % (ticker, priceTarget, bidPrice))
 
