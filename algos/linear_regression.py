@@ -13,7 +13,7 @@ class LinearRegression:
         self.generate()
 
     def generate(self):
-        """Analyze current price predictions from the linear regression model."""
+        """Generate a linear regression model from historical price data."""
         # format dataset
         self.dataset = {"day": [], "price": []}
         for i, price in enumerate(self.priceHistory):
