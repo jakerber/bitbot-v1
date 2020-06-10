@@ -19,7 +19,7 @@ class Assistant:
         self.logger.log("fetching %s price of %s" % (priceType, ticker))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        if priceType not in constants.KRAKEN_PRICE_TYPES:
+        if priceType not in constants.SUPPORTED_PRICE_TYPES:
             raise RuntimeError("price type not supported: %s" % priceType)
 
         # fetch all prices
@@ -44,7 +44,7 @@ class Assistant:
 
         # parse price type out of response
         allPrices = {}
-        for priceType in constants.KRAKEN_PRICE_TYPES:
+        for priceType in constants.SUPPORTED_PRICE_TYPES:
             priceTypeCode = constants.KRAKEN_PRICE_TYPES.get(priceType).get("code")
             priceTypeIndex = constants.KRAKEN_PRICE_TYPES.get(priceType).get("index")
             allPrices[priceType] = float(prices.get(priceTypeCode)[priceTypeIndex])
