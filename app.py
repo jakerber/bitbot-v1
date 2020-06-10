@@ -94,7 +94,7 @@ def backfillCsv(filename):
 def equity():
     """Get current account balance in USD."""
     try:
-        balances = assistant.getAccountBalances()
+        balances = assistant.getBalances()
         value = assistant.getAccountValue()
         marginUsed = assistant.getMarginUsed()
     except Exception as err:
@@ -169,7 +169,7 @@ def trade():
 
 def sendDailySummary():
     """Sends a daily activity summary email."""
-    accountBalances = assistant.getAccountBalances()
+    accountBalances = assistant.getBalances()
     accountValue = assistant.getAccountValue()
     marginUsed = assistant.getMarginUsed()
 

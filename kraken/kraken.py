@@ -65,7 +65,7 @@ def getPrice(ticker, priceType):
 ##  Account info
 ############################
 
-def getAccountBalances():
+def getBalances():
     """Get all account balances."""
     resp = _executeRequest(kraken.query_private, "Balance")
     for balance in resp["result"]:
@@ -79,7 +79,7 @@ def getAccountValue():
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
-    balances = getAccountBalances()
+    balances = getBalances()
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
     if priceBalanceKey in balances:

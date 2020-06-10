@@ -66,12 +66,7 @@ class Assistant:
     ##  Account info
     ############################
 
-    def getAccountBalances(self, ):
-        """Get current account balances."""
-        self.logger.log("fetching account balance")
-        return kraken.getAccountBalances()
-
-    def getAccountValue(self, ):
+    def getAccountValue(self):
         """Get current value of account in USD."""
         self.logger.log("fetching account value")
         return kraken.getAccountValue()
@@ -83,7 +78,12 @@ class Assistant:
             raise RuntimeError("ticker not supported: %s" % ticker)
         return kraken.getBalance(ticker)
 
-    def getMarginUsed(self, ):
+    def getBalances(self):
+        """Get current balance of all assets."""
+        self.logger.log("fetching all balances")
+        return kraken.getBalances()
+
+    def getMarginUsed(self):
         """Get the current margin used for all open positions."""
         self.logger.log("fetching margin used")
         return kraken.getMarginUsed()
