@@ -20,8 +20,12 @@ def visualize(ticker, currentPrices, priceHistory):
     regression = linear_regression.LinearRegression(currentPrice, priceHistory)
     analysis = meanReversion.analyze()
 
-    # generate historical price visualization
+    # clear any previous visualizations
     pyplot.clf()
+    pyplot.cla()
+    pyplot.close()
+
+    # generate historical price visualization
     pyplot.title("%s History" % ticker)
     pyplot.ylabel("price ($)")
     pyplot.xlabel("timestamp (UTC)")
