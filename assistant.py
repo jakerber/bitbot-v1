@@ -21,47 +21,59 @@ class Assistant:
             raise RuntimeError("ticker not supported: %s" % ticker)
         if priceType not in constants.KRAKEN_PRICE_TYPES:
             raise RuntimeError("price type not supported: %s" % priceType)
-        priceType = constants.KRAKEN_PRICE_TYPES[priceType]
-        return kraken.getPrices(ticker)[priceType]
 
-    def getPrices(self, ticker):
-        """Get all current prices of a cryptocurrency."""
-        self.logger.log("fetching all prices of %s" % ticker)
+        # fetch all prices
+        prices = kraken.getPrices(ticker)
+
+        # parse price type out of response
+        priceTypeCode = constants.KRAKEN_PRICE_TYPES.get(priceType).get("code")
+        priceTypeIndex = constants.KRAKEN_PRICE_TYPES.get(priceType).get("index")
+        price = prices.get(priceTypeCode).get(priceTypeIndex)
+
+        # return converted price
+        return float(price)
+
+    def getAllPrices(self, ticker):
+        """Get all supported prices of a cryptocurrency."""
+        self.logger.log("fetching all prices of %s" % (ticker))
         if ticker not in constants.SUPPORTED_CRYPTOS:
-            raise RuntimeError("ticker %s not supported" % ticker)
-        return kraken.getPrices(ticker)
+            raise RuntimeError("ticker not supported: %s" % ticker)
 
-    def getPriceHistory(self, ticker, priceType="open"):
+        # fetch all prices
+        prices = kraken.getPrices(ticker)
+
+        # parse price type out of response
+        allPrices = {}
+        for priceType in constants.KRAKEN_PRICE_TYPES:
+            priceTypeCode = constants.KRAKEN_PRICE_TYPES.get(priceType).get("code")
+            priceTypeIndex = constants.KRAKEN_PRICE_TYPES.get(priceType).get("index")
+            allPrices[priceType] = float(prices.get(priceTypeCode)[priceTypeIndex])
+
+        # return all prices
+        return allPrices
+
+    def getPriceHistory(self, ticker):
         """Get the historical price data of a cryptocurrency."""
         self.logger.log("fetching price history of %s" % (ticker))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        if priceType not in constants.SUPPORTED_PRICE_TYPES:
-            raise RuntimeError("price type not supported: %s" % priceType)
 
-        # collect dates from lookback days
-        dates = []
-        now = datetime.datetime.now()
-        for daysAgo in range(1, constants.LOOKBACK_DAYS):
-            delta = datetime.timedelta(days=daysAgo)
-            dateDaysAgo = now - delta
-            dates.append(dateDaysAgo.strftime("%Y-%m-%d"))
+        # get starting unix timestamp based on lookback days
+        now = datetime.datetime.utcnow()
+        delta = datetime.timedelta(days=constants.LOOKBACK_DAYS)
+        startingDatetime = now - delta
 
-        # fetch prices on dates
-        queryFilter = {"date": {"$in": dates}, "ticker": ticker}
+        # fetch prices within lookback
+        queryFilter = {"ticker": ticker, "utc_datetime": {"$gte": startingDatetime}}
         querySort = ("date", constants.MONGODB_SORT_ASC)
         priceHistory = self.mongodb.find("price", filter=queryFilter, sort=querySort)
 
-        # verify price history is complete
+        # verify price history exists
         if not priceHistory:
             raise RuntimeError("%s price history is empty" % ticker)
-        elif len(priceHistory) != len(dates):
-            datesFromDatabase = [price["date"] for price in priceHistory]
-            missingDates = [date for date in dates if date not in datesFromDatabase]
-            raise RuntimeError("%s price history is missing dates: %s" % (ticker, missingDates))
 
         # return price history
-        return [price[priceType] for price in priceHistory]
+        return priceHistory
 
     ############################
     ##  Account info
@@ -71,16 +83,16 @@ class Assistant:
         """Get current value of account in USD."""
         self.logger.log("fetching account value")
         accountBalances = kraken.getAccountBalances()
-        return accountBalances["eb"] + accountBalances["n"]  # balance + net of open positions
+        return accountBalances.get("eb") + accountBalances.get("n")  # balance + net of open positions
 
     def getAssetBalance(self, ticker):
         """Get the current balance of an asset."""
         self.logger.log("fetching balance of %s" % ticker)
         assetBalances = getAssetBalances()
-        krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
+        krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
         priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
         if priceBalanceKey in assetBalances:
-            return assetBalances[priceBalanceKey]
+            return assetBalances.get(priceBalanceKey)
         return 0.0
 
     def getAssetBalances(self):
@@ -93,7 +105,7 @@ class Assistant:
         self.logger.log("fetching margin level")
         accountBalances = kraken.getAccountBalances()
         if "ml" in accountBalances:
-            return accountBalances["ml"]
+            return accountBalances.get("ml")
         return None
 
     def getTradeHistory(self, startDatetime=None, endDatetime=None):

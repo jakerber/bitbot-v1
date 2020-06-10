@@ -28,7 +28,7 @@ class Notifier:
             self.logger.log("email notification sent successfully")
             return
         try:
-            errorMessage = resp.json()["message"]
+            errorMessage = resp.json().get("message")
         except Exception:
             errorMessage = "error unknown"
         self.logger.log("unable to send email notification: %s" % errorMessage)

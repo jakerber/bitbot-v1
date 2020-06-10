@@ -14,25 +14,31 @@ UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 ############################
 
 def getPrices(ticker):
-    """Get all current prices of a cryptocurrency."""
+    """Get all current prices of a cryptocurrency.
+
+    Response format: (https://www.kraken.com/en-us/features/api#get-ticker-info)
+        {
+            "a": ["9718.50000", "1", "1.000"],
+            "b": ["9715.60000", "4", "4.000"],
+            "c": ["9712.70000", "0.03238337"],
+            "v": ["22.15109020", "6976.84439690"],
+            "p": ["9709.27880", "9687.91860"],
+            "t": [70, 22174],
+            "l": ["9675.60000", "9331.70000"],
+            "h": ["9722.70000", "9888.00000"],
+            "o": "9675.60000"
+        }
+    """
     # execute kraken price request
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
-    requestData = {"pair": "%sUSD" % krakenTicker}
+    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
+    requestData = {"pair": constants.KRAKEN_ASSET_PAIR_TEMPLATE % krakenTicker}
     resp = _executeRequest(kraken.query_public, "Ticker", requestData=requestData)
 
-    # determine price code used to interpret results
+    # return all current prices
     priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-    if priceCode not in resp["result"]:
+    if priceCode not in resp.get("result"):
         priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-    allPrices = resp["result"][priceCode]
-
-    # convert all prices to floats and return
-    for priceType in allPrices:
-        if priceType == "open":  # open price is a single value, not an array
-            allPrices[priceType] = float(allPrices[priceType])
-        else:
-            allPrices[priceType] = float(allPrices[priceType][0])
-    return allPrices
+    return resp.get("result").get(priceCode)
 
 ############################
 ##  Account info
@@ -41,16 +47,16 @@ def getPrices(ticker):
 def getAccountBalances():
     """Get all account balances."""
     resp = _executeRequest(kraken.query_private, "TradeBalance")
-    for balance in resp["result"]:
-        resp["result"][balance] = float(resp["result"][balance])
-    return resp["result"]
+    for balance in resp.get("result"):
+        resp["result"][balance] = float(resp.get("result").get(balance))
+    return resp.get("result")
 
 def getAssetBalances():
     """Get all asset balances."""
     resp = _executeRequest(kraken.query_private, "Balance")
-    for balance in resp["result"]:
-        resp["result"][balance] = float(resp["result"][balance])
-    return resp["result"]
+    for balance in resp.get("result"):
+        resp["result"][balance] = float(resp.get("result").get(balance))
+    return resp.get("result")
 
 def getTradeHistory(startDatetime=None, endDatetime=None):
     """Get trade history for this account."""
@@ -60,7 +66,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
     if endDatetime:
         requestData["end"] = endDatetime.timestamp()
     resp = _executeRequest(kraken.query_private, "TradesHistory", requestData=requestData)
-    return resp["result"]
+    return resp.get("result")
 
 ############################
 ##  Trading
@@ -68,7 +74,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 
 def buy(ticker, amount, priceTarget):
     """Buy a cryptocurrency."""
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
+    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD % krakenTicker
     requestData = {"pair": cryptoPair,
                    "type": "buy",
@@ -79,7 +85,7 @@ def buy(ticker, amount, priceTarget):
                    "close[price]": priceTarget}
 
     # verify target price is above ask price
-    askPrice = getPrices(ticker)["a"]
+    askPrice = getPrices(ticker).get("a")
     if not priceTarget > askPrice:
         raise RuntimeError("unable to buy %s: target price ($%.3f) must be above ask price ($%.3f)" % (ticker, priceTarget, askPrice))
 
@@ -95,11 +101,11 @@ def buy(ticker, amount, priceTarget):
             requestData["pair"] = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
             resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
 
-    return resp["result"]["descr"]
+    return resp.get("result").get("descr")
 
 def short(ticker, amount, priceTarget):
     """Short a cryptocurrency."""
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
+    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     requestData = {"pair": cryptoPair,
                    "type": "sell",
@@ -111,7 +117,7 @@ def short(ticker, amount, priceTarget):
                    "close[price]": priceTarget}
 
     # verify target price is below bid price
-    bidPrice = getPrices(ticker)["b"]
+    bidPrice = getPrices(ticker).get("b")
     if not priceTarget < bidPrice:
         raise RuntimeError("unable to short %s: target price ($%.3f) must be below bid price ($%.3f)" % (ticker, priceTarget, bidPrice))
 
@@ -131,7 +137,7 @@ def short(ticker, amount, priceTarget):
             requestData["pair"] = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
             resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
 
-    return resp["result"]["descr"]
+    return resp.get("result").get("descr")
 
 ############################
 ##  Helper methods
@@ -139,8 +145,8 @@ def short(ticker, amount, priceTarget):
 
 def sufficientMargin(shortAmountUSD):
     """Determine if there is enough margin available to open a short position."""
-    currentEquity = getAccountBalances()["e"]
-    currentMarginUsed = getAccountBalances()["m"]
+    currentEquity = getAccountBalances().get("e")
+    currentMarginUsed = getAccountBalances().get("m")
     usedMarginAfterShort = currentMarginUsed + shortAmountUSD
     marginLevelAfterShort = (currentEquity / usedMarginAfterShort) * 100
     return marginLevelAfterShort > constants.MARGIN_LEVEL_LIMIT
@@ -150,8 +156,8 @@ def _executeRequest(api, requestName, requestData={}):
     resp = api(requestName, requestData)
 
     # raise error if necessary
-    if resp["error"] or "result" not in resp:
-        raise RuntimeError("unable to execute Kraken %s request: %s" % (requestName, resp["error"]))
+    if resp.get("error") or "result" not in resp:
+        raise RuntimeError("unable to execute Kraken %s request: %s" % (requestName, resp.get("error")))
 
     # pause to avoid spamming exchange
     time.sleep(constants.KRAKEN_API_CALL_INTERVAL_SEC)

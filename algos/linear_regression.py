@@ -1,6 +1,8 @@
 """Linear regression algo module."""
 import constants
+import datetime
 import pandas
+import statistics
 from sklearn import linear_model
 
 class LinearRegression:
@@ -15,26 +17,23 @@ class LinearRegression:
     def generate(self):
         """Generate a linear regression model from historical price data."""
         # format dataset
-        self.dataset = {"day": [], "price": []}
-        for i, price in enumerate(self.priceHistory):
-            self.dataset["day"].append(i)
+        self.dataset = {"unix_timestamp": [], "price": []}
+        for prices in self.priceHistory:
+            unixTimestamp = prices.get("utc_datetime").timestamp()
+            price = statistics.mean([prices.get("ask"), prices.get("bid")])
+            self.dataset["unix_timestamp"].append(unixTimestamp)
             self.dataset["price"].append(price)
 
         # add current price to dataset
-        self.dataset["day"].append(len(self.priceHistory))
+        self.dataset["unix_timestamp"].append(datetime.datetime.utcnow().timestamp())
         self.dataset["price"].append(self.currentPrice)
 
         # instantiate pandas dataframe
         self.dataframe = pandas.DataFrame.from_dict(self.dataset)
-        self.days = self.dataframe.iloc[:, 0].values.reshape(-1, 1)
+        self.timestamps = self.dataframe.iloc[:, 0].values.reshape(-1, 1)
         self.prices = self.dataframe.iloc[:, 1].values.reshape(-1, 1)
 
         # generate sklearn linear regression model
         self.model = linear_model.LinearRegression()
-        self.model.fit(self.days, self.prices)
-        self.trend = self.model.predict(self.days)
-
-    def predict(self, daysFromNow=0):
-        """Predict future prices."""
-        daysFromNow += constants.LOOKBACK_DAYS
-        return self.model.predict([[daysFromNow]])[0][0]
+        self.model.fit(self.timestamps, self.prices)
+        self.trend = self.model.predict(self.timestamps)

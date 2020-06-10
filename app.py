@@ -40,16 +40,16 @@ def analyze():
     analysis = []
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
-            currentPrice = assistant.getPrice(ticker, "ask")
+            currentPrices = assistant.getAllPrices(ticker)
             priceHistory = assistant.getPriceHistory(ticker)
-            analysis.append({"ticker": ticker, "analysis": mean_reversion.MeanReversion(currentPrice, priceHistory).analyze().__dict__})
+            analysis.append({"ticker": ticker, "analysis": mean_reversion.MeanReversion(currentPrices, priceHistory).analyze().__dict__})
         except Exception as err:
             analysis.append({"ticker": ticker, "error": repr(err)})
     return _successResp(analysis)
 
 @app.route("%s/backfill/<filename>" % constants.API_ROOT)
 def backfillCsv(filename):
-    """Backfill price history based on CSV dataset (https://coindesk.com/price/bitcoin)."""
+    """Backfill price history based on CSV dataset."""
     filepath = "datasets/%s" % filename
     if not os.path.exists(filepath):
         return _failedResp("dataset does not exist: %s" % filename, 400)  # 400 bad request
@@ -108,9 +108,9 @@ def visualize(ticker):
         return _failedResp("ticker not supported: %s" % ticker, statusCode=400)  # 400 bad request
 
     # generate visualization
-    currentPrice = assistant.getPrice(ticker, "ask")
+    currentPrices = assistant.getAllPrices(ticker)
     priceHistory = assistant.getPriceHistory(ticker)
-    visualization = visualizer.visualize(ticker, currentPrice, priceHistory)
+    visualization = visualizer.visualize(ticker, currentPrices, priceHistory)
 
     # display visualization
     image = io.BytesIO()
@@ -137,9 +137,9 @@ def trade():
     ordersExecuted = {}
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
-            currentPrice = assistant.getPrice(ticker, "ask")
+            currentPrices = assistant.getAllPrices(ticker)
             priceHistory = assistant.getPriceHistory(ticker)
-            analysis = mean_reversion.MeanReversion(currentPrice, priceHistory).analyze()
+            analysis = mean_reversion.MeanReversion(currentPrices, priceHistory).analyze()
         except Exception as err:
             continue
 
@@ -173,8 +173,8 @@ def sendDailySummary():
     accountValue = assistant.getAccountValue()
     marginLevel = assistant.getMarginLevel()
 
-    # fetch trades that were executed today
-    datetimeDayAgo = datetime.datetime.now() - datetime.timedelta(days=1)
+    # fetch trades that were executed in the past day
+    datetimeDayAgo = datetime.datetime.utcnow() - datetime.timedelta(days=1)
     tradesExecuted = assistant.getTradeHistory(startDatetime=datetimeDayAgo)
 
     # notify via email
@@ -189,31 +189,21 @@ def sendDailySummary():
     emailBody += "\n" + json.dumps(tradesExecuted, indent=6)
     notifier.email(emailSubject, emailBody)
 
-def snapshotPrices():
-    """Store the prices of all supported cryptocurrency."""
+def snapshot():
+    """Store the relevant prices of all supported cryptocurrencies."""
     snapshots = []
     for ticker in constants.SUPPORTED_CRYPTOS:
-
-        # ensure price doesn't already exist for today
-        currentDate = datetime.datetime.now().strftime("%Y-%m-%d")
-        queryFilter = {"date": currentDate, "ticker": ticker}
-        entry = mongodb.find("price", queryFilter)
-        if entry:
-            logger.log("%s price snapshot already exists for %s: %s" % (ticker, currentDate, repr(entry[0])))
-            continue
-
-        # fetch relevant prices
         try:
-            prices = assistant.getPrices(ticker)
+            allPrices = assistant.getAllPrices(ticker)
+            ask = allPrices.get("ask")
+            bid = allPrices.get("bid")
+            vwap = allPrices.get("vwap")
         except Exception as err:
-            logger.log("unable to fetch prices of %s: %s" % (ticker, repr(err)))
+            logger.log("unable to fetch price snapshot of %s: %s" % (ticker, repr(err)))
             continue
-        openPrice = float(prices["o"])
-        highPrice = float(prices["h"][0])
-        lowPrice = float(prices["l"][0])
 
         # store relevant prices in database
-        priceModel = models.Price(ticker, openPrice, highPrice, lowPrice)
+        priceModel = models.Price(ticker, ask, bid, vwap)
         try:
             mongodb.insert(priceModel)
         except Exception as err:
