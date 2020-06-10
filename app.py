@@ -1,15 +1,12 @@
 """BitBot APIs module."""
 import assistant
-import base64
 import constants
 import datetime
 import flask
 import io
 import json
 import logger
-import math
 import notifier
-import os
 import trader
 import visualizer
 from algos import mean_reversion
@@ -47,49 +44,6 @@ def analyze():
         except Exception as err:
             analysis.append({"ticker": ticker, "error": repr(err)})
     return _successResp(analysis)
-
-@app.route("%s/backfill/<filename>" % constants.API_ROOT)
-def backfillCsv(filename):
-    """Backfill price history based on CSV dataset."""
-    filepath = "datasets/%s" % filename
-    if not os.path.exists(filepath):
-        return _failedResp("dataset does not exist: %s" % filename, 400)  # 400 bad request
-
-    # aggregate prices from dataset
-    headerLine = True
-    newPriceModels = []
-    with open(filepath) as priceHistoryFile:
-        for line in priceHistoryFile:
-            if headerLine:
-                headerLine = False
-                continue
-
-            # split fields in CSV
-            fields = line.split(",")
-            ticker = fields[0]
-            date = fields[1]
-            openPrice = float(fields[3])
-            highPrice = float(fields[4])
-            lowPrice = float(fields[5])
-
-            # initialize new price model
-            newPriceModel = models.Price(ticker, openPrice, highPrice, lowPrice)
-            newPriceModel.date = date
-            newPriceModels.append(newPriceModel)
-
-    # ensure prices don't already exist for this crypto
-    queryFilter = {"ticker": ticker}
-    entries = mongodb.find("price", queryFilter)
-    if entries:
-        return _failedResp("unable to backfill: %i price snapshots already exist for %s" % (len(entries), ticker), 400)  # 400 bad request
-
-    # save to database
-    try:
-        mongodb.insertMany(newPriceModels)
-    except Exception as err:
-        return _failedResp("unable to insert price models: %s" % repr(err))
-    else:
-        return _successResp("successfully backfilled %i prices" % len(newPriceModels))
 
 @app.route("%s/equity" % constants.API_ROOT)
 def equity():
