@@ -7,7 +7,7 @@ from matplotlib import pyplot
 from algos import linear_regression
 from algos import mean_reversion
 
-X_AXIS_TICKS = 4
+SECONDS_IN_DAY = 3600 * 24
 
 # ensure Flask doesn't try to create GUI windows
 matplotlib.use("Agg")
@@ -17,8 +17,14 @@ def visualize(ticker, currentPrices, priceHistory):
     # analyze price data
     meanReversion = mean_reversion.MeanReversion(currentPrices, priceHistory)
     currentPrice = meanReversion.currentPrice
+    currentVWAP = meanReversion.currentVWAP
     regression = linear_regression.LinearRegression(currentPrice, priceHistory)
     analysis = meanReversion.analyze()
+
+    # determine starting timestamp for x-axis label
+    startingTimestamp = regression.timestamps[0][0]
+    startingDatetime = datetime.datetime.fromtimestamp(startingTimestamp)
+    startingDatetimeString = startingDatetime.strftime("%b %d %H:%M")
 
     # clear any previous visualizations
     pyplot.clf()
@@ -28,29 +34,25 @@ def visualize(ticker, currentPrices, priceHistory):
     # generate historical price visualization
     pyplot.title("%s History" % ticker)
     pyplot.ylabel("price ($)")
-    pyplot.xlabel("timestamp (UTC)")
+    pyplot.xlabel("days after %s UTC" % startingDatetimeString)
     pyplot.grid(color="silver", linestyle="--", linewidth=0.5, alpha=0.5)
 
-    # plot price history and trend lines
+    # plot price history with VWAP and trend line
     pyplot.plot(regression.timestamps, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
-    pyplot.plot(regression.timestamps, regression.trend, color="red", linestyle="--", label="linear regression")
-
-    # plot 24-hour volume-weighted average price
-    pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", linewidth=0.5, label="24-hour VWAP")
+    pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="VWAP ($%.3f)" % currentVWAP)
+    pyplot.plot(regression.timestamps, regression.trend, color="red", linestyle="--", label="trend line")
 
     # plot present day
     currentTimestamp = datetime.datetime.utcnow().timestamp()
     pyplot.axvline(x=currentTimestamp, color="black", label="now")
 
-    # set x-axis labels to readable datetimes
+    # set x-axis ticks to incrementing hours
     labels = []
-    startingTimestamp = regression.timestamps[0][0]
-    endingTimestamp = currentTimestamp
-    step = (endingTimestamp - startingTimestamp) / X_AXIS_TICKS
-    ticks = numpy.arange(startingTimestamp, endingTimestamp, step=step)
-    for timestamp in ticks:
-        tickDatetime = datetime.datetime.fromtimestamp(timestamp)
-        labels.append(tickDatetime.strftime("%m-%d %H:%M"))
+    ticks = numpy.arange(startingTimestamp, currentTimestamp, step=SECONDS_IN_DAY)
+    ticks = numpy.append(ticks, currentTimestamp)
+    for tickTimestamp in ticks:
+        daysFromStart = (tickTimestamp - startingTimestamp) / SECONDS_IN_DAY
+        labels.append("%.2f" % daysFromStart)
     pyplot.xticks(ticks, labels)
 
     # generate visualization
