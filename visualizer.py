@@ -38,7 +38,7 @@ def visualize(ticker, currentPrices, priceHistory):
 
     # plot price history with VWAP and trend line
     pyplot.plot(regression.timestamps, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
-    pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1, linestyle="--", label="price trend ($%.3f)" % analysis.current_trend_price)
+    pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1, linestyle="--", label="price trend")
     pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="VWAP ($%.3f)" % currentVWAP)
 
     # plot present day
