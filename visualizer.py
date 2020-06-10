@@ -34,13 +34,13 @@ def visualize(ticker, currentPrices, priceHistory):
     # generate historical price visualization
     pyplot.title("%s History" % ticker)
     pyplot.ylabel("price ($)")
-    pyplot.xlabel("days after %s UTC" % startingDatetimeString)
+    pyplot.xlabel("days after %s (UTC)" % startingDatetimeString)
     pyplot.grid(color="silver", linestyle="--", linewidth=0.5, alpha=0.5)
 
     # plot price history with VWAP and trend line
     pyplot.plot(regression.timestamps, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
+    pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1, linestyle="--", label="price trend")
     pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="VWAP ($%.3f)" % currentVWAP)
-    pyplot.plot(regression.timestamps, regression.trend, color="red", linestyle="--", label="trend line")
 
     # plot present day
     currentTimestamp = datetime.datetime.utcnow().timestamp()
