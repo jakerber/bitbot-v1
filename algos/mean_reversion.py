@@ -46,6 +46,7 @@ class MeanReversion:
 
         # determine target price based on current price and standard deviation
         # cap target price at current volume-weighted average price
+        # TODO: finalize target price prediction algorithm
         if self.currentPrice < self.currentVWAP:
             targetPrice = min(self.currentPrice + standardDeviation, self.currentVWAP)
         else:
