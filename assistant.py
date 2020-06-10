@@ -65,7 +65,7 @@ class Assistant:
 
         # fetch prices within lookback
         queryFilter = {"ticker": ticker, "utc_datetime": {"$gte": startingDatetime}}
-        querySort = ("date", constants.MONGODB_SORT_ASC)
+        querySort = ("utc_datetime", constants.MONGODB_SORT_ASC)
         priceHistory = self.mongodb.find("price", filter=queryFilter, sort=querySort)
 
         # verify price history exists
