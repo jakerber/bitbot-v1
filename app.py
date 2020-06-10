@@ -219,7 +219,7 @@ def snapshot():
 def getTradeAmountUSD(currentPercentDeviation):
     """Determine how much of the cryptocurrency should be traded."""
     deviationAboveThreshold = currentPercentDeviation - constants.PERCENT_DEVIATION_THRESHOLD
-    multiplier = min(deviationAboveThreshold, constants.TRADE_MULTIPLIER_MAX)
+    multiplier = min(deviationAboveThreshold, constants.TRADE_AMOUNT_MULTIPLIER_MAX)
     return constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
 
 ###############################
