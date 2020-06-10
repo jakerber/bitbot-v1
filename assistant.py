@@ -83,10 +83,10 @@ class Assistant:
         self.logger.log("fetching all balances")
         return kraken.getBalances()
 
-    def getMarginUsed(self):
-        """Get the current margin used for all open positions."""
-        self.logger.log("fetching margin used")
-        return kraken.getMarginUsed()
+    def getMarginLevel(self):
+        """Get the current account margin level."""
+        self.logger.log("fetching margin level")
+        return kraken.getMarginLevel()
 
     def getTradeHistory(self, startDatetime=None, endDatetime=None):
         """Get trade history."""

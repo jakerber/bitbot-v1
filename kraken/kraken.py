@@ -72,10 +72,17 @@ def getBalances():
         resp["result"][balance] = float(resp["result"][balance])
     return resp["result"]
 
+def getAccountEquity():
+    """Get total equity of account in USD."""
+    resp = _executeRequest(kraken.query_private, "TradeBalance")
+    return float(resp["result"]["e"])
+
 def getAccountValue():
     """Get total value of account in USD."""
     resp = _executeRequest(kraken.query_private, "TradeBalance")
-    return float(resp["result"]["e"])
+    accountBalance = resp["result"]["eb"]
+    netOpenPositions = resp["result"]["n"]
+    return float(accountBalance) + float(netOpenPositions)
 
 def getBalance(ticker):
     """Get the current balance of a cryptocurrency."""
@@ -85,6 +92,13 @@ def getBalance(ticker):
     if priceBalanceKey in balances:
         return balances[priceBalanceKey]
     return 0.0
+
+def getMarginLevel():
+    """Get the current account margin level."""
+    resp = _executeRequest(kraken.query_private, "TradeBalance")
+    if "ml" in resp["result"]:
+        return float(resp["result"]["ml"])
+    return None
 
 def getMarginUsed():
     """Get the current margin used for all open positions."""
@@ -178,7 +192,7 @@ def short(ticker, amount, priceTarget):
 
 def sufficientMargin(shortAmountUSD):
     """Determine if there is enough margin available to open a short position."""
-    currentEquity = getAccountValue()
+    currentEquity = getAccountEquity()
     currentMarginUsed = getMarginUsed()
     usedMarginAfterShort = currentMarginUsed + shortAmountUSD
     marginLevelAfterShort = (currentEquity / usedMarginAfterShort) * 100
