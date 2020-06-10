@@ -72,7 +72,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 ##  Trading
 ############################
 
-def buy(ticker, amount, priceTarget):
+def buy(ticker, amount, targetPrice, stopPrice):
     """Buy a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD % krakenTicker
@@ -81,13 +81,9 @@ def buy(ticker, amount, priceTarget):
                    "ordertype": "market",
                    "volume": amount,
                    "expiretm": ORDER_EXPIRATION,
-                   "close[ordertype]": "limit",
-                   "close[price]": priceTarget}
-
-    # verify target price is above ask price
-    askPrice = float(getPrices(ticker).get("a")[0])
-    if not priceTarget > askPrice:
-        raise RuntimeError("unable to buy %s: target price ($%.3f) must be above ask price ($%.3f)" % (ticker, priceTarget, askPrice))
+                   "close[ordertype]": "stop-loss-limit",
+                   "close[price]": stopPrice,
+                   "close[price2]": targetPrice}
 
     # add kraken buy order
     try:
@@ -103,7 +99,7 @@ def buy(ticker, amount, priceTarget):
 
     return resp.get("result").get("descr")
 
-def short(ticker, amount, priceTarget):
+def short(ticker, amount, targetPrice, stopPrice):
     """Short a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
@@ -113,15 +109,12 @@ def short(ticker, amount, priceTarget):
                    "volume": amount,
                    "leverage": DEFAULT_LEVERAGE,
                    "expiretm": ORDER_EXPIRATION,
-                   "close[ordertype]": "limit",
-                   "close[price]": priceTarget}
-
-    # verify target price is below bid price
-    bidPrice = float(getPrices(ticker).get("b")[0])
-    if not priceTarget < bidPrice:
-        raise RuntimeError("unable to short %s: target price ($%.3f) must be below bid price ($%.3f)" % (ticker, priceTarget, bidPrice))
+                   "close[ordertype]": "stop-loss-limit",
+                   "close[price]": stopPrice,
+                   "close[price2]": targetPrice}
 
     # ensure sufficient margin is available to open short position
+    bidPrice = float(getPrices(ticker).get("b")[0])
     if not sufficientMargin(amount * bidPrice):
         raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
 

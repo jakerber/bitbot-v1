@@ -144,8 +144,8 @@ def trade():
             continue
 
         # trade if price deviation thresholds are met
-        if shouldTrade(analysis.current_percent_deviation):
-            if analysis.target_price > analysis.current_price:
+        if analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_THRESHOLD:
+            if analysis.current_volume_weighted_average_price > analysis.current_price:
                 tradeFunc = assistant.buy
             else:
                 tradeFunc = assistant.short
@@ -155,7 +155,7 @@ def trade():
                     logger.log("unable to short %s: margin trading is not allowed :(" % ticker)
                     continue
 
-            # determine amount to trade
+            # determine amount of cryptocurrency to trade
             tradeAmountUSD = getTradeAmountUSD(analysis.current_percent_deviation)
             tradeAmount = tradeAmountUSD / analysis.current_price
 
@@ -164,7 +164,7 @@ def trade():
                 orderDescription = tradeFunc(ticker,
                                              amount=tradeAmount,
                                              price=analysis.current_price,
-                                             priceTarget=analysis.target_price)
+                                             targetPrice=analysis.current_volume_weighted_average_price)
                 logger.log("trade executed successfully")
                 logger.log(orderDescription, moneyExchanged=True)
             except Exception as err:
@@ -221,10 +221,6 @@ def getTradeAmountUSD(currentPercentDeviation):
     deviationAboveThreshold = currentPercentDeviation - constants.PERCENT_DEVIATION_THRESHOLD
     multiplier = min(deviationAboveThreshold, constants.TRADE_MULTIPLIER_MAX)
     return constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
-
-def shouldTrade(currentPercentDeviation):
-    """Determine if a cryptocurrency should be traded."""
-    return currentPercentDeviation >= constants.PERCENT_DEVIATION_THRESHOLD
 
 ###############################
 ##  Response formatting

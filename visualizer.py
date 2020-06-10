@@ -13,7 +13,7 @@ X_AXIS_TICKS = 4
 matplotlib.use("Agg")
 
 def visualize(ticker, currentPrices, priceHistory):
-    """Generate a visualization of a target price prediction."""
+    """Generate a visualization of cryptocurrency price analysis."""
     # analyze price data
     meanReversion = mean_reversion.MeanReversion(currentPrices, priceHistory)
     currentPrice = meanReversion.currentPrice
@@ -37,11 +37,6 @@ def visualize(ticker, currentPrices, priceHistory):
 
     # plot 24-hour volume-weighted average price
     pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="24-hour VWAP")
-
-    # plot target price
-    label = "price target ($%.3f)" % analysis.target_price
-    targetPriceLine = [[analysis.target_price]] * len(regression.timestamps)
-    pyplot.plot(regression.timestamps, targetPriceLine, color="yellowgreen", linestyle="--", label=label)
 
     # plot present day
     currentTimestamp = datetime.datetime.utcnow().timestamp()

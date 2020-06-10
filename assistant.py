@@ -117,16 +117,22 @@ class Assistant:
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, price, priceTarget):
+    def buy(self, ticker, amount, price, targetPrice):
         """Buy a cryptocurrency."""
-        self.logger.log("buying %f of %s @ $%f w/ target $%f" % (amount, ticker, price, priceTarget))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        return kraken.buy(ticker, amount, priceTarget)
+        stopPrice = targetPrice - (targetPrice * constants.STOP_LOSS_PRICE_MULTIPLIER)
+        if stopPrice >= targetPrice:
+            raise RuntimeError("stop price (%f) >= target price (%f)" % (stopPrice, targetPrice))
+        self.logger.log("buying $%f of %s" % (amount * price, ticker))
+        return kraken.buy(ticker, amount, targetPrice, stopPrice)
 
-    def short(self, ticker, amount, price, priceTarget):
+    def short(self, ticker, amount, price, targetPrice):
         """Short a cryptocurrency."""
-        self.logger.log("shorting %f of %s @ $%f w/ target $%f" % (amount, ticker, price, priceTarget))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        return kraken.short(ticker, amount, priceTarget)
+        stopPrice = targetPrice + (targetPrice * constants.STOP_LOSS_PRICE_MULTIPLIER)
+        if stopPrice <= targetPrice:
+            raise RuntimeError("stop price (%f) <= target price (%f)" % (stopPrice, targetPrice))
+        self.logger.log("shorting $%f of %s" % (amount * price, ticker))
+        return kraken.short(ticker, amount, targetPrice, stopPrice)
