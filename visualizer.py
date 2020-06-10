@@ -32,7 +32,7 @@ def visualize(ticker, currentPrices, priceHistory):
     pyplot.plot(regression.timestamps, regression.trend, color="red", label="linear regression")
 
     # plot 24-hour volume-weighted average price
-    pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="24-hour vwap")
+    pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="24-hour VWAP")
 
     # plot target price
     label = "price target ($%.3f)" % analysis.target_price
@@ -48,7 +48,7 @@ def visualize(ticker, currentPrices, priceHistory):
     startingTimestamp = regression.timestamps[0][0]
     endingTimestamp = currentTimestamp
     step = (endingTimestamp - startingTimestamp) / X_AXIS_TICKS
-    ticks = numpy.arange(startingTimestamp, endingTimestamp + step, step=step)
+    ticks = numpy.arange(startingTimestamp, endingTimestamp, step=step)
     for timestamp in ticks:
         tickDatetime = datetime.datetime.fromtimestamp(timestamp)
         labels.append(tickDatetime.strftime("%m-%d %H:%M"))
