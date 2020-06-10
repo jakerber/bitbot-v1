@@ -2,11 +2,12 @@
 import constants
 import datetime
 import matplotlib
+import numpy
 from matplotlib import pyplot
 from algos import linear_regression
 from algos import mean_reversion
 
-VISUALIZATION_FILE = "visualization.png"
+X_AXIS_TICKS = 4
 
 # ensure Flask doesn't try to create GUI windows
 matplotlib.use("Agg")
@@ -23,13 +24,12 @@ def visualize(ticker, currentPrices, priceHistory):
     pyplot.clf()
     pyplot.title("%s History" % ticker)
     pyplot.ylabel("price ($)")
-    pyplot.xlabel("unix timestamp (beginning %i days ago)" % constants.LOOKBACK_DAYS)
+    pyplot.xlabel("timestamp (UTC)")
     pyplot.grid(color="silver", linestyle="--", linewidth=0.5, alpha=0.5)
 
     # plot price history and trend lines
-    trend = regression.model.predict(regression.timestamps)
     pyplot.plot(regression.timestamps, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
-    pyplot.plot(regression.timestamps, trend, color="red", label="linear regression")
+    pyplot.plot(regression.timestamps, regression.trend, color="red", label="linear regression")
 
     # plot 24-hour volume-weighted average price
     pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="24-hour vwap")
@@ -40,8 +40,19 @@ def visualize(ticker, currentPrices, priceHistory):
     pyplot.plot(regression.timestamps, targetPriceLine, color="yellowgreen", linestyle="--", label=label)
 
     # plot present day
-    presentDayLine = [[datetime.datetime.utcnow().timestamp()]] * len(regression.timestamps)
-    pyplot.plot(presentDayLine, regression.prices, color="black", label="today")
+    currentTimestamp = datetime.datetime.utcnow().timestamp()
+    pyplot.axvline(x=currentTimestamp, color="black", label="now")
+
+    # set x-axis labels to readable datetimes
+    labels = []
+    startingTimestamp = regression.timestamps[0][0]
+    endingTimestamp = currentTimestamp
+    step = (endingTimestamp - startingTimestamp) / X_AXIS_TICKS
+    ticks = numpy.arange(startingTimestamp, endingTimestamp + step, step=step)
+    for timestamp in ticks:
+        tickDatetime = datetime.datetime.fromtimestamp(timestamp)
+        labels.append(tickDatetime.strftime("%m-%d %H:%M"))
+    pyplot.xticks(ticks, labels)
 
     # generate visualization
     pyplot.legend()
