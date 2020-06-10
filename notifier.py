@@ -4,7 +4,7 @@ import logger
 import requests
 
 # initialize logger
-logger = logger.Logger("Notifier")
+logger = logger.BitBotLogger("Notifier")
 
 class Notifier:
     """Object to send notifications to users."""

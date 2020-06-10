@@ -8,7 +8,7 @@ class Assistant:
     """Object to retrieve information for BitBot."""
     def __init__(self, mongodb):
         self.mongodb = mongodb
-        self.logger = logger.Logger("Assistant")
+        self.logger = logger.BitBotLogger("Assistant")
 
     ############################
     ##  Prices

@@ -1,5 +1,6 @@
 """Mean reversion algo module."""
 import constants
+import logger
 import math
 import statistics
 from algos import linear_regression
@@ -18,6 +19,7 @@ class MeanReversionAnalysis:
 class MeanReversion:
     """Object to analyze price deviation from the mean."""
     def __init__(self, currentPrices, priceHistory):
+        self.logger = logger.BitBotLogger("MeanReversion")
         self.currentPrice = self.calculatePrice(currentPrices)
         self.currentVWAP = currentPrices.get("vwap")
         self.priceHistory = priceHistory
@@ -49,7 +51,8 @@ class MeanReversion:
         else:
             targetPrice = max(self.currentPrice - standardDeviation, self.currentVWAP)
 
-        # return analysis
+        # log and return analysis
+        self.logger.log("analyzed %i price deviations" % len(self.vwapPrices))
         return MeanReversionAnalysis(self.currentVWAP, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
 
     def calculatePrice(self, allPrices):

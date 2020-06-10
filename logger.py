@@ -3,7 +3,7 @@
 SEPERATOR = "------------------------------------------------------------------"
 MONEY_EXCHANGE_INDICATOR = "***"
 
-class Logger:
+class BitBotLogger:
     """Object to log events to the console."""
     def __init__(self, componentName):
         self.componentName = componentName
