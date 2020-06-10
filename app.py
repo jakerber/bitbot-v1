@@ -89,7 +89,6 @@ def rootApi():
 def trade():
     """Trade cryptocurrency to achieve profit."""
     # analyze price deviation from the mean for all supported cryptos
-    ordersExecuted = {}
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
             currentPrices = assistant.getAllPrices(ticker)
@@ -98,17 +97,20 @@ def trade():
         except Exception as err:
             continue
 
-        # consider trade if price deviation thresholds are met
+        # consult trader if price deviation thresholds are met
         if analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_THRESHOLD:
             logger.log("consulting trader on %s trade" % ticker)
             _trader = trader.Trader(ticker, analysis, assistant)
+
+            # safetly execute trade if trader approves it
             if _trader.approvesTrade():
                 try:
                     orderConfirmation = _trader.executeTrade()
-                    logger.log("trade executed successfully")
-                    logger.log(orderConfirmation, moneyExchanged=True)
                 except Exception as err:
                     logger.log("unable to execute %s trade: %s" % (ticker, str(err)))
+                else:
+                    logger.log("trade executed successfully")
+                    logger.log(orderConfirmation, moneyExchanged=True)
 
 def summarize():
     """Sends a daily activity summary notification."""

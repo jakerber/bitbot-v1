@@ -33,7 +33,6 @@ class Trader:
 
     def executeTrade(self):
         """Trade cryptocurrency."""
-        self.logger.log("executing %s trade" % self.ticker)
         if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
             tradeFunc = self.assistant.buy
         else:
@@ -43,20 +42,24 @@ class Trader:
             if not constants.ALLOW_MARGIN_TRADING:
                 raise RuntimeError("unable to short %s: margin trading is not allowed :(" % self.ticker)
 
-        # calculate trade specifications
+        # gather trade specifications
         targetPrice = self.getTargetPrice()
         tradeAmount = self.getAmount()
 
         # execute trade
-        return tradeFunc(ticker, tradeAmount, analysis.current_price, targetPrice)
+        self.logger.log("executing %s %s" % (self.ticker, tradeFunc.__name__))
+        return tradeFunc(ticker=self.ticker,
+                         amount=tradeAmount,
+                         price=self.analysis.current_price,
+                         targetPrice=targetPrice)
 
     ############################
     ##  Trade specifications
     ############################
 
     def getTargetPrice(self):
-        """Determine target price of a cryptocurrency"""
-        return self.analysis.trendPrice
+        """Determine the target price of a cryptocurrency"""
+        return self.analysis.current_trend_price
 
     def getAmount(self):
         """Determine how much of the cryptocurrency should be traded."""
