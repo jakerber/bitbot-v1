@@ -5,12 +5,13 @@ from algos import linear_regression
 
 class MeanReversionAnalysis:
     """Object to store results from price deviation analysis."""
-    def __init__(self, averagePrice, currentDeviation, currentPercentDeviation, currentPrice, standardDeviation, targetPrice):
-        self.average_price = averagePrice
+    def __init__(self, movingAveragePrice, currentDeviation, currentPercentDeviation, currentPrice, standardDeviation, targetPrice):
+        self.moving_average_price = movingAveragePrice
         self.current_deviation = currentDeviation
         self.current_percent_deviation = currentPercentDeviation
         self.current_price = currentPrice
         self.lookback_days = constants.LOOKBACK_DAYS
+        self.moving_average_window = constants.MOVING_AVERAGE_WINDOW_DAYS
         self.standard_deviation = standardDeviation
         self.target_price = targetPrice
 
@@ -20,44 +21,51 @@ class MeanReversion:
         self.currentPrice = currentPrice
         self.priceHistory = priceHistory
 
+        # use to calculate moving average
+        self.movingAveragePrices = []
+
     def analyze(self):
         """Analyze the current price deviation from the mean."""
         # calculate moving averages
         priceSum = 0.0
         movingAverage = 0.0
-        self.movingAverages = []  # expose for visualization
-        for i, price in enumerate(self.priceHistory, 1):
-            priceSum += price
-            movingAverage = priceSum / i
-            self.movingAverages.append([movingAverage])  # aggregate for visualization
+        self.movingAverages = []  # expose for visualizations
+        for price in self.priceHistory:
+            movingAverage = self.calculateMovingAverage(price)
+            self.movingAverages.append(movingAverage)
 
-        # determine average price using moving averages
-        priceSum += self.currentPrice
-        averagePrice = priceSum / constants.LOOKBACK_DAYS
-        self.movingAverages.append([averagePrice])  # aggregate for visualization
+        # determine current moving average price
+        currentMovingAveragePrice = self.calculateMovingAverage(self.currentPrice)
+        self.movingAverages.append(currentMovingAveragePrice)
 
-        # generate linear regression model
+        # generate linear regression model for visualization
         model = linear_regression.LinearRegression(self.currentPrice, self.priceHistory)
 
-        # calculate standard deviation using linear regression model
+        # calculate standard deviation using moving averages
         deviationsSquaredSum = 0.0
         for i, historicalPrice in enumerate(self.priceHistory):
-            trendPrice = model.trend[i][0]
-            priceDeviation = abs(historicalPrice - trendPrice)
+            movingAverage = self.movingAverages[i]
+            priceDeviation = abs(historicalPrice - movingAverage)
             deviationsSquaredSum += priceDeviation ** 2
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
 
-        # calculate current price deviation from current trend price
-        trendPrice = model.trend[-1][0]
-        currentDeviation = abs(self.currentPrice - trendPrice)
+        # calculate current price deviation from current moving average
+        currentDeviation = abs(self.currentPrice - currentMovingAveragePrice)
         currentPercentDeviation = currentDeviation / standardDeviation
 
         # determine target price based on current price and standard deviation
-        # cap target price at current trend price
-        if self.currentPrice < trendPrice:
-            targetPrice = min(self.currentPrice + standardDeviation, trendPrice)
+        # cap target price at current moving average price
+        if self.currentPrice < currentMovingAveragePrice:
+            targetPrice = min(self.currentPrice + standardDeviation, currentMovingAveragePrice)
         else:
-            targetPrice = max(self.currentPrice - standardDeviation, trendPrice)
+            targetPrice = max(self.currentPrice - standardDeviation, currentMovingAveragePrice)
 
         # return analysis
-        return MeanReversionAnalysis(averagePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
+        return MeanReversionAnalysis(currentMovingAveragePrice, currentDeviation, currentPercentDeviation, self.currentPrice, standardDeviation, targetPrice)
+
+    def calculateMovingAverage(self, price):
+        """Calculate the moving average price within the window."""
+        self.movingAveragePrices.append(price)
+        while len(self.movingAveragePrices) > constants.MOVING_AVERAGE_WINDOW_DAYS:
+            self.movingAveragePrices.pop(0)
+        return sum(self.movingAveragePrices) / len(self.movingAveragePrices)

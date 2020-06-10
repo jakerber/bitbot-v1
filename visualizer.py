@@ -30,7 +30,10 @@ def visualize(ticker, currentPrice, priceHistory):
     trend = regression.model.predict(regression.days)
     pyplot.plot(regression.days, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
     pyplot.plot(regression.days, trend, color="red", label="linear regression")
-    pyplot.plot(regression.days, meanReversion.movingAverages, color="darkorange", label="moving average")
+
+    # plot moving average price
+    movingAveragePrices = [[price] for price in meanReversion.movingAverages]
+    pyplot.plot(regression.days, movingAveragePrices, color="darkorange", label="moving average")
 
     # plot target price
     label = "price target ($%.3f)" % analysis.target_price
