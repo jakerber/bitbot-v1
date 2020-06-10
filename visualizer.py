@@ -33,10 +33,10 @@ def visualize(ticker, currentPrices, priceHistory):
 
     # plot price history and trend lines
     pyplot.plot(regression.timestamps, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
-    pyplot.plot(regression.timestamps, regression.trend, color="red", label="linear regression")
+    pyplot.plot(regression.timestamps, regression.trend, color="red", linestyle="--", label="linear regression")
 
     # plot 24-hour volume-weighted average price
-    pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="24-hour VWAP")
+    pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", linewidth=0.5, label="24-hour VWAP")
 
     # plot present day
     currentTimestamp = datetime.datetime.utcnow().timestamp()
