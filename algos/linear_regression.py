@@ -1,6 +1,7 @@
 """Linear regression algo module."""
 import constants
 import datetime
+import logger
 import pandas
 import statistics
 from sklearn import linear_model
@@ -8,6 +9,7 @@ from sklearn import linear_model
 class LinearRegression:
     """Object to represent a linear regression model."""
     def __init__(self, currentPrice, priceHistory):
+        self.logger = logger.BitBotLogger("LinearRegression")
         self.currentPrice = currentPrice
         self.priceHistory = priceHistory
 
@@ -37,3 +39,5 @@ class LinearRegression:
         self.model = linear_model.LinearRegression()
         self.model.fit(self.timestamps, self.prices)
         self.trend = self.model.predict(self.timestamps)
+        self.trendPrice = self.trend[-1][0]
+        self.logger.log("generated model from %i price points" % len(self.prices))

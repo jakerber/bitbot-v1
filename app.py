@@ -10,6 +10,7 @@ import logger
 import math
 import notifier
 import os
+import trader
 import visualizer
 from algos import mean_reversion
 from db import db
@@ -143,32 +144,17 @@ def trade():
         except Exception as err:
             continue
 
-        # trade if price deviation thresholds are met
+        # consider trade if price deviation thresholds are met
         if analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_THRESHOLD:
-            if analysis.current_volume_weighted_average_price > analysis.current_price:
-                tradeFunc = assistant.buy
-            else:
-                tradeFunc = assistant.short
-
-                # ensure margin trading is allowed before shorting
-                if not constants.ALLOW_MARGIN_TRADING:
-                    logger.log("unable to short %s: margin trading is not allowed :(" % ticker)
-                    continue
-
-            # determine amount of cryptocurrency to trade
-            tradeAmountUSD = getTradeAmountUSD(analysis.current_percent_deviation)
-            tradeAmount = tradeAmountUSD / analysis.current_price
-
-            # safetly execute trade
-            try:
-                orderDescription = tradeFunc(ticker,
-                                             amount=tradeAmount,
-                                             price=analysis.current_price,
-                                             targetPrice=analysis.current_volume_weighted_average_price)
-                logger.log("trade executed successfully")
-                logger.log(orderDescription, moneyExchanged=True)
-            except Exception as err:
-                logger.log("unable to execute %s trade: %s" % (ticker, str(err)))
+            logger.log("consulting trader on %s trade" % ticker)
+            _trader = trader.Trader(ticker, analysis, assistant)
+            if _trader.approvesTrade():
+                try:
+                    orderConfirmation = _trader.executeTrade()
+                    logger.log("trade executed successfully")
+                    logger.log(orderConfirmation, moneyExchanged=True)
+                except Exception as err:
+                    logger.log("unable to execute %s trade: %s" % (ticker, str(err)))
 
 def summarize():
     """Sends a daily activity summary notification."""
@@ -211,16 +197,6 @@ def snapshot():
             mongodb.insert(priceModel)
         except Exception as err:
             logger.log("unable to add %s price snapshot to the database: %s" % (ticker, repr(err)))
-
-###############################
-##  Helper functions
-###############################
-
-def getTradeAmountUSD(currentPercentDeviation):
-    """Determine how much of the cryptocurrency should be traded."""
-    deviationAboveThreshold = currentPercentDeviation - constants.PERCENT_DEVIATION_THRESHOLD
-    multiplier = min(deviationAboveThreshold, constants.TRADE_AMOUNT_MULTIPLIER_MAX)
-    return constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
 
 ###############################
 ##  Response formatting
