@@ -167,8 +167,8 @@ def trade():
             except Exception as err:
                 logger.log("unable to execute %s trade: %s" % (ticker, str(err)))
 
-def sendDailySummary():
-    """Sends a daily activity summary email."""
+def summarize():
+    """Sends a daily activity summary notification."""
     assetBalances = assistant.getAssetBalances()
     accountValue = assistant.getAccountValue()
     marginLevel = assistant.getMarginLevel()
