@@ -94,7 +94,7 @@ def backfillCsv(filename):
 def equity():
     """Get current account balance in USD."""
     try:
-        balances = assistant.getBalances()
+        balances = assistant.getAssetBalances()
         value = assistant.getAccountValue()
         marginLevel = assistant.getMarginLevel()
     except Exception as err:
@@ -169,7 +169,7 @@ def trade():
 
 def sendDailySummary():
     """Sends a daily activity summary email."""
-    accountBalances = assistant.getBalances()
+    assetBalances = assistant.getAssetBalances()
     accountValue = assistant.getAccountValue()
     marginLevel = assistant.getMarginLevel()
 
@@ -180,11 +180,11 @@ def sendDailySummary():
     # notify via email
     emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
     emailBody = "Account value:"
-    emailBody += "\n$%f" % accountValue
+    emailBody += "\n$%.2f" % accountValue
     emailBody += "\n\nMargin level:"
-    emailBody += "\n%f%%" % marginLevel
-    emailBody += "\n\nAccount balances:"
-    emailBody += "\n" + json.dumps(accountBalances, indent=6)
+    emailBody += "\n%.2f%%" % marginLevel
+    emailBody += "\n\nAsset balances:"
+    emailBody += "\n" + json.dumps(assetBalances, indent=6)
     emailBody += "\n\nTrades executed:"
     emailBody += "\n" + json.dumps(tradesExecuted, indent=6)
     notifier.email(emailSubject, emailBody)
@@ -204,13 +204,13 @@ def snapshotPrices():
 
         # fetch relevant prices
         try:
-            allPrices = assistant.getAllPrices(ticker)
+            prices = assistant.getPrices(ticker)
         except Exception as err:
             logger.log("unable to fetch prices of %s: %s" % (ticker, repr(err)))
             continue
-        openPrice = float(allPrices["o"])
-        highPrice = float(allPrices["h"][0])
-        lowPrice = float(allPrices["l"][0])
+        openPrice = float(prices["o"])
+        highPrice = float(prices["h"][0])
+        lowPrice = float(prices["l"][0])
 
         # store relevant prices in database
         priceModel = models.Price(ticker, openPrice, highPrice, lowPrice)

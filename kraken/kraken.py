@@ -13,97 +13,44 @@ UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 ##  Prices
 ############################
 
-def getAllPrices(ticker):
-    """Get all current prices of a cryptocurrency.
-
-    Format: (https://www.kraken.com/en-us/features/api#get-ticker-info)
-        {
-            "a": ["9718.50000", "1", "1.000"],
-            "b": ["9715.60000", "4", "4.000"],
-            "c": ["9712.70000", "0.03238337"],
-            "v": ["22.15109020", "6976.84439690"],
-            "p": ["9709.27880", "9687.91860"],
-            "t": [70, 22174],
-            "l": ["9675.60000", "9331.70000"],
-            "h": ["9722.70000", "9888.00000"],
-            "o": "9675.60000"
-        }
-    """
+def getPrices(ticker):
+    """Get all current prices of a cryptocurrency."""
     # execute kraken price request
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
     requestData = {"pair": "%sUSD" % krakenTicker}
     resp = _executeRequest(kraken.query_public, "Ticker", requestData=requestData)
 
-    # return crypto price
+    # determine price code used to interpret results
     priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     if priceCode not in resp["result"]:
         priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
     allPrices = resp["result"][priceCode]
+
+    # convert all prices to floats and return
+    for priceType in allPrices:
+        if priceType == "open":  # open price is a single value, not an array
+            allPrices[priceType] = float(allPrices[priceType])
+        else:
+            allPrices[priceType] = float(allPrices[priceType][0])
     return allPrices
-
-def getPrice(ticker, priceType):
-    """Get the current price of a cryptocurrency."""
-    # execute kraken price request
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
-    requestData = {"pair": "%sUSD" % krakenTicker}
-    resp = _executeRequest(kraken.query_public, "Ticker", requestData=requestData)
-
-    # determine how to interpret results
-    priceTypeCode = constants.KRAKEN_PRICE_TYPES[priceType]
-    priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-    if priceCode not in resp["result"]:
-        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-
-    # return crypto price
-    if priceType == "open":  # open price is a single value, not an array
-        price = resp["result"][priceCode][priceTypeCode]
-    else:
-        price = resp["result"][priceCode][priceTypeCode][0]
-    return float(price)
 
 ############################
 ##  Account info
 ############################
 
-def getBalances():
+def getAccountBalances():
     """Get all account balances."""
-    resp = _executeRequest(kraken.query_private, "Balance")
+    resp = _executeRequest(kraken.query_private, "TradeBalance")
     for balance in resp["result"]:
         resp["result"][balance] = float(resp["result"][balance])
     return resp["result"]
 
-def getAccountEquity():
-    """Get total equity of account in USD."""
-    resp = _executeRequest(kraken.query_private, "TradeBalance")
-    return float(resp["result"]["e"])
-
-def getAccountValue():
-    """Get total value of account in USD."""
-    resp = _executeRequest(kraken.query_private, "TradeBalance")
-    accountBalance = resp["result"]["eb"]
-    netOpenPositions = resp["result"]["n"]
-    return float(accountBalance) + float(netOpenPositions)
-
-def getBalance(ticker):
-    """Get the current balance of a cryptocurrency."""
-    balances = getBalances()
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS[ticker]
-    priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
-    if priceBalanceKey in balances:
-        return balances[priceBalanceKey]
-    return 0.0
-
-def getMarginLevel():
-    """Get the current account margin level."""
-    resp = _executeRequest(kraken.query_private, "TradeBalance")
-    if "ml" in resp["result"]:
-        return float(resp["result"]["ml"])
-    return None
-
-def getMarginUsed():
-    """Get the current margin used for all open positions."""
-    resp = _executeRequest(kraken.query_private, "TradeBalance")
-    return float(resp["result"]["m"])
+def getAssetBalances():
+    """Get all asset balances."""
+    resp = _executeRequest(kraken.query_private, "Balance")
+    for balance in resp["result"]:
+        resp["result"][balance] = float(resp["result"][balance])
+    return resp["result"]
 
 def getTradeHistory(startDatetime=None, endDatetime=None):
     """Get trade history for this account."""
@@ -132,7 +79,7 @@ def buy(ticker, amount, priceTarget):
                    "close[price]": priceTarget}
 
     # verify target price is above ask price
-    askPrice = getPrice(ticker, "ask")
+    askPrice = getPrices(ticker)["a"]
     if not priceTarget > askPrice:
         raise RuntimeError("unable to buy %s: target price ($%.3f) must be above ask price ($%.3f)" % (ticker, priceTarget, askPrice))
 
@@ -164,7 +111,7 @@ def short(ticker, amount, priceTarget):
                    "close[price]": priceTarget}
 
     # verify target price is below bid price
-    bidPrice = getPrice(ticker, "bid")
+    bidPrice = getPrices(ticker)["b"]
     if not priceTarget < bidPrice:
         raise RuntimeError("unable to short %s: target price ($%.3f) must be below bid price ($%.3f)" % (ticker, priceTarget, bidPrice))
 
@@ -192,8 +139,8 @@ def short(ticker, amount, priceTarget):
 
 def sufficientMargin(shortAmountUSD):
     """Determine if there is enough margin available to open a short position."""
-    currentEquity = getAccountEquity()
-    currentMarginUsed = getMarginUsed()
+    currentEquity = getAccountBalances()["e"]
+    currentMarginUsed = getAccountBalances()["m"]
     usedMarginAfterShort = currentMarginUsed + shortAmountUSD
     marginLevelAfterShort = (currentEquity / usedMarginAfterShort) * 100
     return marginLevelAfterShort > constants.MARGIN_LEVEL_LIMIT
