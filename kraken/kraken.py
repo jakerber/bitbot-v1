@@ -85,7 +85,7 @@ def buy(ticker, amount, priceTarget):
                    "close[price]": priceTarget}
 
     # verify target price is above ask price
-    askPrice = getPrices(ticker).get("a")
+    askPrice = float(getPrices(ticker).get("a")[0])
     if not priceTarget > askPrice:
         raise RuntimeError("unable to buy %s: target price ($%.3f) must be above ask price ($%.3f)" % (ticker, priceTarget, askPrice))
 
@@ -117,7 +117,7 @@ def short(ticker, amount, priceTarget):
                    "close[price]": priceTarget}
 
     # verify target price is below bid price
-    bidPrice = getPrices(ticker).get("b")
+    bidPrice = float(getPrices(ticker).get("b")[0])
     if not priceTarget < bidPrice:
         raise RuntimeError("unable to short %s: target price ($%.3f) must be below bid price ($%.3f)" % (ticker, priceTarget, bidPrice))
 

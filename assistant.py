@@ -28,7 +28,7 @@ class Assistant:
         # parse price type out of response
         priceTypeCode = constants.KRAKEN_PRICE_TYPES.get(priceType).get("code")
         priceTypeIndex = constants.KRAKEN_PRICE_TYPES.get(priceType).get("index")
-        price = prices.get(priceTypeCode).get(priceTypeIndex)
+        price = prices.get(priceTypeCode)[priceTypeIndex]
 
         # return converted price
         return float(price)
@@ -117,16 +117,16 @@ class Assistant:
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, priceTarget):
+    def buy(self, ticker, amount, price, priceTarget):
         """Buy a cryptocurrency."""
-        self.logger.log("buying %f of %s @ target $%f" % (amount, ticker, priceTarget))
+        self.logger.log("buying %f of %s @ $%f w/ target $%f" % (amount, ticker, price, priceTarget))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         return kraken.buy(ticker, amount, priceTarget)
 
-    def short(self, ticker, amount, priceTarget):
+    def short(self, ticker, amount, price, priceTarget):
         """Short a cryptocurrency."""
-        self.logger.log("shorting %f of %s @ target $%f" % (amount, ticker, priceTarget))
+        self.logger.log("shorting %f of %s @ $%f w/ target $%f" % (amount, ticker, price, priceTarget))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         return kraken.short(ticker, amount, priceTarget)

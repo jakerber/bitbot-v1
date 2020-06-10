@@ -152,7 +152,7 @@ def trade():
 
                 # ensure margin trading is allowed before shorting
                 if not constants.ALLOW_MARGIN_TRADING:
-                    logger.log("unable to short %s: margin trading is not allowed" % ticker)
+                    logger.log("unable to short %s: margin trading is not allowed :(" % ticker)
                     continue
 
             # determine amount to trade
@@ -161,7 +161,10 @@ def trade():
 
             # safetly execute trade
             try:
-                orderDescription = tradeFunc(ticker, tradeAmount, priceTarget=analysis.target_price)
+                orderDescription = tradeFunc(ticker,
+                                             amount=tradeAmount,
+                                             price=analysis.current_price,
+                                             priceTarget=analysis.target_price)
                 logger.log("trade executed successfully")
                 logger.log(orderDescription, moneyExchanged=True)
             except Exception as err:
