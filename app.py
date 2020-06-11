@@ -89,6 +89,7 @@ def rootApi():
 def trade():
     """Trade cryptocurrency to achieve profit."""
     # analyze price deviation from the mean for all supported cryptos
+    tickersTraded = []
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
             currentPrices = assistant.getAllPrices(ticker)
@@ -106,7 +107,15 @@ def trade():
             if _trader.approvesTrade():
                 orderConfirmation = _trader.executeTrade()
                 if orderConfirmation:
+                    tickersTraded.append(ticker)
                     logger.log(orderConfirmation, moneyExchanged=True)
+
+    # log trading session summary
+    numTrades = len(tickersTraded)
+    sessionSummary = "traded %i cryptocurrenc%s" % (numTrades, "y" if numTrades == 1 else "ies")
+    if numTrades:
+        sessionSummary += ": %s" % str(tickersTraded)
+    logger.log(sessionSummary)
 
 def summarize():
     """Sends a daily activity summary notification."""
