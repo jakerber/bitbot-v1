@@ -6,6 +6,7 @@ import time
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 DEFAULT_LEVERAGE = 2
+LIMIT_PRICE_TEMPLATE = "%.6f"
 ORDER_EXPIRATION = "+%i" % constants.ORDER_EXPIRATION_SECONDS
 UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 
@@ -79,7 +80,7 @@ def buy(ticker, amount, price, targetPrice):
     requestData = {"pair": cryptoPair,
                    "type": "buy",
                    "ordertype": "limit",
-                   "price": price,
+                   "price": LIMIT_PRICE_TEMPLATE % price,
                    "volume": amount,
                    "expiretm": ORDER_EXPIRATION,
                    "close[ordertype]": "limit",
@@ -106,7 +107,7 @@ def short(ticker, amount, price, targetPrice):
     requestData = {"pair": cryptoPair,
                    "type": "sell",
                    "ordertype": "limit",
-                   "price": price,
+                   "price": LIMIT_PRICE_TEMPLATE % price,
                    "volume": amount,
                    "leverage": DEFAULT_LEVERAGE,
                    "expiretm": ORDER_EXPIRATION,

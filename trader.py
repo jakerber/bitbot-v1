@@ -16,12 +16,16 @@ class Trader:
 
     def approvesTrade(self):
         """Determine if a cryptocurrency should be traded."""
+        # verify prices fall within profitable bounds
         if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
-            tradeApproval = self.analysis.current_price < self.analysis.current_trend_price
+            withinBounds = self.analysis.current_price < self.analysis.current_trend_price
+            priceChange = (self.analysis.current_trend_price - self.analysis.current_price) / self.analysis.current_price
         else:
-            tradeApproval = self.analysis.current_price > self.analysis.current_trend_price
+            withinBounds = self.analysis.current_price > self.analysis.current_trend_price
+            priceChange = (self.analysis.current_price - self.analysis.current_trend_price) / self.analysis.current_price
 
         # return trade approval
+        tradeApproval = withinBounds and priceChange >= constants.PERCENT_PRICE_CHANGE_MIN
         if tradeApproval:
             self.logger.log(self.analysis.__dict__)
             self.logger.log("%s trade approved!" % self.ticker)
@@ -43,7 +47,7 @@ class Trader:
                 raise RuntimeError("unable to short %s: margin trading is not allowed :(" % self.ticker)
 
         # gather trade specifications
-        targetPrice = self.getTargetPrice()
+        targetPrice = self.analysis.current_trend_price
         tradeAmount = self.getAmount()
 
         # execute trade
@@ -58,10 +62,6 @@ class Trader:
     ############################
     ##  Trade specifications
     ############################
-
-    def getTargetPrice(self):
-        """Determine the target price of a cryptocurrency"""
-        return self.analysis.current_trend_price
 
     def getAmount(self):
         """Determine how much of the cryptocurrency should be traded."""
