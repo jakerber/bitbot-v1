@@ -42,6 +42,7 @@ def analyze():
             priceHistory = assistant.getPriceHistory(ticker)
             analysis.append({"ticker": ticker, "analysis": mean_reversion.MeanReversion(currentPrices, priceHistory).analyze().__dict__})
         except Exception as err:
+            raise
             analysis.append({"ticker": ticker, "error": repr(err)})
     return _successResp(analysis)
 

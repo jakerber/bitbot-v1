@@ -67,10 +67,16 @@ class Trader:
 
     def getAmount(self):
         """Determine how much of the cryptocurrency should be traded."""
+        minimumAmount = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
+
+        # calculate amount based on current price deviation
         deviationAboveThreshold = self.analysis.current_percent_deviation - constants.PERCENT_DEVIATION_THRESHOLD
         multiplier = min(deviationAboveThreshold, constants.TRADE_AMOUNT_MULTIPLIER_MAX)
-        tradeAmountUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
-        return tradeAmountUSD / self.analysis.current_price
+        amountUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
+        amount = amountUSD / self.analysis.current_price
+
+        # override to minimum amount if minimum not met
+        return max(amount, minimumAmount)
 
     def getTargetPrice(self):
         """Determine the price target for the cryptocurrency."""

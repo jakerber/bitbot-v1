@@ -6,9 +6,8 @@ import time
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 DEFAULT_LEVERAGE = 2
-LIMIT_PRICE_TEMPLATE = "%.2f"
 ORDER_EXPIRATION = "+%i" % constants.ORDER_EXPIRATION_SECONDS
-UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
+TRADE_VALUE_TEMPLATE = "%.{precision}f"
 
 ############################
 ##  Prices
@@ -31,15 +30,12 @@ def getPrices(ticker):
         }
     """
     # execute kraken price request
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
-    requestData = {"pair": constants.KRAKEN_ASSET_PAIR_TEMPLATE % krakenTicker}
+    krakenAssetPair = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("usd_pair")
+    requestData = {"pair": krakenAssetPair}
     resp = _executeRequest(kraken.query_public, "Ticker", requestData=requestData)
 
     # return all current prices
-    priceCode = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-    if priceCode not in resp.get("result"):
-        priceCode = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-    return resp.get("result").get(priceCode)
+    return resp.get("result").get(krakenAssetPair)
 
 ############################
 ##  Account info
@@ -75,62 +71,49 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 
 def buy(ticker, amount, price, targetPrice):
     """Buy a cryptocurrency."""
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
-    cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD % krakenTicker
-    requestData = {"pair": cryptoPair,
+    krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
+    assetPair = krakenConfig.get("usd_pair")
+    pricePrecision = krakenConfig.get("price_decimal_precision")
+    volumePrecision = krakenConfig.get("volume_decimal_precision")
+
+    # construct kraken order request
+    requestData = {"pair": assetPair,
                    "type": "buy",
                    "ordertype": "limit",
-                   "price": LIMIT_PRICE_TEMPLATE % price,
-                   "volume": amount,
+                   "price": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price,
+                   "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
                    "expiretm": ORDER_EXPIRATION,
                    "close[ordertype]": "limit",
-                   "close[price]": LIMIT_PRICE_TEMPLATE % targetPrice}
+                   "close[price]": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % targetPrice}
 
-    # add kraken buy order
-    try:
-        resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
-    except RuntimeError as err:
-        if UNKNOWN_ASSET_PAIR_ERROR not in str(err):
-            raise
-
-        # retry with secondary pairing if asset pair is unknown
-        else:
-            requestData["pair"] = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-            resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
-
+    # execute buy order
+    resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
     return resp.get("result").get("descr")
 
 def short(ticker, amount, price, targetPrice):
     """Short a cryptocurrency."""
-    krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
-    cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-    requestData = {"pair": cryptoPair,
+    krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
+    assetPair = krakenConfig.get("usd_pair")
+    pricePrecision = krakenConfig.get("price_decimal_precision")
+    volumePrecision = krakenConfig.get("volume_decimal_precision")
+
+    # construct kraken order request
+    requestData = {"pair": assetPair,
                    "type": "sell",
                    "ordertype": "limit",
-                   "price": LIMIT_PRICE_TEMPLATE % price,
-                   "volume": amount,
+                   "price": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price,
+                   "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
                    "leverage": DEFAULT_LEVERAGE,
                    "expiretm": ORDER_EXPIRATION,
                    "close[ordertype]": "limit",
-                   "close[price]": LIMIT_PRICE_TEMPLATE % targetPrice}
+                   "close[price]": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % targetPrice}
 
     # ensure sufficient margin is available to open short position
-    bidPrice = float(getPrices(ticker).get("b")[0])
-    if not sufficientMargin(amount * bidPrice):
+    if not sufficientMargin(amount * price):
         raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
 
-    # add kraken sell order
-    try:
-        resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
-    except RuntimeError as err:
-        if UNKNOWN_ASSET_PAIR_ERROR not in str(err):
-            raise
-
-        # retry with secondary pairing if asset pair is unknown
-        else:
-            requestData["pair"] = constants.KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
-            resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
-
+    # execute sell order
+    resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
     return resp.get("result").get("descr")
 
 ############################

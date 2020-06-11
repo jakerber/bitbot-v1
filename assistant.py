@@ -26,8 +26,9 @@ class Assistant:
         prices = kraken.getPrices(ticker)
 
         # parse price type out of response
-        priceTypeCode = constants.KRAKEN_PRICE_TYPES.get(priceType).get("code")
-        priceTypeIndex = constants.KRAKEN_PRICE_TYPES.get(priceType).get("index")
+        priceConfig = constants.KRAKEN_PRICE_CONFIGS.get(priceType)
+        priceTypeCode = priceConfig.get("code")
+        priceTypeIndex = priceConfig.get("api_index")
         price = prices.get(priceTypeCode)[priceTypeIndex]
 
         # return converted price
@@ -45,8 +46,9 @@ class Assistant:
         # parse price type out of response
         allPrices = {}
         for priceType in constants.SUPPORTED_PRICE_TYPES:
-            priceTypeCode = constants.KRAKEN_PRICE_TYPES.get(priceType).get("code")
-            priceTypeIndex = constants.KRAKEN_PRICE_TYPES.get(priceType).get("index")
+            config = constants.KRAKEN_PRICE_CONFIGS.get(priceType)
+            priceTypeCode = config.get("code")
+            priceTypeIndex = config.get("api_index")
             allPrices[priceType] = float(prices.get(priceTypeCode)[priceTypeIndex])
 
         # return all prices
@@ -86,19 +88,25 @@ class Assistant:
         return accountBalances.get("eb") + accountBalances.get("n")  # balance + net of open positions
 
     def getAssetBalance(self, ticker):
-        """Get the current balance of an asset."""
+        """Get the current balance of an asset in USD."""
         self.logger.log("fetching balance of %s" % ticker)
         assetBalances = getAssetBalances()
-        krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
-        priceBalanceKey = constants.KRAKEN_PRICE_BALANCE_TEMPLATE % krakenTicker
-        if priceBalanceKey in assetBalances:
-            return assetBalances.get(priceBalanceKey)
+        if ticker in assetBalances:
+            return assetBalances.get(ticker)
         return 0.0
 
     def getAssetBalances(self):
         """Get current balance of all assets."""
         self.logger.log("fetching balances of all assets")
-        return kraken.getAssetBalances()
+        assetBalances = kraken.getAssetBalances()
+
+        # convert assets to tickers
+        tickerBalances = {}
+        for asset in assetBalances:
+            for ticker in constants.KRAKEN_CRYPTO_CONFIGS:
+                if constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("asset") == asset:
+                    tickerBalances[ticker] = assetBalances.get(asset)
+        return tickerBalances
 
     def getMarginLevel(self):
         """Get the current account margin level."""
@@ -128,5 +136,5 @@ class Assistant:
         """Short a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        self.logger.log("shorting $%.2f of %s" % (amount * price, ticker))
+        self.logger.log("shorting ~$%.2f of %s" % (amount * price, ticker))
         return kraken.short(ticker, amount, price, targetPrice)

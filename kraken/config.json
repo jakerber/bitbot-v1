@@ -1,0 +1,98 @@
+{
+    "cryptocurrencies": {
+        "ADA": {
+            "name": "Cardano",
+            "asset": "ADA",
+            "usd_pair": "ADAUSD",
+            "price_decimal_precision": 6,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 1.0
+        },
+        "BTC": {
+            "name": "Bitcoin",
+            "asset": "XXBT",
+            "usd_pair": "XXBTZUSD",
+            "price_decimal_precision": 1,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 0.002
+        },
+        "ETH": {
+            "name": "Etherium",
+            "asset": "XETH",
+            "usd_pair": "XETHZUSD",
+            "price_decimal_precision": 2,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 0.02
+        },
+        "EOS": {
+            "name": "EOS",
+            "asset": "EOS",
+            "usd_pair": "EOSUSD",
+            "price_decimal_precision": 4,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 3.0
+        },
+        "LTC": {
+            "name": "Litecoin",
+            "asset": "XLTC",
+            "usd_pair": "XLTCZUSD",
+            "price_decimal_precision": 2,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 0.01
+        },
+        "TRX": {
+            "name": "TRON",
+            "asset": "TRX",
+            "usd_pair": "TRXUSD",
+            "price_decimal_precision": 10,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 500.0
+        },
+        "XLM": {
+            "name": "Stellar",
+            "asset": "XXLM",
+            "usd_pair": "XXLMZUSD",
+            "price_decimal_precision": 6,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 30.0
+        },
+        "XMR": {
+            "name": "Monero",
+            "asset": "XXMR",
+            "usd_pair": "XXMRZUSD",
+            "price_decimal_precision": 2,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 0.1
+        },
+        "XRP": {
+            "name": "Ripple",
+            "asset": "XXRP",
+            "usd_pair": "XXRPZUSD",
+            "price_decimal_precision": 5,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 30.0
+        },
+        "XTZ": {
+            "name": "Tezos",
+            "asset": "XTZ",
+            "usd_pair": "XTZUSD",
+            "price_decimal_precision": 4,
+            "volume_decimal_precision": 8,
+            "minimum_volume": 1.0
+        }
+    },
+    "prices": {
+        "ask": {
+            "code": "a",
+            "api_index": 0
+        },
+        "bid": {
+            "code": "b",
+            "api_index": 0
+        },
+        "vwap": {
+            "code": "p",
+            "api_index": 1
+        }
+    }
+}

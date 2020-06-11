@@ -1,5 +1,6 @@
 """BitBot constants module."""
 import os
+import json
 
 # api
 API_ROOT = "/api/v1"
@@ -23,30 +24,15 @@ if not MONGODB_URI:
 # kraken API constants
 KRAKEN_API_BASE = "https://api.kraken.com/0/"
 KRAKEN_API_CALL_INTERVAL_SEC = 0.5
-KRAKEN_ASSET_PAIR_TEMPLATE = "%sUSD"
-KRAKEN_CRYPTO_TICKERS = {"ADA": "ADA",
-                         "BTC": "XBT",
-                         "ETH": "ETH",
-                         "EOS": "EOS",
-                         "LTC": "LTC",
-                         "TRX": "TRX",
-                         "XLM": "XLM",
-                         "XMR": "XMR",
-                         "XRP": "XRP",
-                         "XTZ": "XTZ"}
 KRAKEN_KEY = os.environ.get("KRAKEN_KEY")
 KRAKEN_SECRET = os.environ.get("KRAKEN_SECRET")
-KRAKEN_PRICE_BALANCE_TEMPLATE = "X%s"
-KRAKEN_PRICE_CODE_TEMPLATE_TO_USD = "X%sZUSD"
-KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD = "ZUSDX%s"
-KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_TO_USD = "%sUSD"
-KRAKEN_SECONDARY_PRICE_CODE_TEMPLATE_FROM_USD = "USD%s"
-KRAKEN_PRICE_TYPES = {"ask": {"code": "a",
-                              "index": 0},
-                      "bid": {"code": "b",
-                              "index": 0},
-                      "vwap": {"code": "p",
-                               "index": 1}}
+
+# kraken API configuration
+KRAKEN_CONFIG = {}
+with open("kraken/config.json") as config:
+    KRAKEN_CONFIG = json.loads(config.read())
+KRAKEN_CRYPTO_CONFIGS = KRAKEN_CONFIG["cryptocurrencies"]
+KRAKEN_PRICE_CONFIGS = KRAKEN_CONFIG["prices"]
 
 # trading constants
 ALLOW_MARGIN_TRADING = os.environ.get("ALLOW_MARGIN_TRADING") == "True"
@@ -56,6 +42,6 @@ MARGIN_LEVEL_LIMIT = float(os.environ.get("MARGIN_LEVEL_LIMIT"))
 ORDER_EXPIRATION_SECONDS = int(os.environ.get("ORDER_EXPIRATION_SECONDS"))
 PERCENT_DEVIATION_THRESHOLD = float(os.environ.get("PERCENT_DEVIATION_THRESHOLD"))
 PERCENT_PRICE_CHANGE_MIN = float(os.environ.get("PERCENT_PRICE_CHANGE_MIN"))
-SUPPORTED_CRYPTOS = KRAKEN_CRYPTO_TICKERS.keys()
-SUPPORTED_PRICE_TYPES = KRAKEN_PRICE_TYPES.keys()
+SUPPORTED_CRYPTOS = KRAKEN_CRYPTO_CONFIGS.keys()
+SUPPORTED_PRICE_TYPES = KRAKEN_PRICE_CONFIGS.keys()
 TRADE_AMOUNT_MULTIPLIER_MAX = float(os.environ.get("TRADE_AMOUNT_MULTIPLIER_MAX"))
