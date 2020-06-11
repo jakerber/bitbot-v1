@@ -99,7 +99,7 @@ def trade():
 
         # consult trader if price deviation thresholds are met
         if analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_THRESHOLD:
-            logger.log("consulting trader on %s trade" % ticker)
+            logger.log("consulting trader on potential %s trade" % ticker)
             _trader = trader.Trader(ticker, analysis, assistant)
 
             # safetly execute trade if trader approves it
@@ -109,7 +109,6 @@ def trade():
                 except Exception as err:
                     logger.log("unable to execute %s trade: %s" % (ticker, str(err)))
                 else:
-                    logger.log("trade executed successfully")
                     logger.log(orderConfirmation, moneyExchanged=True)
 
 def summarize():

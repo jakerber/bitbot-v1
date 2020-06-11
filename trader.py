@@ -3,7 +3,7 @@ import constants
 import logger
 
 class Trader:
-    """Object to make executive decisions on trades and perform trade execution."""
+    """Object to make executive decisions on trades and oversee order execution."""
     def __init__(self, ticker, analysis, assistant):
         self.logger = logger.BitBotLogger("Trader")
         self.assistant = assistant
@@ -34,9 +34,9 @@ class Trader:
     def executeTrade(self):
         """Trade cryptocurrency."""
         if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
-            tradeFunc = self.assistant.buy
+            tradingMethod = self.assistant.buy
         else:
-            tradeFunc = self.assistant.short
+            tradingMethod = self.assistant.short
 
             # ensure margin trading is allowed before shorting
             if not constants.ALLOW_MARGIN_TRADING:
@@ -47,11 +47,13 @@ class Trader:
         tradeAmount = self.getAmount()
 
         # execute trade
-        self.logger.log("executing %s %s" % (self.ticker, tradeFunc.__name__))
-        return tradeFunc(ticker=self.ticker,
-                         amount=tradeAmount,
-                         price=self.analysis.current_price,
-                         targetPrice=targetPrice)
+        self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
+        orderConfirmation = tradingMethod(ticker=self.ticker,
+                                          amount=tradeAmount,
+                                          price=self.analysis.current_price,
+                                          targetPrice=targetPrice)
+        self.logger.log("trade executed successfully")
+        return orderConfirmation
 
     ############################
     ##  Trade specifications
