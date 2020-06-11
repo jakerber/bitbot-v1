@@ -102,13 +102,10 @@ def trade():
             logger.log("consulting trader on potential %s trade" % ticker)
             _trader = trader.Trader(ticker, analysis, assistant)
 
-            # safetly execute trade if trader approves it
+            # execute trade if trader approves it
             if _trader.approvesTrade():
-                try:
-                    orderConfirmation = _trader.executeTrade()
-                except Exception as err:
-                    logger.log("unable to execute %s trade: %s" % (ticker, str(err)))
-                else:
+                orderConfirmation = _trader.executeTrade()
+                if orderConfirmation:
                     logger.log(orderConfirmation, moneyExchanged=True)
 
 def summarize():

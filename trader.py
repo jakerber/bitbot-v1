@@ -50,12 +50,18 @@ class Trader:
         targetPrice = self.analysis.current_trend_price
         tradeAmount = self.getAmount()
 
-        # execute trade
+        # safely execute trade
         self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
-        orderConfirmation = tradingMethod(ticker=self.ticker,
-                                          amount=tradeAmount,
-                                          price=self.analysis.current_price,
-                                          targetPrice=targetPrice)
+        try:
+            orderConfirmation = tradingMethod(ticker=self.ticker,
+                                              amount=tradeAmount,
+                                              price=self.analysis.current_price,
+                                              targetPrice=targetPrice)
+        except Exception as err:
+            self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
+            return None
+
+        # return order confirmation if trade was successful
         self.logger.log("trade executed successfully")
         return orderConfirmation
 
