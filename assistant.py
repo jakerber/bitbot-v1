@@ -121,18 +121,12 @@ class Assistant:
         """Buy a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        stopPrice = targetPrice - (targetPrice * constants.STOP_LOSS_PRICE_MULTIPLIER)
-        if stopPrice >= targetPrice:
-            raise RuntimeError("stop price (%f) >= target price (%f)" % (stopPrice, targetPrice))
-        self.logger.log("buying $%f of %s" % (amount * price, ticker))
-        return kraken.buy(ticker, amount, targetPrice, stopPrice)
+        self.logger.log("buying $%.2f of %s" % (amount * price, ticker))
+        return kraken.buy(ticker, amount, targetPrice)
 
     def short(self, ticker, amount, price, targetPrice):
         """Short a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        stopPrice = targetPrice + (targetPrice * constants.STOP_LOSS_PRICE_MULTIPLIER)
-        if stopPrice <= targetPrice:
-            raise RuntimeError("stop price (%f) <= target price (%f)" % (stopPrice, targetPrice))
-        self.logger.log("shorting $%f of %s" % (amount * price, ticker))
-        return kraken.short(ticker, amount, targetPrice, stopPrice)
+        self.logger.log("shorting $%.2f of %s" % (amount * price, ticker))
+        return kraken.short(ticker, amount, targetPrice)

@@ -5,7 +5,7 @@ import time
 
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
-DEFAULT_LEVERAGE = "2"
+DEFAULT_LEVERAGE = 2
 ORDER_EXPIRATION = "+%i" % constants.ORDER_EXPIRATION_SECONDS
 UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 
@@ -72,7 +72,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 ##  Trading
 ############################
 
-def buy(ticker, amount, targetPrice, stopPrice):
+def buy(ticker, amount, targetPrice):
     """Buy a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_FROM_USD % krakenTicker
@@ -81,9 +81,8 @@ def buy(ticker, amount, targetPrice, stopPrice):
                    "ordertype": "market",
                    "volume": amount,
                    "expiretm": ORDER_EXPIRATION,
-                   "close[ordertype]": "stop-loss-limit",
-                   "close[price]": stopPrice,
-                   "close[price2]": targetPrice}
+                   "close[ordertype]": "limit",
+                   "close[price]": targetPrice}
 
     # add kraken buy order
     try:
@@ -99,7 +98,7 @@ def buy(ticker, amount, targetPrice, stopPrice):
 
     return resp.get("result").get("descr")
 
-def short(ticker, amount, targetPrice, stopPrice):
+def short(ticker, amount, targetPrice):
     """Short a cryptocurrency."""
     krakenTicker = constants.KRAKEN_CRYPTO_TICKERS.get(ticker)
     cryptoPair = constants.KRAKEN_PRICE_CODE_TEMPLATE_TO_USD % krakenTicker
@@ -109,9 +108,8 @@ def short(ticker, amount, targetPrice, stopPrice):
                    "volume": amount,
                    "leverage": DEFAULT_LEVERAGE,
                    "expiretm": ORDER_EXPIRATION,
-                   "close[ordertype]": "stop-loss-limit",
-                   "close[price]": stopPrice,
-                   "close[price2]": targetPrice}
+                   "close[ordertype]": "limit",
+                   "close[price]": targetPrice}
 
     # ensure sufficient margin is available to open short position
     bidPrice = float(getPrices(ticker).get("b")[0])
@@ -139,7 +137,8 @@ def short(ticker, amount, targetPrice, stopPrice):
 def sufficientMargin(shortAmountUSD):
     """Determine if there is enough margin available to open a short position."""
     equity = getAccountBalances().get("e")
-    marginUsed = getAccountBalances().get("m") + shortAmountUSD
+    marginUsed = getAccountBalances().get("m")
+    marginUsed += shortAmountUSD / DEFAULT_LEVERAGE  # estimated margin cost
     marginLevel = (equity / marginUsed) * 100
     return marginLevel > constants.MARGIN_LEVEL_LIMIT
 
