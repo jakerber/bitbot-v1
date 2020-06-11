@@ -4,6 +4,8 @@ import datetime
 import logger
 from kraken import kraken
 
+MINIMUM_ASSET_BALANCE = 0.0001
+
 class Assistant:
     """Object to retrieve information for BitBot."""
     def __init__(self, mongodb):
@@ -100,12 +102,14 @@ class Assistant:
         self.logger.log("fetching balances of all assets")
         assetBalances = kraken.getAssetBalances()
 
-        # convert assets to tickers
+        # convert assets to tickers and omit balances under minimum
         tickerBalances = {}
         for asset in assetBalances:
             for ticker in constants.KRAKEN_CRYPTO_CONFIGS:
                 if constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("asset") == asset:
-                    tickerBalances[ticker] = assetBalances.get(asset)
+                    balance = assetBalances.get(asset)
+                    balance = 0.0 if balance < MINIMUM_ASSET_BALANCE else balance
+                    tickerBalances[ticker] = balance
         return tickerBalances
 
     def getMarginLevel(self):

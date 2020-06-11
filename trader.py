@@ -21,7 +21,7 @@ class Trader:
         priceChange = abs(1 - (targetPrice / self.analysis.current_price))
 
         # return trade approval
-        tradeApproval = priceChange >= constants.PERCENT_PRICE_CHANGE_MIN
+        tradeApproval = priceChange >= constants.MINIMUM_PERCENT_PRICE_CHANGE
         if tradeApproval:
             self.logger.log(self.analysis.__dict__)
             self.logger.log("%s trade approved!" % self.ticker)
@@ -71,7 +71,7 @@ class Trader:
 
         # calculate amount based on current price deviation
         deviationAboveThreshold = self.analysis.current_percent_deviation - constants.PERCENT_DEVIATION_THRESHOLD
-        multiplier = min(deviationAboveThreshold, constants.TRADE_AMOUNT_MULTIPLIER_MAX)
+        multiplier = min(deviationAboveThreshold, constants.MAXIMUM_TRADE_AMOUNT_MULTIPLIER)
         amountUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
         amount = amountUSD / self.analysis.current_price
 
