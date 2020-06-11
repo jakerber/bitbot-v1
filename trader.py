@@ -16,19 +16,12 @@ class Trader:
 
     def approvesTrade(self):
         """Determine if a cryptocurrency should be traded."""
-        # verify prices fall within profitable bounds
-        if self.analysis.current_deviation < 0:
-            trendDiverged = self.analysis.current_volume_weighted_average_price < self.analysis.current_trend_price
-        else:
-            trendDiverged = self.analysis.current_volume_weighted_average_price > self.analysis.current_trend_price
-
         # verify trade exceeds minimum price change
         targetPrice = self.getTargetPrice()
         priceChange = abs(1 - (targetPrice / self.analysis.current_price))
-        profitable = priceChange >= constants.PERCENT_PRICE_CHANGE_MIN
 
         # return trade approval
-        tradeApproval = trendDiverged and profitable
+        tradeApproval = priceChange >= constants.PERCENT_PRICE_CHANGE_MIN
         if tradeApproval:
             self.logger.log(self.analysis.__dict__)
             self.logger.log("%s trade approved!" % self.ticker)
@@ -50,7 +43,7 @@ class Trader:
                 raise RuntimeError("unable to short %s: margin trading is not allowed :(" % self.ticker)
 
         # gather trade specifications
-        targetPrice = self.analysis.current_trend_price
+        targetPrice = self.getTargetPrice()
         tradeAmount = self.getAmount()
 
         # safely execute trade
@@ -81,7 +74,7 @@ class Trader:
 
     def getTargetPrice(self):
         """Determine the price target for the cryptocurrency."""
-        if self.analysis.current_deviation < 0:
+        if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
             return self.analysis.current_price + self.analysis.standard_deviation
         else:
             return self.analysis.current_price - self.analysis.standard_deviation

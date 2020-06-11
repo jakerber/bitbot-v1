@@ -44,8 +44,8 @@ class MeanReversion:
 
         # calculate current price deviation from current weighted average
         self.vwapPrices.append([self.currentVWAP])  # aggregate for visualizations
-        currentDeviation = self.currentPrice - self.currentVWAP
-        currentPercentDeviation = abs(currentDeviation) / standardDeviation
+        currentDeviation = abs(self.currentPrice - self.currentVWAP)
+        currentPercentDeviation = currentDeviation / standardDeviation
 
         # log and return analysis
         self.logger.log("analyzed %i price deviations" % len(self.vwapPrices))
