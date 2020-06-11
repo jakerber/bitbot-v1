@@ -6,7 +6,7 @@ import time
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 DEFAULT_LEVERAGE = 2
-LIMIT_PRICE_TEMPLATE = "%.6f"
+LIMIT_PRICE_TEMPLATE = "%.2f"
 ORDER_EXPIRATION = "+%i" % constants.ORDER_EXPIRATION_SECONDS
 UNKNOWN_ASSET_PAIR_ERROR = "Unknown asset pair"
 
@@ -84,7 +84,7 @@ def buy(ticker, amount, price, targetPrice):
                    "volume": amount,
                    "expiretm": ORDER_EXPIRATION,
                    "close[ordertype]": "limit",
-                   "close[price]": targetPrice}
+                   "close[price]": LIMIT_PRICE_TEMPLATE % targetPrice}
 
     # add kraken buy order
     try:
@@ -112,7 +112,7 @@ def short(ticker, amount, price, targetPrice):
                    "leverage": DEFAULT_LEVERAGE,
                    "expiretm": ORDER_EXPIRATION,
                    "close[ordertype]": "limit",
-                   "close[price]": targetPrice}
+                   "close[price]": LIMIT_PRICE_TEMPLATE % targetPrice}
 
     # ensure sufficient margin is available to open short position
     bidPrice = float(getPrices(ticker).get("b")[0])
