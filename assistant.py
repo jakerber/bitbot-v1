@@ -122,11 +122,11 @@ class Assistant:
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         self.logger.log("buying $%.2f of %s" % (amount * price, ticker))
-        return kraken.buy(ticker, amount, targetPrice)
+        return kraken.buy(ticker, amount, price, targetPrice)
 
     def short(self, ticker, amount, price, targetPrice):
         """Short a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         self.logger.log("shorting $%.2f of %s" % (amount * price, ticker))
-        return kraken.short(ticker, amount, targetPrice)
+        return kraken.short(ticker, amount, price, targetPrice)
