@@ -17,15 +17,18 @@ class Trader:
     def approvesTrade(self):
         """Determine if a cryptocurrency should be traded."""
         # verify prices fall within profitable bounds
-        if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
-            withinBounds = self.analysis.current_price < self.analysis.current_trend_price
-            priceChange = (self.analysis.current_trend_price - self.analysis.current_price) / self.analysis.current_price
+        if self.analysis.current_deviation < 0:
+            trendDiverged = self.analysis.current_volume_weighted_average_price < self.analysis.current_trend_price
         else:
-            withinBounds = self.analysis.current_price > self.analysis.current_trend_price
-            priceChange = (self.analysis.current_price - self.analysis.current_trend_price) / self.analysis.current_price
+            trendDiverged = self.analysis.current_volume_weighted_average_price > self.analysis.current_trend_price
+
+        # verify trade exceeds minimum price change
+        targetPrice = self.getTargetPrice()
+        priceChange = abs(1 - (targetPrice / self.analysis.current_price))
+        profitable = priceChange >= constants.PERCENT_PRICE_CHANGE_MIN
 
         # return trade approval
-        tradeApproval = withinBounds and priceChange >= constants.PERCENT_PRICE_CHANGE_MIN
+        tradeApproval = trendDiverged and profitable
         if tradeApproval:
             self.logger.log(self.analysis.__dict__)
             self.logger.log("%s trade approved!" % self.ticker)
@@ -75,3 +78,10 @@ class Trader:
         multiplier = min(deviationAboveThreshold, constants.TRADE_AMOUNT_MULTIPLIER_MAX)
         tradeAmountUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
         return tradeAmountUSD / self.analysis.current_price
+
+    def getTargetPrice(self):
+        """Determine the price target for the cryptocurrency."""
+        if self.analysis.current_deviation < 0:
+            return self.analysis.current_price + self.analysis.standard_deviation
+        else:
+            return self.analysis.current_price - self.analysis.standard_deviation
