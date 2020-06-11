@@ -138,11 +138,10 @@ def short(ticker, amount, targetPrice, stopPrice):
 
 def sufficientMargin(shortAmountUSD):
     """Determine if there is enough margin available to open a short position."""
-    currentEquity = getAccountBalances().get("e")
-    currentMarginUsed = getAccountBalances().get("m")
-    usedMarginAfterShort = currentMarginUsed + shortAmountUSD
-    marginLevelAfterShort = (currentEquity / usedMarginAfterShort) * 100
-    return marginLevelAfterShort > constants.MARGIN_LEVEL_LIMIT
+    equity = getAccountBalances().get("e")
+    marginUsed = getAccountBalances().get("m") + shortAmountUSD
+    marginLevel = (equity / marginUsed) * 100
+    return marginLevel > constants.MARGIN_LEVEL_LIMIT
 
 def _executeRequest(api, requestName, requestData={}):
     """Execute a request to the Kraken API."""
