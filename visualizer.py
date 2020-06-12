@@ -1,5 +1,4 @@
 """Data visualization module."""
-import constants
 import datetime
 import matplotlib
 import numpy
@@ -20,11 +19,6 @@ def visualize(ticker, currentPrices, priceHistory):
     regression = meanReversion.linearRegression
     analysis = meanReversion.analyze()
 
-    # determine starting timestamp for x-axis label
-    startingTimestamp = regression.timestamps[0][0]
-    startingDatetime = datetime.datetime.fromtimestamp(startingTimestamp)
-    startingDatetimeString = startingDatetime.strftime("%b %d %H:%M")
-
     # clear any previous visualizations
     pyplot.clf()
     pyplot.cla()
@@ -32,8 +26,8 @@ def visualize(ticker, currentPrices, priceHistory):
 
     # generate historical price visualization
     pyplot.title("%s History" % ticker)
-    pyplot.ylabel("price ($)")
-    pyplot.xlabel("days after %s (UTC)" % startingDatetimeString)
+    pyplot.ylabel("Price ($)")
+    pyplot.xlabel("Time (days)")
     pyplot.grid(color="silver", linestyle="--", linewidth=0.5, alpha=0.5)
 
     # plot price history with VWAP and trend line
@@ -47,6 +41,7 @@ def visualize(ticker, currentPrices, priceHistory):
 
     # set x-axis ticks to incrementing hours
     labels = []
+    startingTimestamp = regression.timestamps[0][0]
     ticks = numpy.arange(startingTimestamp, currentTimestamp, step=SECONDS_IN_DAY)
     ticks = numpy.append(ticks, currentTimestamp)
     for tickTimestamp in ticks:
