@@ -17,6 +17,11 @@ class Closer:
         if self.orderType not in ["buy", "sell"]:
             raise RuntimeError("unknown order type: %s", orderType)
 
+        # store order constants
+        self.startingPrice = float(self.order.get("price"))
+        self.tradeAmount = float(self.order.get("vol"))
+        self.leverage = int(self.order.get("descr").get("leverage")[0])
+
         # fetch current price
         self.closingPriceType = "bid" if self.orderType == "buy" else "ask"
         self.currentPrice = self.assistant.getPrice(self.ticker, self.closingPriceType)
@@ -45,7 +50,10 @@ class Closer:
 
         # return approval
         if _approval:
-            self.logger.log({"actionable_price": actionablePrice, "percent_difference": percentDifference})
+            self.logger.log({"actionable_price": actionablePrice,
+                             "percent_difference": percentDifference,
+                             "current_price": self.currentPrice,
+                             "initial_order_price": self.startingPrice})
             self.logger.log("%s close approved!" % self.ticker)
         return _approval
 
@@ -55,24 +63,20 @@ class Closer:
 
     def execute(self):
         """Close a trade position."""
-        startingPrice = float(self.order.get("price"))
-        tradeAmount = float(self.order.get("vol"))
-        leverage = int(self.order.get("descr").get("leverage"))
-
         # determine trading method
         if self.orderType == "buy":
             tradingMethod = self.assistant.sell
-            profit = (self.currentPrice - startingPrice) * tradeAmount
+            profit = (self.currentPrice - self.startingPrice) * self.tradeAmount
         else:
             tradingMethod = self.assistant.buy
-            profit = (startingPrice - self.currentPrice) * tradeAmount
+            profit = (self.startingPrice - self.currentPrice) * self.tradeAmount
 
         # safely close position
         self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
         try:
             success, order = tradingMethod(ticker=self.ticker,
-                                           amount=tradeAmount,
-                                           leverage=leverage)
+                                           amount=self.tradeAmount,
+                                           leverage=self.leverage)
         except Exception as err:
             raise
             self.logger.log("unable to close %s position: %s" % (self.ticker, str(err)))
