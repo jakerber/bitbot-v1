@@ -4,6 +4,7 @@ import matplotlib
 import numpy
 from matplotlib import pyplot
 from algos import mean_reversion
+from algos import linear_regression
 
 SECONDS_IN_DAY = 3600 * 24
 
@@ -16,7 +17,7 @@ def visualize(ticker, currentPrices, priceHistory):
     meanReversion = mean_reversion.MeanReversion(currentPrices, priceHistory)
     currentPrice = meanReversion.currentPrice
     currentVWAP = meanReversion.currentVWAP
-    regression = meanReversion.linearRegression
+    regression = linear_regression.LinearRegression(meanReversion.currentPrice, meanReversion.priceHistory)
     analysis = meanReversion.analyze()
 
     # clear any previous visualizations
