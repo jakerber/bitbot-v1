@@ -129,29 +129,35 @@ class Assistant:
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, price):
+    def buy(self, ticker, amount, price, useMargin=False):
         """Buy a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        self.logger.log("buying ~$%.2f of %s" % (amount * price, ticker))
-        return self._executeTrade(kraken.buy, ticker, amount, price)
+        logMessage = "buying ~$%.2f of %s" % (amount * price, ticker)
+        if useMargin:
+            logMessage += " with margin"
+        self.logger.log(logMessage)
+        return self._executeTrade(kraken.buy, ticker, amount, price, useMargin=useMargin)
 
-    def short(self, ticker, amount, price):
+    def short(self, ticker, amount, price, useMargin=False):
         """Short a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        self.logger.log("shorting ~$%.2f of %s" % (amount * price, ticker))
-        return self._executeTrade(kraken.short, ticker, amount, price, margin=True)
+        logMessage = "shorting ~$%.2f of %s" % (amount * price, ticker)
+        if useMargin:
+            logMessage += " with margin"
+        self.logger.log(logMessage)
+        return self._executeTrade(kraken.short, ticker, amount, price, useMargin=useMargin)
 
     ############################
     ##  Helper methods
     ############################
 
-    def _executeTrade(self, tradeMethod, ticker, amount, price, margin=False):
+    def _executeTrade(self, tradeMethod, ticker, amount, price, useMargin=False):
         """Parse transaction ID and description out of order response."""
-        confirmation = tradeMethod(ticker, amount, price)
+        confirmation = tradeMethod(ticker, amount, price, useMargin=useMargin)
         if confirmation:
             return True, {"transactionId": confirmation.get("txid")[0],
                           "description": confirmation.get("descr"),
-                          "margin": margin}
+                          "margin": useMargin}
         return False, {}

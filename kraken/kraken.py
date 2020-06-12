@@ -69,7 +69,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 ##  Trading
 ############################
 
-def buy(ticker, amount, price):
+def buy(ticker, amount, price, useMargin=False):
     """Buy a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
@@ -84,11 +84,17 @@ def buy(ticker, amount, price):
                    "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
                    "expiretm": ORDER_EXPIRATION}
 
+    # add leverage if buying on margin
+    if useMargin:
+        if not sufficientMargin(amount * price):
+            raise RuntimeError("insufficient margin available: buy would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
+        requestData["leverage"] = DEFAULT_LEVERAGE
+
     # execute buy order
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
     return resp.get("result").get("descr")
 
-def short(ticker, amount, price):
+def short(ticker, amount, price, useMargin=False):
     """Short a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
@@ -101,12 +107,13 @@ def short(ticker, amount, price):
                    "ordertype": "limit",
                    "price": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price,
                    "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
-                   "leverage": DEFAULT_LEVERAGE,
                    "expiretm": ORDER_EXPIRATION}
 
-    # ensure sufficient margin is available to open short position
-    if not sufficientMargin(amount * price):
-        raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
+    # add leverage if shorting on margin
+    if useMargin:
+        if not sufficientMargin(amount * price):
+            raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
+        requestData["leverage"] = DEFAULT_LEVERAGE
 
     # execute sell order
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)

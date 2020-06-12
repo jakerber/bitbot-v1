@@ -34,8 +34,10 @@ class Trader:
         # determine trading method
         if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
             tradingMethod = self.assistant.buy
+            useMargin = False
         else:
             tradingMethod = self.assistant.short
+            useMargin = True
 
             # ensure margin trading is allowed before shorting
             if not constants.ALLOW_MARGIN_TRADING:
@@ -47,7 +49,8 @@ class Trader:
         try:
             success, order = tradingMethod(ticker=self.ticker,
                                            amount=tradeAmount,
-                                           price=self.analysis.current_price)
+                                           price=self.analysis.current_price,
+                                           useMargin=useMargin)
         except Exception as err:
             self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
             return None
