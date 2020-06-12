@@ -14,11 +14,10 @@ class OpenPosition(BitBotModel):
     """Object representing an entry in the open_position collection."""
     collectionName = "open_position"
 
-    def __init__(self, ticker, transactionId, description, margin):
+    def __init__(self, ticker, transactionId, description):
         self.ticker = ticker
         self.transaction_id = transactionId
         self.description = description
-        self.margin = margin
         self.utc_datetime = datetime.datetime.utcnow()
 
 class Price(BitBotModel):

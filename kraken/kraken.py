@@ -111,7 +111,7 @@ def getOrder(transactionId):
 ##  Trading
 ############################
 
-def buy(ticker, amount, price=None, useMargin=False):
+def buy(ticker, amount, price=None, leverage=None):
     """Buy a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
@@ -132,17 +132,17 @@ def buy(ticker, amount, price=None, useMargin=False):
         requestData["ordertype"] = "limit"
 
     # add leverage if buying on margin
-    if useMargin:
+    if leverage:
         price = price or float(getPrices(ticker).get("a")[0])
-        if not sufficientMargin(amount * price):
+        if not sufficientMargin(amount * price, leverage):
             raise RuntimeError("insufficient margin available: buy would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
-        requestData["leverage"] = DEFAULT_LEVERAGE
+        requestData["leverage"] = leverage
 
     # execute buy order
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
     return resp.get("result")
 
-def sell(ticker, amount, price=None, useMargin=False):
+def sell(ticker, amount, price=None, leverage=None):
     """Sell a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
@@ -162,11 +162,11 @@ def sell(ticker, amount, price=None, useMargin=False):
         requestData["ordertype"] = "limit"
 
     # add leverage if selling on margin
-    if useMargin:
+    if leverage:
         price = price or float(getPrices(ticker).get("b")[0])
-        if not sufficientMargin(amount * price):
+        if not sufficientMargin(amount * price, leverage):
             raise RuntimeError("insufficient margin available: sell would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
-        requestData["leverage"] = DEFAULT_LEVERAGE
+        requestData["leverage"] = leverage
 
     # execute sell order
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
@@ -176,11 +176,11 @@ def sell(ticker, amount, price=None, useMargin=False):
 ##  Helper methods
 ############################
 
-def sufficientMargin(tradeAmountUSD):
+def sufficientMargin(tradeAmountUSD, leverage):
     """Determine if there is enough margin available to open a position."""
     equity = getAccountBalances().get("e")
     marginUsed = getAccountBalances().get("m")
-    marginUsed += tradeAmountUSD / DEFAULT_LEVERAGE  # estimated margin cost
+    marginUsed += tradeAmountUSD / leverage  # estimated margin cost
     marginLevel = (equity / marginUsed) * 100
     return marginLevel > constants.MARGIN_LEVEL_LIMIT
 

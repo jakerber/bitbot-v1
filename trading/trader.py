@@ -35,10 +35,10 @@ class Trader:
         # determine trading method
         if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
             tradingMethod = self.assistant.buy
-            useMargin = False
+            leverage = None
         else:
             tradingMethod = self.assistant.sell
-            useMargin = True
+            leverage = constants.DEFAULT_LEVERAGE
 
         # safely execute trade
         tradeAmount = self.getAmount()
@@ -46,7 +46,7 @@ class Trader:
         try:
             success, order = tradingMethod(ticker=self.ticker,
                                            amount=tradeAmount,
-                                           useMargin=useMargin)
+                                           leverage=leverage)
         except Exception as err:
             self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
             return None, None

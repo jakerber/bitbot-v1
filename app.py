@@ -206,10 +206,9 @@ def trade():
                 logger.log("trade executed successfully", moneyExchanged=True)
 
                 # add new position to the database
-                transactionId = position.get("transactionId")
+                transactionId = position.get("transaction_id")
                 description = position.get("description")
-                margin = position.get("margin")
-                openPositionModel = models.OpenPosition(ticker, transactionId, description, margin)
+                openPositionModel = models.OpenPosition(ticker, transactionId, description)
                 mongodb.insert(openPositionModel)
 
     # log trading session summary

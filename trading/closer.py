@@ -57,15 +57,14 @@ class Closer:
         """Close a trade position."""
         startingPrice = float(self.order.get("price"))
         tradeAmount = float(self.order.get("vol"))
+        leverage = int(self.order.get("descr").get("leverage"))
 
         # determine trading method
         if self.orderType == "buy":
             tradingMethod = self.assistant.sell
-            useMargin = False
             profit = (self.currentPrice - startingPrice) * tradeAmount
         else:
             tradingMethod = self.assistant.buy
-            useMargin = True
             profit = (startingPrice - self.currentPrice) * tradeAmount
 
         # safely close position
@@ -73,7 +72,7 @@ class Closer:
         try:
             success, order = tradingMethod(ticker=self.ticker,
                                            amount=tradeAmount,
-                                           useMargin=useMargin)  # TODO: specify margin from self.order.get("descr").get("leverage")
+                                           leverage=leverage)
         except Exception as err:
             raise
             self.logger.log("unable to close %s position: %s" % (self.ticker, str(err)))

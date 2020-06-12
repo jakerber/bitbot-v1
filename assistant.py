@@ -139,51 +139,49 @@ class Assistant:
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, price=None, useMargin=False):
+    def buy(self, ticker, amount, price=None, leverage=None):
         """Buy a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         logMessage = "buying %.3f of %s" % (amount, ticker)
         if price:
             logMessage += " @ $%.3f" % price
-        if useMargin:
-            logMessage += " with margin"
+        if leverage:
+            logMessage += " with %i:1 leverage" % leverage
         self.logger.log(logMessage)
 
-        # ensure margin trading is allowed before using margin
-        if useMargin and not constants.ALLOW_MARGIN_TRADING:
+        # ensure margin trading is allowed before using leverage
+        if leverage and not constants.ALLOW_MARGIN_TRADING:
             raise RuntimeError("unable to buy %s: margin trading is not allowed" % ticker)
 
         # buy cryptocurrency
-        return self._executeTrade(kraken.buy, ticker, amount, price=price, useMargin=useMargin)
+        return self._executeTrade(kraken.buy, ticker, amount, price, leveragee)
 
-    def sell(self, ticker, amount, price=None, useMargin=False):
+    def sell(self, ticker, amount, price=None, leverage=None):
         """Sell a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         logMessage = "selling %.3f of %s" % (amount, ticker)
         if price:
             logMessage += " @ $%.3f" % price
-        if useMargin:
-            logMessage += " with margin"
+        if leverage:
+            logMessage += " with %i:1 leverage" % leverage
         self.logger.log(logMessage)
 
-        # ensure margin trading is allowed before using margin
-        if useMargin and not constants.ALLOW_MARGIN_TRADING:
+        # ensure margin trading is allowed before using leverage
+        if leverage and not constants.ALLOW_MARGIN_TRADING:
             raise RuntimeError("unable to sell %s: margin trading is not allowed" % ticker)
 
         # sell cryptocurrency
-        return self._executeTrade(kraken.sell, ticker, amount, price=price, useMargin=useMargin)
+        return self._executeTrade(kraken.sell, ticker, amount, price, leverage)
 
     ############################
     ##  Helper methods
     ############################
 
-    def _executeTrade(self, tradeMethod, ticker, amount, price=None, useMargin=False):
+    def _executeTrade(self, tradeMethod, ticker, amount, price, leverage):
         """Execute trade and interpret order response."""
-        confirmation = tradeMethod(ticker, amount, price=price, useMargin=useMargin)
+        confirmation = tradeMethod(ticker, amount, price=price, leverage=leverage)
         if confirmation:
-            return True, {"transactionId": confirmation.get("txid")[0],
-                          "description": confirmation.get("descr"),
-                          "margin": useMargin}
+            return True, {"transaction_id": confirmation.get("txid")[0], "description": confirmation.get("descr")}
         return False, {}

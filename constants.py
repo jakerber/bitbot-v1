@@ -37,6 +37,7 @@ KRAKEN_PRICE_CONFIGS = KRAKEN_CONFIG["prices"]
 # trading constants
 ALLOW_MARGIN_TRADING = os.environ.get("ALLOW_MARGIN_TRADING") == "True"
 BASE_BUY_USD = float(os.environ.get("BASE_BUY_USD"))
+DEFAULT_LEVERAGE = float(os.environ.get("DEFAULT_LEVERAGE"))
 LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS"))
 MARGIN_LEVEL_LIMIT = float(os.environ.get("MARGIN_LEVEL_LIMIT"))
 MAXIMUM_TRADE_AMOUNT_MULTIPLIER = float(os.environ.get("MAXIMUM_TRADE_AMOUNT_MULTIPLIER"))
