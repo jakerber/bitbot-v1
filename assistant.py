@@ -129,16 +129,28 @@ class Assistant:
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, price, targetPrice):
+    def buy(self, ticker, amount, price):
         """Buy a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        self.logger.log("buying $%.2f of %s" % (amount * price, ticker))
-        return kraken.buy(ticker, amount, price, targetPrice)
+        self.logger.log("buying ~$%.2f of %s" % (amount * price, ticker))
+        return self._executeTrade(kraken.buy, ticker, amount, price)
 
-    def short(self, ticker, amount, price, targetPrice):
+    def short(self, ticker, amount, price):
         """Short a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         self.logger.log("shorting ~$%.2f of %s" % (amount * price, ticker))
-        return kraken.short(ticker, amount, price, targetPrice)
+        return self._executeTrade(kraken.short, ticker, amount, price)
+
+    ############################
+    ##  Helper methods
+    ############################
+
+    def _executeTrade(self, tradeMethod, ticker, amount, price):
+        """Parse transaction ID and description out of order response."""
+        confirmation = tradeMethod(ticker, amount, price)
+        if confirmation:
+            return True, {"transactionId": confirmation.get("txid")[0],
+                          "description": confirmation.get("descr")}
+        return False, {}

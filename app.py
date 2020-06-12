@@ -99,17 +99,16 @@ def trade():
         except Exception as err:
             continue
 
-        # consult trader if price deviation thresholds are met
-        if analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_THRESHOLD:
-            logger.log("consulting trader on potential %s trade" % ticker)
-            _trader = trader.Trader(ticker, analysis, assistant)
+        # consult trader on potential trade
+        _trader = trader.Trader(ticker, analysis, assistant)
+        logger.log("consulting trader on potential %s trade" % ticker)
+        if _trader.approvesTrade():
 
-            # execute trade if trader approves it
-            if _trader.approvesTrade():
-                orderConfirmation = _trader.executeTrade()
-                if orderConfirmation:
-                    tickersTraded.append(ticker)
-                    logger.log(orderConfirmation, moneyExchanged=True)
+            # execute trade
+            success, order = _trader.executeTrade()
+            if success:
+                tickersTraded.append(ticker)
+                logger.log("trade executed successfully", moneyExchanged=True)
 
     # log trading session summary
     numTrades = len(tickersTraded)

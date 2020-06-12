@@ -69,7 +69,7 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
 ##  Trading
 ############################
 
-def buy(ticker, amount, price, targetPrice):
+def buy(ticker, amount, price):
     """Buy a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
@@ -82,15 +82,13 @@ def buy(ticker, amount, price, targetPrice):
                    "ordertype": "limit",
                    "price": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price,
                    "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
-                   "expiretm": ORDER_EXPIRATION,
-                   "close[ordertype]": "limit",
-                   "close[price]": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % targetPrice}
+                   "expiretm": ORDER_EXPIRATION}
 
     # execute buy order
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
     return resp.get("result").get("descr")
 
-def short(ticker, amount, price, targetPrice):
+def short(ticker, amount, price):
     """Short a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
@@ -104,9 +102,7 @@ def short(ticker, amount, price, targetPrice):
                    "price": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price,
                    "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
                    "leverage": DEFAULT_LEVERAGE,
-                   "expiretm": ORDER_EXPIRATION,
-                   "close[ordertype]": "limit",
-                   "close[price]": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % targetPrice}
+                   "expiretm": ORDER_EXPIRATION}
 
     # ensure sufficient margin is available to open short position
     if not sufficientMargin(amount * price):
@@ -114,7 +110,7 @@ def short(ticker, amount, price, targetPrice):
 
     # execute sell order
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
-    return resp.get("result").get("descr")
+    return resp.get("result")
 
 ############################
 ##  Helper methods
