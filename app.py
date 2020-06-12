@@ -146,7 +146,7 @@ def stop_loss():
             if _closer.approvesClose():
 
                 # close position
-                success, order, profit = _closer.executeClose()
+                success, order, profit = _closer.execute()
                 if success:
                     tickersClosed.append(ticker)
                     logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
@@ -198,10 +198,10 @@ def trade():
         # consult trader on potential trade
         _trader = trader.Trader(ticker, analysis, assistant)
         logger.log("consulting trader on potential %s trade" % ticker)
-        if _trader.approvesTrade():
+        if _trader.approves:
 
             # execute trade
-            success, order = _trader.executeTrade()
+            success, order = _trader.execute()
             if success:
                 tickersTraded.append(ticker)
                 logger.log("trade executed successfully", moneyExchanged=True)

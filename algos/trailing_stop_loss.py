@@ -7,32 +7,33 @@ class TrailingStopLoss:
         self.orderType = orderType
         self.currentPrice = currentPrice
         self.priceHistory = priceHistory
+        self.actionablePrice = None
+        self.percentDifference = None
 
         # verify order type
         if self.orderType not in ["buy", "sell"]:
             raise RuntimeError("unknown order type: %s" % self.orderType)
 
-    def shouldClosePosition(self):
-        """Determine if position should be closed."""
-        actionablePrice = None
+    def analyze(self):
+        """Determine price deviation from extreme (peak / valley)."""
         priceOperation = max if self.orderType == "buy" else min
 
         # determine actionable price
         # if buy: actionable price = peak since buy
         # if sell: actionable price = valley since sell
         for price in self.priceHistory:
-            if not actionablePrice:
-                actionablePrice = price
+            if not self.actionablePrice:
+                self.actionablePrice = price
             else:
-                actionablePrice = priceOperation(price, actionablePrice)
+                self.actionablePrice = priceOperation(price, self.actionablePrice)
 
         # calulate different between current and actionable prices
         # if buy: percent difference = how much price has fallen from max
         # if sell: percent difference = how much price has risen from min
         if self.orderType == "buy":
-            percentDifference = (actionablePrice - self.currentPrice) / actionablePrice
+            self.percentDifference = (self.actionablePrice - self.currentPrice) / self.actionablePrice
         else:
-            percentDifference = (self.currentPrice - actionablePrice) / actionablePrice
+            self.percentDifference = (self.currentPrice - self.actionablePrice) / self.actionablePrice
 
-        # decide if position should be closed
-        return percentDifference > constants.PERCENT_DEVIATION_TRAILING_STOP_LOSS_THRESHOLD:
+        # price deviation
+        return self.percentDifference, self.actionablePrice

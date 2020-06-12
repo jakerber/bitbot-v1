@@ -23,7 +23,8 @@ class Closer:
     ##  Close approval
     ############################
 
-    def approvesClose(self):
+    @property
+    def approves(self):
         """Determine if positon should be closed."""
         # fetch price history from when initial order closed
         closeTimestamp = self.order.get("closetm")
@@ -33,15 +34,24 @@ class Closer:
         # filter price history by relevant price type
         priceHistory = [price.get(self.closingPriceType) for price in self.priceHistory]
 
-        # close positions that devaite above threshold
-        trailingStopLoss = trailing_stop_loss.TrailingStopLoss(ticker, orderType, self.currentPrice, priceHistory)
-        return trailingStopLoss.shouldClosePosition()
+        # analyze trailing stop loss
+        analysis = trailing_stop_loss.TrailingStopLoss(ticker, orderType, self.currentPrice, priceHistory).analyze()
+
+        # determine trade approval
+        percentDifference, actionablePrice = trailingStopLoss.shouldClosePosition()
+        _approval = percentDifference >= constants.PERCENT_TRAILING_STOP_LOSS_THRESHOLD
+
+        # return approval
+        if _approval:
+            self.logger.log({"actionable_price": actionablePrice, "percent_difference": percentDifference})
+            self.logger.log("%s close approved!" % self.ticker)
+        return _approval
 
     ############################
     ##  Close execution
     ############################
 
-    def executeClose(self):
+    def execute(self):
         """Close a trade position."""
         startingPrice = self.order.get("price")
         tradeAmount = self.order.get("vol")

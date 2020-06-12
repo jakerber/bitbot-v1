@@ -14,22 +14,23 @@ class Trader:
     ##  Trade approval
     ############################
 
-    def approvesTrade(self):
+    @property
+    def approves(self):
         """Perform any finals check to decide if the cryptocurrency should be traded."""
         # verify trade exceeds price deviation threshold
-        tradeApproval = self.analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_TRADE_THRESHOLD
+        _approval = self.analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_TRADE_THRESHOLD
 
-        # return trade approval
-        if tradeApproval:
+        # return approval
+        if _approval:
             self.logger.log(self.analysis.__dict__)
             self.logger.log("%s trade approved!" % self.ticker)
-        return tradeApproval
+        return _approval
 
     ############################
     ##  Trade execution
     ############################
 
-    def executeTrade(self):
+    def execute(self):
         """Trade cryptocurrency."""
         # determine trading method
         if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
