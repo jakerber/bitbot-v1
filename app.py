@@ -136,13 +136,13 @@ def stop_loss():
         elif orderStatus != "closed":
             continue
 
-        # gather relevant order information
+        # gather relevant position information
         initialOrderType = order.get("descr").get("type")
         initialPrice = float(order.get("price"))
         volume = float(order.get("vol"))
         leverage = int(order.get("descr").get("leverage")[0])
-        closeTimestamp = order.get("closetm")
-        closeDatetime = datetime.datetime.fromtimestamp(closeTimestamp)
+        initialOrderTimestamp = order.get("closetm")
+        initialOrderDatetime = datetime.datetime.utcfromtimestamp(initialOrderTimestamp)
 
         # verify order type
         if initialOrderType not in ["buy", "sell"]:
@@ -151,7 +151,7 @@ def stop_loss():
         # analyze trailing stop-loss order potential
         try:
             currentPrice = assistant.getPrice(ticker, "bid") if initialOrderType == "buy" else assistant.getPrice(ticker, "ask")
-            priceHistory = assistant.getPriceHistory(ticker, startingDatetime=closeDatetime)
+            priceHistory = assistant.getPriceHistory(ticker, startingDatetime=initialOrderDatetime)
             analysis = trailing_stop_loss.TrailingStopLoss(ticker,
                                                            initialOrderType,
                                                            leverage,
