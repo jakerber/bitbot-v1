@@ -4,7 +4,7 @@ class TrailingStopLoss:
     """Object to perform trailing stop loss analysis on open positons."""
     def __init__(self, ticker, orderType, currentPrice, priceHistory):
         self.ticker = ticker
-        self.orderType = orderType
+        self.orderType = orderType  # that opened the position
         self.currentPrice = currentPrice
         self.priceHistory = priceHistory
         self.actionablePrice = None

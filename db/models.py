@@ -10,16 +10,15 @@ class BitBotModel:
         return str({prop: self.__dict__.get(prop) for prop in self.__dict__.keys()
                     if prop not in constants.MONGODB_EXCLUDE_PROPS})
 
-class Order(BitBotModel):
-    """Object representing an entry in the order collection."""
-    collectionName = "order"
+class OpenPosition(BitBotModel):
+    """Object representing an entry in the open_position collection."""
+    collectionName = "open_position"
 
     def __init__(self, ticker, transactionId, description, margin):
         self.ticker = ticker
         self.transaction_id = transactionId
         self.description = description
         self.margin = margin
-        self.position_closed = False
         self.utc_datetime = datetime.datetime.utcnow()
 
 class Price(BitBotModel):

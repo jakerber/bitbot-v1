@@ -1,6 +1,5 @@
 """BitBot APIs module."""
 import assistant
-import closer
 import constants
 import datetime
 import flask
@@ -8,9 +7,10 @@ import io
 import json
 import logger
 import notifier
-import trader
 import visualizer
 from algos import mean_reversion
+from trading import trader
+from trading import closer
 from db import db
 from db import models
 
@@ -112,12 +112,12 @@ def stop_loss():
     """Close any open positions to limit losses."""
     # fetch open positons from the database
     tickersClosed = []
-    orders = mongodb.find("order", filter={"position_closed": False})
-    for order in orders:
-        ticker = order.get("ticker")
-        transactionId = order.get("transaction_id")
+    positions = mongodb.find("open_position")
+    for position in positions:
+        ticker = position.get("ticker")
+        transactionId = position.get("transaction_id")
 
-        # fetch order information
+        # fetch position information
         try:
             order = assistant.getOrder(transactionId)
         except Exception as err:
@@ -133,9 +133,9 @@ def stop_loss():
         if orderStatus not in ["pending", "open", "closed", "cancelled", "expired"]:
             continue
 
-        # delete failed orders
+        # delete open positions for failed orders
         if orderStatus == "cancelled" or orderStatus == "expired":
-            mongodb.delete("order", filter={"transaction_id": transactionId})
+            mongodb.delete("open_position", filter={"transaction_id": transactionId})
             continue
 
         # consult closer on the potential close of position
@@ -150,8 +150,8 @@ def stop_loss():
                     tickersClosed.append(ticker)
                     logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
 
-                    # mark order position as closed in the database
-                    mongodb.update("order", filter={"transaction_id": transactionId}, update={"position_closed": True})
+                    # delete open position from the database
+                    mongodb.delete("open_position", filter={"transaction_id": transactionId})
 
     # log clossing session summary
     numCloses = len(tickersClosed)
@@ -200,17 +200,17 @@ def trade():
         if _trader.approves:
 
             # execute trade
-            success, order = _trader.execute()
+            success, position = _trader.execute()
             if success:
                 tickersTraded.append(ticker)
                 logger.log("trade executed successfully", moneyExchanged=True)
 
-                # add new order to the database
-                transactionId = order.get("transactionId")
-                description = order.get("description")
-                margin = order.get("margin")
-                orderModel = models.Order(ticker, transactionId, description, margin)
-                mongodb.insert(orderModel)
+                # add new position to the database
+                transactionId = position.get("transactionId")
+                description = position.get("description")
+                margin = position.get("margin")
+                openPositionModel = models.OpenPosition(ticker, transactionId, description, margin)
+                mongodb.insert(openPositionModel)
 
     # log trading session summary
     numTrades = len(tickersTraded)

@@ -79,5 +79,5 @@ class Closer:
             self.logger.log("unable to close %s position: %s" % (self.ticker, str(err)))
             return None, None, None
 
-        # return order confirmation if trade was successful
+        # return order confirmation if close was successful
         return success, order, profit

@@ -168,7 +168,7 @@ class Assistant:
     ############################
 
     def _executeTrade(self, tradeMethod, ticker, amount, price=None, useMargin=False):
-        """Execute trade and parse order response."""
+        """Execute trade and interpret order response."""
         confirmation = tradeMethod(ticker, amount, price=price, useMargin=useMargin)
         if confirmation:
             return True, {"transactionId": confirmation.get("txid")[0],
