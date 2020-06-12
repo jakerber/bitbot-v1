@@ -141,16 +141,17 @@ class Assistant:
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         self.logger.log("shorting ~$%.2f of %s" % (amount * price, ticker))
-        return self._executeTrade(kraken.short, ticker, amount, price)
+        return self._executeTrade(kraken.short, ticker, amount, price, margin=True)
 
     ############################
     ##  Helper methods
     ############################
 
-    def _executeTrade(self, tradeMethod, ticker, amount, price):
+    def _executeTrade(self, tradeMethod, ticker, amount, price, margin=False):
         """Parse transaction ID and description out of order response."""
         confirmation = tradeMethod(ticker, amount, price)
         if confirmation:
             return True, {"transactionId": confirmation.get("txid")[0],
-                          "description": confirmation.get("descr")}
+                          "description": confirmation.get("descr"),
+                          "margin": margin}
         return False, {}
