@@ -9,6 +9,7 @@ import logger
 import notifier
 import visualizer
 from algos import mean_reversion
+from algos import trailing_stop_loss
 from trading import trader
 from trading import closer
 from db import db
@@ -43,7 +44,6 @@ def analyze():
             priceHistory = assistant.getPriceHistory(ticker)
             analysis.append({"ticker": ticker, "analysis": mean_reversion.MeanReversion(currentPrices, priceHistory).analyze().__dict__})
         except Exception as err:
-            raise
             analysis.append({"ticker": ticker, "error": repr(err)})
     return _successResp(analysis)
 
@@ -129,29 +129,42 @@ def stop_loss():
         orderStatus = order.get("status")
         logger.log("%s order status: %s" % (transactionId, orderStatus))
 
-        # alert of unknown order specifications
-        if orderStatus not in ["pending", "open", "closed", "cancelled", "expired"]:
-            continue
-
         # delete open positions for failed orders
         if orderStatus == "cancelled" or orderStatus == "expired":
             mongodb.delete("open_position", filter={"transaction_id": transactionId})
             continue
+        elif orderStatus != "closed":
+            continue
+
+        # gather relevant order information
+        orderType = order.get("descr").get("type")
+        startingPrice = float(order.get("price"))
+        tradeAmount = float(order.get("vol"))
+        leverage = int(order.get("descr").get("leverage")[0])
+        closeTimestamp = order.get("closetm")
+        closeDatetime = datetime.datetime.fromtimestamp(closeTimestamp)
+
+        # analyze trailing stop-loss order potential
+        try:
+            priceHistory = self.assistant.getPriceHistory(ticker, startingDatetime=closeDatetime)
+            analysis = trailing_stop_loss.TrailingStopLoss(ticker, orderType, leverage, tradeAmount, currentPrice, startingPrice, priceHistory).analyze()
+        except Exception as err:
+            logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))
+            continue
 
         # consult closer on the potential close of position
-        if orderStatus == "closed":
-            _closer = closer.Closer(ticker, order, assistant)
-            logger.log("consulting closer on potential %s position close" % ticker)
-            if _closer.approves:
+        _closer = closer.Closer(ticker, analysis, assistant)
+        logger.log("consulting closer on potential %s position close" % ticker)
+        if _closer.approves:
 
-                # close position
-                success, order, profit = _closer.execute()
-                if success:
-                    tickersClosed.append(ticker)
-                    logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
+            # close position
+            success, order, profit = _closer.execute()
+            if success:
+                tickersClosed.append(ticker)
+                logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
 
-                    # delete open position from the database
-                    mongodb.delete("open_position", filter={"transaction_id": transactionId})
+                # delete open position from the database
+                mongodb.delete("open_position", filter={"transaction_id": transactionId})
 
     # log clossing session summary
     numCloses = len(tickersClosed)
