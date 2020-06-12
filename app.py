@@ -137,7 +137,7 @@ def stop_loss():
             continue
 
         # gather relevant order information
-        orderType = order.get("descr").get("type")
+        initialOrderType = order.get("descr").get("type")
         initialPrice = float(order.get("price"))
         volume = float(order.get("vol"))
         leverage = int(order.get("descr").get("leverage")[0])
@@ -145,14 +145,20 @@ def stop_loss():
         closeDatetime = datetime.datetime.fromtimestamp(closeTimestamp)
 
         # verify order type
-        if orderType not in ["buy", "sell"]:
-            logger.log("unknown order type for %s: %s" % (transactionId, orderType))
+        if initialOrderType not in ["buy", "sell"]:
+            logger.log("unknown initial order type for %s: %s" % (transactionId, initialOrderType))
 
         # analyze trailing stop-loss order potential
         try:
-            currentPrice = assistant.getPrice(ticker, "bid") if orderType == "buy" else assistant.getPrice(ticker, "ask")
+            currentPrice = assistant.getPrice(ticker, "bid") if initialOrderType == "buy" else assistant.getPrice(ticker, "ask")
             priceHistory = assistant.getPriceHistory(ticker, startingDatetime=closeDatetime)
-            analysis = trailing_stop_loss.TrailingStopLoss(ticker, orderType, leverage, volume, currentPrice, initialPrice, priceHistory).analyze()
+            analysis = trailing_stop_loss.TrailingStopLoss(ticker,
+                                                           initialOrderType,
+                                                           leverage,
+                                                           volume,
+                                                           currentPrice,
+                                                           initialPrice,
+                                                           priceHistory).analyze()
         except Exception as err:
             logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))
             continue

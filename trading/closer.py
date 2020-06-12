@@ -34,7 +34,7 @@ class Closer:
     def execute(self):
         """Close a trade position."""
         # determine trading method
-        if self.analysis.order_type == "buy":
+        if self.analysis.initial_order_type == "buy":
             tradingMethod = self.assistant.sell
         else:
             tradingMethod = self.assistant.buy
