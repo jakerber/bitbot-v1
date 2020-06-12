@@ -11,7 +11,7 @@ class TrailingStopLossAnalysis:
         self.initial_price = initialPrice
         self.percent_difference = percentDifference
         self.actionable_price = actionablePrice
-        self.actionable_datetime = actionableDatetime
+        self.actionable_datetime = str(actionableDatetime)
         self.unrealized_profit = unrealizedProfit
 
 class TrailingStopLoss:
@@ -64,6 +64,7 @@ class TrailingStopLoss:
                                         self.leverage,
                                         self.volume,
                                         self.currentPrice,
+                                        self.initialPrice,
                                         percentDifference,
                                         actionablePrice,
                                         actionableDatetime,
