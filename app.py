@@ -144,9 +144,14 @@ def stop_loss():
         closeTimestamp = order.get("closetm")
         closeDatetime = datetime.datetime.fromtimestamp(closeTimestamp)
 
+        # verify order type
+        if orderType not in ["buy", "sell"]:
+            logger.log("unknown order type for %s: %s" % (transactionId, orderType))
+
         # analyze trailing stop-loss order potential
         try:
-            priceHistory = self.assistant.getPriceHistory(ticker, startingDatetime=closeDatetime)
+            currentPrice = assistant.getPrice(ticker, "bid") if orderType == "buy" else assistant.getPrice(ticker, "ask")
+            priceHistory = assistant.getPriceHistory(ticker, startingDatetime=closeDatetime)
             analysis = trailing_stop_loss.TrailingStopLoss(ticker, orderType, leverage, volume, currentPrice, initialPrice, priceHistory).analyze()
         except Exception as err:
             logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))

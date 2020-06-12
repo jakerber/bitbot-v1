@@ -25,10 +25,6 @@ class TrailingStopLoss:
         self.initialPrice = initialPrice
         self.priceHistory = priceHistory
 
-        # verify order type
-        if self.orderType not in ["buy", "sell"]:
-            raise RuntimeError("unknown order type: %s" % self.orderType)
-
     def analyze(self):
         """Determine price deviation from extreme (peak / valley)."""
         # determine actionable price
