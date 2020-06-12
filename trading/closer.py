@@ -43,7 +43,7 @@ class Closer:
         self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
         try:
             success, order = tradingMethod(ticker=self.ticker,
-                                           amount=self.analysis.trade_amount,
+                                           volume=self.analysis.trade_volume,
                                            leverage=self.analysis.leverage)
         except Exception as err:
             raise

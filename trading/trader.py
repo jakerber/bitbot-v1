@@ -41,11 +41,11 @@ class Trader:
             leverage = constants.DEFAULT_LEVERAGE
 
         # safely execute trade
-        tradeAmount = self.getAmount()
+        tradeVolume = self.getVolume()
         self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
         try:
             success, order = tradingMethod(ticker=self.ticker,
-                                           amount=tradeAmount,
+                                           volume=tradeVolume,
                                            leverage=leverage)
         except Exception as err:
             self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
@@ -58,15 +58,15 @@ class Trader:
     ##  Trade specifications
     ############################
 
-    def getAmount(self):
+    def getVolume(self):
         """Determine how much of the cryptocurrency should be traded."""
-        minimumAmount = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
+        minimumVolume = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
 
-        # calculate amount based on current price deviation
+        # calculate volume based on current price deviation
         deviationAboveThreshold = self.analysis.current_percent_deviation - constants.PERCENT_DEVIATION_TRADE_THRESHOLD
-        multiplier = min(deviationAboveThreshold, constants.MAXIMUM_TRADE_AMOUNT_MULTIPLIER)
-        amountUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
-        amount = amountUSD / self.analysis.current_price
+        multiplier = min(deviationAboveThreshold, constants.MAXIMUM_TRADE_VOLUME_MULTIPLIER)
+        costUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
+        volume = costUSD / self.analysis.current_price
 
-        # override to minimum amount if minimum not met
-        return max(amount, minimumAmount)
+        # override to minimum volume if minimum not met
+        return max(volume, minimumVolume)

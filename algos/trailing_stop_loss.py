@@ -2,13 +2,13 @@
 
 class TrailingStopLossAnalysis:
     """Object to store results from trailing stop-loss analysis."""
-    def __init__(self, ticker, orderType, leverage, tradeAmount, currentPrice, startingPrice, percentDifference, actionablePrice, actionableDatetime, unrealizedProfit):
+    def __init__(self, ticker, orderType, leverage, volume, currentPrice, initialPrice, percentDifference, actionablePrice, actionableDatetime, unrealizedProfit):
         self.ticker = ticker
         self.order_type = orderType
         self.leverage = leverage
-        self.trade_amount = tradeAmount
+        self.volume = volume
         self.current_price = currentPrice
-        self.starting_price = startingPrice
+        self.initial_price = initialPrice
         self.percent_difference = percentDifference
         self.actionable_price = actionablePrice
         self.actionable_datetime = actionableDatetime
@@ -16,13 +16,13 @@ class TrailingStopLossAnalysis:
 
 class TrailingStopLoss:
     """Object to perform trailing stop-loss analysis on open positons."""
-    def __init__(self, ticker, orderType, leverage, tradeAmount, currentPrice, startingPrice, priceHistory):
+    def __init__(self, ticker, orderType, leverage, volume, currentPrice, initialPrice, priceHistory):
         self.ticker = ticker
         self.orderType = orderType  # initial trade that opened the position
         self.leverage = leverage
-        self.tradeAmount = tradeAmount
+        self.volume = volume
         self.currentPrice = currentPrice
-        self.startingPrice = startingPrice
+        self.initialPrice = initialPrice
         self.priceHistory = priceHistory
 
         # verify order type
@@ -57,16 +57,16 @@ class TrailingStopLoss:
         # if initial sell: percent difference = how much price has risen from min
         if self.orderType == "buy":
             percentDifference = (actionablePrice - self.currentPrice) / actionablePrice
-            unrealizedProfit = (self.currentPrice - self.startingPrice) * self.tradeAmount
+            unrealizedProfit = (self.currentPrice - self.initialPrice) * self.volume
         else:
             percentDifference = (self.currentPrice - actionablePrice) / actionablePrice
-            unrealizedProfit = (self.startingPrice - self.currentPrice) * self.tradeAmount
+            unrealizedProfit = (self.initialPrice - self.currentPrice) * self.volume
 
         # price trailing stop-loss analysis
         return TrailingStopLossAnalysis(self.ticker,
                                         self.orderType,
                                         self.leverage,
-                                        self.tradeAmount,
+                                        self.volume,
                                         self.currentPrice,
                                         percentDifference,
                                         actionablePrice,

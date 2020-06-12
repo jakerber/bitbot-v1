@@ -138,8 +138,8 @@ def stop_loss():
 
         # gather relevant order information
         orderType = order.get("descr").get("type")
-        startingPrice = float(order.get("price"))
-        tradeAmount = float(order.get("vol"))
+        initialPrice = float(order.get("price"))
+        volume = float(order.get("vol"))
         leverage = int(order.get("descr").get("leverage")[0])
         closeTimestamp = order.get("closetm")
         closeDatetime = datetime.datetime.fromtimestamp(closeTimestamp)
@@ -147,7 +147,7 @@ def stop_loss():
         # analyze trailing stop-loss order potential
         try:
             priceHistory = self.assistant.getPriceHistory(ticker, startingDatetime=closeDatetime)
-            analysis = trailing_stop_loss.TrailingStopLoss(ticker, orderType, leverage, tradeAmount, currentPrice, startingPrice, priceHistory).analyze()
+            analysis = trailing_stop_loss.TrailingStopLoss(ticker, orderType, leverage, volume, currentPrice, initialPrice, priceHistory).analyze()
         except Exception as err:
             logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))
             continue

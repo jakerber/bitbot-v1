@@ -139,11 +139,11 @@ class Assistant:
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, price=None, leverage=None):
+    def buy(self, ticker, volume, price=None, leverage=None):
         """Buy a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        logMessage = "buying %.3f of %s" % (amount, ticker)
+        logMessage = "buying %.3f of %s" % (volume, ticker)
         if price:
             logMessage += " @ $%.3f" % price
         if leverage:
@@ -155,13 +155,13 @@ class Assistant:
             raise RuntimeError("unable to buy %s: margin trading is not allowed" % ticker)
 
         # buy cryptocurrency
-        return self._executeTrade(kraken.buy, ticker, amount, price, leveragee)
+        return self._executeTrade(kraken.buy, ticker, volume, price, leveragee)
 
-    def sell(self, ticker, amount, price=None, leverage=None):
+    def sell(self, ticker, volume, price=None, leverage=None):
         """Sell a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        logMessage = "selling %.3f of %s" % (amount, ticker)
+        logMessage = "selling %.3f of %s" % (volume, ticker)
         if price:
             logMessage += " @ $%.3f" % price
         if leverage:
@@ -173,15 +173,15 @@ class Assistant:
             raise RuntimeError("unable to sell %s: margin trading is not allowed" % ticker)
 
         # sell cryptocurrency
-        return self._executeTrade(kraken.sell, ticker, amount, price, leverage)
+        return self._executeTrade(kraken.sell, ticker, volume, price, leverage)
 
     ############################
     ##  Helper methods
     ############################
 
-    def _executeTrade(self, tradeMethod, ticker, amount, price, leverage):
+    def _executeTrade(self, tradeMethod, ticker, volume, price, leverage):
         """Execute trade and interpret order response."""
-        confirmation = tradeMethod(ticker, amount, price=price, leverage=leverage)
+        confirmation = tradeMethod(ticker, volume, price=price, leverage=leverage)
         if confirmation:
             return True, {"transaction_id": confirmation.get("txid")[0], "description": confirmation.get("descr")}
         return False, {}
