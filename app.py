@@ -127,23 +127,22 @@ def stop_loss():
         # determine if action needs to be taken on the order
         # order statuses: ["pending", "open", "closed", "cancelled", "expired"]
         orderStatus = order.get("status")
+        logger.log("%s order status: %s" % (transactionId, orderStatus))
 
         # alert of unknown order specifications
         if orderStatus not in ["pending", "open", "closed", "cancelled", "expired"]:
-            logger.log("unknown order status for %s: %s" % (transactionId, orderStatus))
             continue
 
         # delete failed orders
         if orderStatus == "cancelled" or orderStatus == "expired":
-            logger.log("deleting %s order: %s" % (orderStatus, transactionId))
             mongodb.delete("order", filter={"transaction_id": transactionId})
             continue
 
         # consult closer on the potential close of position
         if orderStatus == "closed":
             _closer = closer.Closer(ticker, order, assistant)
-            logger.log("consulting closer on potential %s close" % ticker)
-            if _closer.approvesClose():
+            logger.log("consulting closer on potential %s position close" % ticker)
+            if _closer.approves:
 
                 # close position
                 success, order, profit = _closer.execute()

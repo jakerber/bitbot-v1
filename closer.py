@@ -1,6 +1,8 @@
 """BitBot position closer module."""
+import constants
 import datetime
 import logger
+from algos import trailing_stop_loss
 
 class Closer:
     """Object to close open trade positions."""
@@ -29,17 +31,17 @@ class Closer:
         # fetch price history from when initial order closed
         closeTimestamp = self.order.get("closetm")
         closeDatetime = datetime.datetime.fromtimestamp(closeTimestamp)
-        priceHistory = self.assistant.getPriceHistory(self.ticker, startingDatetime=closeDatetime)
+        try:
+            priceHistory = self.assistant.getPriceHistory(self.ticker, startingDatetime=closeDatetime)
+        except Exception as err:
+            return False  # don't close position if no trade history
 
         # filter price history by relevant price type
-        priceHistory = [price.get(self.closingPriceType) for price in self.priceHistory]
+        priceHistory = [price.get(self.closingPriceType) for price in priceHistory]
 
-        # analyze trailing stop loss
-        analysis = trailing_stop_loss.TrailingStopLoss(ticker, orderType, self.currentPrice, priceHistory).analyze()
-
-        # determine trade approval
-        percentDifference, actionablePrice = trailingStopLoss.shouldClosePosition()
-        _approval = percentDifference >= constants.PERCENT_TRAILING_STOP_LOSS_THRESHOLD
+        # determine trade approval based on trailing stop loss analysis
+        percentDifference, actionablePrice = trailing_stop_loss.TrailingStopLoss(self.ticker, self.orderType, self.currentPrice, priceHistory).analyze()
+        _approval = percentDifference >= constants.PERCENT_DEVIATION_CLOSE_THRESHOLD
 
         # return approval
         if _approval:
@@ -53,8 +55,8 @@ class Closer:
 
     def execute(self):
         """Close a trade position."""
-        startingPrice = self.order.get("price")
-        tradeAmount = self.order.get("vol")
+        startingPrice = float(self.order.get("price"))
+        tradeAmount = float(self.order.get("vol"))
 
         # determine trading method
         if self.orderType == "buy":
@@ -67,13 +69,13 @@ class Closer:
             profit = (startingPrice - self.currentPrice) * tradeAmount
 
         # safely close position
-
         self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
         try:
             success, order = tradingMethod(ticker=self.ticker,
                                            amount=tradeAmount,
                                            useMargin=useMargin)  # TODO: specify margin from self.order.get("descr").get("leverage")
         except Exception as err:
+            raise
             self.logger.log("unable to close %s position: %s" % (self.ticker, str(err)))
             return None, None, None
 

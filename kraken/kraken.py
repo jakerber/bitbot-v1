@@ -133,13 +133,14 @@ def buy(ticker, amount, price=None, useMargin=False):
 
     # add leverage if buying on margin
     if useMargin:
+        price = price or float(getPrices(ticker).get("a")[0])
         if not sufficientMargin(amount * price):
             raise RuntimeError("insufficient margin available: buy would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
         requestData["leverage"] = DEFAULT_LEVERAGE
 
     # execute buy order
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
-    return resp.get("result").get("descr")
+    return resp.get("result")
 
 def short(ticker, amount, price=None, useMargin=False):
     """Short a cryptocurrency."""
@@ -162,6 +163,7 @@ def short(ticker, amount, price=None, useMargin=False):
 
     # add leverage if shorting on margin
     if useMargin:
+        price = price or float(getPrices(ticker).get("b")[0])
         if not sufficientMargin(amount * price):
             raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
         requestData["leverage"] = DEFAULT_LEVERAGE

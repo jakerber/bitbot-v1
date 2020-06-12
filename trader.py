@@ -50,7 +50,6 @@ class Trader:
         try:
             success, order = tradingMethod(ticker=self.ticker,
                                            amount=tradeAmount,
-                                           price=self.analysis.current_price,
                                            useMargin=useMargin)
         except Exception as err:
             self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
