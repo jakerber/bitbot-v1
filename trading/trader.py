@@ -37,12 +37,8 @@ class Trader:
             tradingMethod = self.assistant.buy
             useMargin = False
         else:
-            tradingMethod = self.assistant.short
+            tradingMethod = self.assistant.sell
             useMargin = True
-
-            # ensure margin trading is allowed before shorting
-            if not constants.ALLOW_MARGIN_TRADING:
-                raise RuntimeError("unable to short %s: margin trading is not allowed :(" % self.ticker)
 
         # safely execute trade
         tradeAmount = self.getAmount()

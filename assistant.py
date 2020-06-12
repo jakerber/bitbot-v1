@@ -149,19 +149,31 @@ class Assistant:
         if useMargin:
             logMessage += " with margin"
         self.logger.log(logMessage)
+
+        # ensure margin trading is allowed before using margin
+        if useMargin and not constants.ALLOW_MARGIN_TRADING:
+            raise RuntimeError("unable to buy %s: margin trading is not allowed" % ticker)
+
+        # buy cryptocurrency
         return self._executeTrade(kraken.buy, ticker, amount, price=price, useMargin=useMargin)
 
-    def short(self, ticker, amount, price=None, useMargin=False):
-        """Short a cryptocurrency."""
+    def sell(self, ticker, amount, price=None, useMargin=False):
+        """Sell a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        logMessage = "shorting %.3f of %s" % (amount, ticker)
+        logMessage = "selling %.3f of %s" % (amount, ticker)
         if price:
             logMessage += " @ $%.3f" % price
         if useMargin:
             logMessage += " with margin"
         self.logger.log(logMessage)
-        return self._executeTrade(kraken.short, ticker, amount, price=price, useMargin=useMargin)
+
+        # ensure margin trading is allowed before using margin
+        if useMargin and not constants.ALLOW_MARGIN_TRADING:
+            raise RuntimeError("unable to sell %s: margin trading is not allowed" % ticker)
+
+        # sell cryptocurrency
+        return self._executeTrade(kraken.sell, ticker, amount, price=price, useMargin=useMargin)
 
     ############################
     ##  Helper methods

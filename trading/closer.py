@@ -60,7 +60,7 @@ class Closer:
 
         # determine trading method
         if self.orderType == "buy":
-            tradingMethod = self.assistant.short
+            tradingMethod = self.assistant.sell
             useMargin = False
             profit = (self.currentPrice - startingPrice) * tradeAmount
         else:

@@ -142,8 +142,8 @@ def buy(ticker, amount, price=None, useMargin=False):
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
     return resp.get("result")
 
-def short(ticker, amount, price=None, useMargin=False):
-    """Short a cryptocurrency."""
+def sell(ticker, amount, price=None, useMargin=False):
+    """Sell a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
     volumePrecision = krakenConfig.get("volume_decimal_precision")
@@ -161,11 +161,11 @@ def short(ticker, amount, price=None, useMargin=False):
         requestData["price"] = TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price
         requestData["ordertype"] = "limit"
 
-    # add leverage if shorting on margin
+    # add leverage if selling on margin
     if useMargin:
         price = price or float(getPrices(ticker).get("b")[0])
         if not sufficientMargin(amount * price):
-            raise RuntimeError("insufficient margin available: short would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
+            raise RuntimeError("insufficient margin available: sell would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
         requestData["leverage"] = DEFAULT_LEVERAGE
 
     # execute sell order
@@ -176,11 +176,11 @@ def short(ticker, amount, price=None, useMargin=False):
 ##  Helper methods
 ############################
 
-def sufficientMargin(shortAmountUSD):
-    """Determine if there is enough margin available to open a short position."""
+def sufficientMargin(tradeAmountUSD):
+    """Determine if there is enough margin available to open a position."""
     equity = getAccountBalances().get("e")
     marginUsed = getAccountBalances().get("m")
-    marginUsed += shortAmountUSD / DEFAULT_LEVERAGE  # estimated margin cost
+    marginUsed += tradeAmountUSD / DEFAULT_LEVERAGE  # estimated margin cost
     marginLevel = (equity / marginUsed) * 100
     return marginLevel > constants.MARGIN_LEVEL_LIMIT
 
