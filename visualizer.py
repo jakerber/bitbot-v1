@@ -1,4 +1,4 @@
-"""Data visualization module."""
+"""BitBot data visualization module."""
 import datetime
 import matplotlib
 import numpy

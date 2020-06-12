@@ -66,10 +66,52 @@ def getTradeHistory(startDatetime=None, endDatetime=None):
     return resp.get("result")
 
 ############################
+##  Order info
+############################
+
+def getOrder(transactionId):
+    """Get order information.
+
+    Response format: (https://www.kraken.com/en-us/features/api#query-orders-info)
+        {
+            "refid": None,
+            "userref": 0,
+            "status": "closed",
+            "reason": None,
+            "opentm": 1591986580.2079,
+            "closetm": 1591986584.3492,
+            "starttm": 0,
+            "expiretm": 1591986600,
+            "descr": {
+                "pair": "ADAUSD",
+                "type": "sell",
+                "ordertype": "limit",
+                "price": "0.078864",
+                "price2": "0",
+                "leverage": "2:1",
+                "order": "sell 126.80056807 ADAUSD @ limit 0.078864 with 2:1 leverage",
+                "close": ""
+            },
+            "vol": "126.80056807",
+            "vol_exec": "126.80056807",
+            "cost": "10.000000",
+            "fee": "0.018000",
+            "price": "0.078864",
+            "stopprice": "0.000000",
+            "limitprice": "0.000000",
+            "misc": "",
+            "oflags": "fciq"
+        }
+    """
+    requestData = {"txid": transactionId}
+    resp = _executeRequest(kraken.query_private, "QueryOrders", requestData=requestData)
+    return resp.get("result").get(transactionId)
+
+############################
 ##  Trading
 ############################
 
-def buy(ticker, amount, price, useMargin=False):
+def buy(ticker, amount, price=None, useMargin=False):
     """Buy a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
@@ -79,10 +121,15 @@ def buy(ticker, amount, price, useMargin=False):
     # construct kraken order request
     requestData = {"pair": assetPair,
                    "type": "buy",
-                   "ordertype": "limit",
-                   "price": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price,
+                   "ordertype": "market",
                    "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
                    "expiretm": ORDER_EXPIRATION}
+
+    # specify limit if price provided
+    if price:
+        pricePrecision = krakenConfig.get("price_decimal_precision")
+        requestData["price"] = TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price
+        requestData["ordertype"] = "limit"
 
     # add leverage if buying on margin
     if useMargin:
@@ -94,20 +141,24 @@ def buy(ticker, amount, price, useMargin=False):
     resp = _executeRequest(kraken.query_private, "AddOrder", requestData=requestData)
     return resp.get("result").get("descr")
 
-def short(ticker, amount, price, useMargin=False):
+def short(ticker, amount, price=None, useMargin=False):
     """Short a cryptocurrency."""
     krakenConfig = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker)
     assetPair = krakenConfig.get("usd_pair")
-    pricePrecision = krakenConfig.get("price_decimal_precision")
     volumePrecision = krakenConfig.get("volume_decimal_precision")
 
     # construct kraken order request
     requestData = {"pair": assetPair,
                    "type": "sell",
-                   "ordertype": "limit",
-                   "price": TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price,
+                   "ordertype": "market",
                    "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % amount,
                    "expiretm": ORDER_EXPIRATION}
+
+    # specify limit if price provided
+    if price:
+        pricePrecision = krakenConfig.get("price_decimal_precision")
+        requestData["price"] = TRADE_VALUE_TEMPLATE.format(precision=pricePrecision) % price
+        requestData["ordertype"] = "limit"
 
     # add leverage if shorting on margin
     if useMargin:

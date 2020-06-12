@@ -17,7 +17,7 @@ class Trader:
     def approvesTrade(self):
         """Perform any finals check to decide if the cryptocurrency should be traded."""
         # verify trade exceeds price deviation threshold
-        tradeApproval = self.analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_THRESHOLD
+        tradeApproval = self.analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_TRADE_THRESHOLD
 
         # return trade approval
         if tradeApproval:
@@ -53,7 +53,7 @@ class Trader:
                                            useMargin=useMargin)
         except Exception as err:
             self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
-            return None
+            return None, None
 
         # return order confirmation if trade was successful
         return success, order
@@ -67,7 +67,7 @@ class Trader:
         minimumAmount = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
 
         # calculate amount based on current price deviation
-        deviationAboveThreshold = self.analysis.current_percent_deviation - constants.PERCENT_DEVIATION_THRESHOLD
+        deviationAboveThreshold = self.analysis.current_percent_deviation - constants.PERCENT_DEVIATION_TRADE_THRESHOLD
         multiplier = min(deviationAboveThreshold, constants.MAXIMUM_TRADE_AMOUNT_MULTIPLIER)
         amountUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
         amount = amountUSD / self.analysis.current_price

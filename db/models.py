@@ -14,11 +14,12 @@ class Order(BitBotModel):
     """Object representing an entry in the order collection."""
     collectionName = "order"
 
-    def __init__(self, transactionId, description, margin):
+    def __init__(self, ticker, transactionId, description, margin):
+        self.ticker = ticker
         self.transaction_id = transactionId
         self.description = description
         self.margin = margin
-        self.closed = False
+        self.position_closed = False
         self.utc_datetime = datetime.datetime.utcnow()
 
 class Price(BitBotModel):

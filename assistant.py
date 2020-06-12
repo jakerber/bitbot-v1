@@ -56,16 +56,17 @@ class Assistant:
         # return all prices
         return allPrices
 
-    def getPriceHistory(self, ticker):
+    def getPriceHistory(self, ticker, startingDatetime=None):
         """Get the historical price data of a cryptocurrency."""
         self.logger.log("fetching price history of %s" % (ticker))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
 
-        # get starting unix timestamp based on lookback days
-        now = datetime.datetime.utcnow()
-        delta = datetime.timedelta(days=constants.LOOKBACK_DAYS)
-        startingDatetime = now - delta
+        # get starting datetime based on lookback days if not provided
+        if not startingDatetime:
+            now = datetime.datetime.utcnow()
+            delta = datetime.timedelta(days=constants.LOOKBACK_DAYS)
+            startingDatetime = now - delta
 
         # fetch prices within lookback
         queryFilter = {"ticker": ticker, "utc_datetime": {"$gte": startingDatetime}}
@@ -126,36 +127,49 @@ class Assistant:
         return kraken.getTradeHistory(startDatetime, endDatetime)
 
     ############################
+    ##  Order info
+    ############################
+
+    def getOrder(self, transactionId):
+        """Get order information."""
+        self.logger.log("fetching order information for transaction %s" % transactionId)
+        return kraken.getOrder(transactionId)
+
+    ############################
     ##  Trading
     ############################
 
-    def buy(self, ticker, amount, price, useMargin=False):
+    def buy(self, ticker, amount, price=None, useMargin=False):
         """Buy a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        logMessage = "buying ~$%.2f of %s" % (amount * price, ticker)
+        logMessage = "buying %.3f of %s" % (amount, ticker)
+        if price:
+            logMessage += " @ $%.3f" % price
         if useMargin:
             logMessage += " with margin"
         self.logger.log(logMessage)
-        return self._executeTrade(kraken.buy, ticker, amount, price, useMargin=useMargin)
+        return self._executeTrade(kraken.buy, ticker, amount, price=price, useMargin=useMargin)
 
-    def short(self, ticker, amount, price, useMargin=False):
+    def short(self, ticker, amount, price=None, useMargin=False):
         """Short a cryptocurrency."""
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        logMessage = "shorting ~$%.2f of %s" % (amount * price, ticker)
+        logMessage = "shorting %.3f of %s" % (amount, ticker)
+        if price:
+            logMessage += " @ $%.3f" % price
         if useMargin:
             logMessage += " with margin"
         self.logger.log(logMessage)
-        return self._executeTrade(kraken.short, ticker, amount, price, useMargin=useMargin)
+        return self._executeTrade(kraken.short, ticker, amount, price=price, useMargin=useMargin)
 
     ############################
     ##  Helper methods
     ############################
 
-    def _executeTrade(self, tradeMethod, ticker, amount, price, useMargin=False):
-        """Parse transaction ID and description out of order response."""
-        confirmation = tradeMethod(ticker, amount, price, useMargin=useMargin)
+    def _executeTrade(self, tradeMethod, ticker, amount, price=None, useMargin=False):
+        """Execute trade and parse order response."""
+        confirmation = tradeMethod(ticker, amount, price=price, useMargin=useMargin)
         if confirmation:
             return True, {"transactionId": confirmation.get("txid")[0],
                           "description": confirmation.get("descr"),
