@@ -110,12 +110,12 @@ def trade():
                 tickersTraded.append(ticker)
                 logger.log("trade executed successfully", moneyExchanged=True)
 
-                # add new position to the database
+                # add new order to the database
                 transactionId = order.get("transactionId")
                 description = order.get("description")
                 margin = order.get("margin")
-                positionModel = models.Position(transactionId, description, margin)
-                mongodb.insert(positionModel)
+                orderModel = models.Order(transactionId, description, margin)
+                mongodb.insert(orderModel)
 
     # log trading session summary
     numTrades = len(tickersTraded)
