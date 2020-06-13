@@ -19,7 +19,7 @@ class Closer:
     def approves(self):
         """Determine if positon should be closed."""
         # verify position exceeds trailing stop-loss close threshold
-        _approval = self.analysis.percent_difference >= constants.PERCENT_DEVIATION_CLOSE_THRESHOLD
+        _approval = self.analysis.trailing_percentage >= constants.PERCENT_TRAILING_CLOSE_THRESHOLD
 
         # return approval
         if _approval:
