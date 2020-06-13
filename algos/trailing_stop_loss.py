@@ -12,7 +12,7 @@ class TrailingStopLossAnalysis:
         self.percent_difference = percentDifference
         self.actionable_price = actionablePrice
         self.actionable_datetime = actionableDatetime
-        self.unrealized_profit = unrealizedProfit
+        self.unrealized_profit_usd = unrealizedProfit
 
 class TrailingStopLoss:
     """Object to perform trailing stop-loss analysis on open positons."""

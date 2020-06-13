@@ -50,4 +50,4 @@ class Closer:
             return None, None, None
 
         # return order confirmation if close was successful
-        return success, order, self.analysis.unrealized_profit
+        return success, order, self.analysis.unrealized_profit_usd
