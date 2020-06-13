@@ -35,15 +35,17 @@ class Assistant:
 
     def getPriceHistory(self, ticker, startingDatetime=None, verify=True):
         """Get the historical price data of a cryptocurrency."""
-        self.logger.log("fetching price history of %s" % (ticker))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
 
         # get starting datetime based on lookback days if none provided
         if not startingDatetime:
+            self.logger.log("fetching %s price history" % ticker)
             now = datetime.datetime.utcnow()
             delta = datetime.timedelta(days=constants.LOOKBACK_DAYS)
             startingDatetime = now - delta
+        else:
+            self.logger.log("fetching %s price since %s UTC" % (ticker, startingDatetime.strftime("%Y-%m-%d %H:%M")))
 
         # fetch prices within lookback
         queryFilter = {"ticker": ticker, "utc_datetime": {"$gte": startingDatetime}}
@@ -98,7 +100,7 @@ class Assistant:
             return self.mongodb.find("open_position")
 
         # filter positions by date if one provided
-        self.logger.log("fetching positions opened %s or later" % str(startingDatetime))
+        self.logger.log("fetching positions opened %s UTC or later" % startingDatetime.strftime("%Y-%m-%d %H:%M"))
         return self.mongodb.find("open_position", filter={"utc_datetime": {"$gte": startingDatetime}})
 
     def getOrders(self, transactionIds):
