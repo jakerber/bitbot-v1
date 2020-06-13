@@ -1,4 +1,5 @@
 """Trailing stop-loss algo module."""
+import logger
 
 class TrailingStopLossAnalysis:
     """Object to store results from trailing stop-loss analysis."""
@@ -17,6 +18,7 @@ class TrailingStopLossAnalysis:
 class TrailingStopLoss:
     """Object to perform trailing stop-loss analysis on open positons."""
     def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, priceHistory):
+        self.logger = logger.BitBotLogger("TrailingStopLoss")
         self.ticker = ticker
         self.initialOrderType = initialOrderType
         self.leverage = leverage
@@ -60,6 +62,7 @@ class TrailingStopLoss:
             unrealizedProfit = (self.initialPrice - self.currentPrice) * self.volume
 
         # price trailing stop-loss analysis
+        self.logger.log("analyzed trailing stop-loss over %i prices" % len(self.priceHistory))
         return TrailingStopLossAnalysis(self.ticker,
                                         self.initialOrderType,
                                         self.leverage,
