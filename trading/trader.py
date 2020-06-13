@@ -35,14 +35,16 @@ class Trader:
         # determine trading method
         if self.analysis.current_volume_weighted_average_price > self.analysis.current_price:
             tradingMethod = self.assistant.buy
+            actionName = "buy"
             leverage = None
         else:
             tradingMethod = self.assistant.sell
+            actionName = "short"
             leverage = constants.DEFAULT_LEVERAGE
 
         # safely execute trade
         tradeVolume = self.getVolume()
-        self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
+        self.logger.log("executing %s %s" % (self.ticker, actionName))
         try:
             success, order = tradingMethod(ticker=self.ticker,
                                            volume=tradeVolume,
