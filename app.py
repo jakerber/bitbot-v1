@@ -217,7 +217,7 @@ def trade():
 ###############################
 
 def analyzeOpenPositions():
-    """Get analysis (eg. unrealized profit, etc.) on open positions."""
+    """Get analysis (e.g. unrealized profit, etc.) on open positions."""
     openPositionAnalysis = []
     currentPrices = assistant.getPrices()
 
@@ -226,6 +226,10 @@ def analyzeOpenPositions():
     openPositions = assistant.getOpenPositions()
     for position in openPositions:
         transactionIds.append(position.get("transaction_id"))
+
+    # skip analysis if no open positions
+    if not openPositions:
+        return []
 
     # fetch information on orders that opened positions
     orders = assistant.getOrders(transactionIds)
