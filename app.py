@@ -121,7 +121,7 @@ def snapshot():
 def stop_loss():
     """Close any declining open positions to limit losses."""
     # fetch analysis on all open positions
-    tickersClosed = set()
+    transactionsClosed = []
     for ticker, transactionId, analysis in analyzeOpenPositions():
 
         # consult closer on the potential close of position
@@ -132,17 +132,17 @@ def stop_loss():
             # close position
             success, order, profit = _closer.execute()
             if success:
-                tickersClosed.add(ticker)
+                transactionsClosed.append(order.get("description").get("order"))
                 logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
 
                 # delete open position from the database
                 mongodb.delete("open_position", filter={"transaction_id": transactionId})
 
     # log clossing session summary
-    numCloses = len(tickersClosed)
+    numCloses = len(transactionsClosed)
     sessionSummary = "closed %i position%s" % (numCloses, "" if numCloses == 1 else "s")
     if numCloses:
-        sessionSummary += ": %s" % str(tickersClosed)
+        sessionSummary += ": %s" % str(transactionsClosed)
     logger.log(sessionSummary)
 
 def summarize():
