@@ -16,45 +16,22 @@ class Assistant:
     ##  Prices
     ############################
 
-    def getPrice(self, ticker, priceType):
-        """Get the current price of a cryptocurrency."""
-        self.logger.log("fetching %s price of %s" % (priceType, ticker))
-        if ticker not in constants.SUPPORTED_CRYPTOS:
-            raise RuntimeError("ticker not supported: %s" % ticker)
-        if priceType not in constants.SUPPORTED_PRICE_TYPES:
-            raise RuntimeError("price type not supported: %s" % priceType)
+    def getPrices(self):
+        """Get all current prices of all supported cryptocurrencies."""
+        self.logger.log("fetching all prices")
+        _prices = kraken.getPrices()
 
-        # fetch all prices
-        prices = kraken.getPrices(ticker)
+        # parse supported price types out of response
+        prices = {}
+        for ticker in _prices:
+            prices[ticker] = {}
+            for priceType in constants.KRAKEN_PRICE_CONFIGS:
+                config = constants.KRAKEN_PRICE_CONFIGS.get(priceType)
+                price = _prices.get(ticker).get(config.get("code"))[config.get("api_index")]
+                prices[ticker][priceType] = float(price)
 
-        # parse price type out of response
-        priceConfig = constants.KRAKEN_PRICE_CONFIGS.get(priceType)
-        priceTypeCode = priceConfig.get("code")
-        priceTypeIndex = priceConfig.get("api_index")
-        price = prices.get(priceTypeCode)[priceTypeIndex]
-
-        # return converted price
-        return float(price)
-
-    def getAllPrices(self, ticker):
-        """Get all supported prices of a cryptocurrency."""
-        self.logger.log("fetching all prices of %s" % (ticker))
-        if ticker not in constants.SUPPORTED_CRYPTOS:
-            raise RuntimeError("ticker not supported: %s" % ticker)
-
-        # fetch all prices
-        prices = kraken.getPrices(ticker)
-
-        # parse price type out of response
-        allPrices = {}
-        for priceType in constants.SUPPORTED_PRICE_TYPES:
-            config = constants.KRAKEN_PRICE_CONFIGS.get(priceType)
-            priceTypeCode = config.get("code")
-            priceTypeIndex = config.get("api_index")
-            allPrices[priceType] = float(prices.get(priceTypeCode)[priceTypeIndex])
-
-        # return all prices
-        return allPrices
+        # return all converted prices
+        return prices
 
     def getPriceHistory(self, ticker, startingDatetime=None, verify=True):
         """Get the historical price data of a cryptocurrency."""
@@ -84,56 +61,50 @@ class Assistant:
     ##  Account info
     ############################
 
-    def getAccountValue(self):
-        """Get current value of account in USD."""
-        self.logger.log("fetching account value")
+    def getAccountBalances(self):
+        """Get current account balances."""
+        self.logger.log("fetching account balances")
         accountBalances = kraken.getAccountBalances()
-        return accountBalances.get("eb") + accountBalances.get("n")  # balance + net of open positions
 
-    def getAssetBalance(self, ticker):
-        """Get the current balance of an asset in USD."""
-        self.logger.log("fetching balance of %s" % ticker)
-        assetBalances = getAssetBalances()
-        if ticker in assetBalances:
-            return assetBalances.get(ticker)
-        return 0.0
+        # parse relevant balances from response
+        balances = {}
+        for balanceType in constants.SUPPORTED_BALANCES:
+            balanceCode = constants.KRAKEN_BALANCE_CONFIGS.get(balanceType)
+            balances[balanceType] = accountBalances.get(balanceCode)
+        return balances
 
     def getAssetBalances(self):
         """Get current balance of all assets."""
-        self.logger.log("fetching balances of all assets")
+        self.logger.log("fetching all asset balances")
         assetBalances = kraken.getAssetBalances()
 
         # convert assets to tickers and omit balances under minimum
         tickerBalances = {}
-        for asset in assetBalances:
-            for ticker in constants.KRAKEN_CRYPTO_CONFIGS:
-                if constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("asset") == asset:
-                    balance = assetBalances.get(asset)
-                    balance = 0.0 if balance < MINIMUM_ASSET_BALANCE else balance
-                    tickerBalances[ticker] = balance
+        for ticker in constants.SUPPORTED_CRYPTOS:
+            asset = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("asset")
+            balance = assetBalances.get(asset)
+            balance = 0.0 if balance < MINIMUM_ASSET_BALANCE else balance
+            tickerBalances[ticker] = balance
         return tickerBalances
-
-    def getMarginLevel(self):
-        """Get the current account margin level."""
-        self.logger.log("fetching margin level")
-        accountBalances = kraken.getAccountBalances()
-        if "ml" in accountBalances:
-            return accountBalances.get("ml")
-        return None
-
-    def getTradeHistory(self, startDatetime=None, endDatetime=None):
-        """Get trade history."""
-        self.logger.log("fetching trade history (%s -> %s)" % (startDatetime, endDatetime))
-        return kraken.getTradeHistory(startDatetime, endDatetime)
 
     ############################
     ##  Order info
     ############################
 
-    def getOrder(self, transactionId):
+    def getOpenPositions(self, startingDatetime=None):
+        """Get open positions."""
+        if not startingDatetime:
+            self.logger.log("fetching open positions")
+            return self.mongodb.find("open_position")
+
+        # filter positions by date if one provided
+        self.logger.log("fetching positions opened %s or later" % str(startingDatetime))
+        return self.mongodb.find("open_position", filter={"utc_datetime": {"$gte": startingDatetime}})
+
+    def getOrders(self, transactionIds):
         """Get order information."""
-        self.logger.log("fetching order information for transaction: %s" % transactionId)
-        return kraken.getOrder(transactionId)
+        self.logger.log("fetching order information for transactions: %s" % str(transactionIds))
+        return kraken.getOrders(transactionIds)
 
     ############################
     ##  Trading

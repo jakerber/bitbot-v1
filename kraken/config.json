@@ -1,4 +1,9 @@
 {
+    "balances": {
+        "margin_level": "ml",
+        "equivalent_balance": "eb",
+        "unrealized_net_profit": "n"
+    },
     "cryptocurrencies": {
         "ADA": {
             "name": "Cardano",

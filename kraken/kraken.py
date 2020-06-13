@@ -13,8 +13,8 @@ TRADE_VALUE_TEMPLATE = "%.{precision}f"
 ##  Prices
 ############################
 
-def getPrices(ticker):
-    """Get all current prices of a cryptocurrency.
+def getPrices():
+    """Get all current prices of all supported cryptocurrencies.
 
     Response format: (https://www.kraken.com/en-us/features/api#get-ticker-info)
         {
@@ -29,13 +29,24 @@ def getPrices(ticker):
             "o": "9675.60000"
         }
     """
+    # gather support crypto asset pairs
+    assetPairs = []
+    for ticker in constants.SUPPORTED_CRYPTOS:
+        assetPair = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("usd_pair")
+        assetPairs.append(assetPair)
+
     # execute kraken price request
-    krakenAssetPair = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("usd_pair")
-    requestData = {"pair": krakenAssetPair}
+    requestData = {"pair": ",".join(assetPairs)}
     resp = _executeRequest(kraken.query_public, "Ticker", requestData=requestData)
 
+    # convert results from asset pairs back to tickers
+    prices = {}
+    for ticker in constants.SUPPORTED_CRYPTOS:
+        assetPair = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("usd_pair")
+        prices[ticker] = resp.get("result").get(assetPair)
+
     # return all current prices
-    return resp.get("result").get(krakenAssetPair)
+    return prices
 
 ############################
 ##  Account info
@@ -55,22 +66,12 @@ def getAssetBalances():
         resp["result"][balance] = float(resp.get("result").get(balance))
     return resp.get("result")
 
-def getTradeHistory(startDatetime=None, endDatetime=None):
-    """Get trade history for this account."""
-    requestData = {}
-    if startDatetime:
-        requestData["start"] = startDatetime.timestamp()
-    if endDatetime:
-        requestData["end"] = endDatetime.timestamp()
-    resp = _executeRequest(kraken.query_private, "TradesHistory", requestData=requestData)
-    return resp.get("result")
-
 ############################
 ##  Order info
 ############################
 
-def getOrder(transactionId):
-    """Get order information.
+def getOrders(transactionIds):
+    """Get information on previously executed orders.
 
     Response format: (https://www.kraken.com/en-us/features/api#query-orders-info)
         {
@@ -103,9 +104,9 @@ def getOrder(transactionId):
             "oflags": "fciq"
         }
     """
-    requestData = {"txid": transactionId}
+    requestData = {"txid": ",".join(transactionIds)}
     resp = _executeRequest(kraken.query_private, "QueryOrders", requestData=requestData)
-    return resp.get("result").get(transactionId)
+    return resp.get("result")
 
 ############################
 ##  Trading

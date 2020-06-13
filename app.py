@@ -37,26 +37,23 @@ notifier = notifier.Notifier()
 @app.route("%s/analyze" % constants.API_ROOT)
 def analyze():
     """Analyze the price deviations of all supported cryptocurrencies."""
+    currentPrices = assistant.getPrices()
     analysis = []
     for ticker in constants.SUPPORTED_CRYPTOS:
-        try:
-            currentPrices = assistant.getAllPrices(ticker)
-            priceHistory = assistant.getPriceHistory(ticker)
-            analysis.append({"ticker": ticker, "analysis": mean_reversion.MeanReversion(currentPrices, priceHistory).analyze().__dict__})
-        except Exception as err:
-            analysis.append({"ticker": ticker, "error": repr(err)})
+        _currentPrices = currentPrices.get(ticker)
+        priceHistory = assistant.getPriceHistory(ticker)
+        analysis.append({"ticker": ticker,
+                         "analysis": mean_reversion.MeanReversion(_currentPrices, priceHistory).analyze().__dict__})
     return _successResp(analysis)
 
 @app.route("%s/equity" % constants.API_ROOT)
 def equity():
     """Get current account balance in USD."""
-    try:
-        balances = assistant.getAssetBalances()
-        value = assistant.getAccountValue()
-        marginLevel = assistant.getMarginLevel()
-    except Exception as err:
-        return _failedResp(err)
-    return _successResp({"balances": balances, "value_usd": value, "margin_level_percent": marginLevel})
+    balances = assistant.getAssetBalances()
+    accountBalances = assistant.getAccountBalances()
+    accountValue = accountBalances.get("equivalent_balance") + accountBalances.get("unrealized_net_profit")
+    marginLevel = accountBalances.get("margin_level")
+    return _successResp({"balances": balances, "value_usd": accountValue, "margin_level_percent": marginLevel})
 
 @app.route("%s/positions" % constants.API_ROOT)
 def positions():
@@ -77,7 +74,7 @@ def visualize(ticker):
         return _failedResp("ticker not supported: %s" % ticker, statusCode=400)  # 400 bad request
 
     # generate visualization
-    currentPrices = assistant.getAllPrices(ticker)
+    currentPrices = assistant.getPrices().get(ticker)
     priceHistory = assistant.getPriceHistory(ticker)
     visualization = visualizer.visualize(ticker, currentPrices, priceHistory)
 
@@ -103,22 +100,15 @@ def root_api():
 def snapshot():
     """Store the relevant prices of all supported cryptocurrencies."""
     snapshots = []
+    currentPrices = assistant.getPrices()
     for ticker in constants.SUPPORTED_CRYPTOS:
-        try:
-            allPrices = assistant.getAllPrices(ticker)
-            ask = allPrices.get("ask")
-            bid = allPrices.get("bid")
-            vwap = allPrices.get("vwap")
-        except Exception as err:
-            logger.log("unable to fetch price snapshot of %s: %s" % (ticker, repr(err)))
-            continue
+        ask = currentPrices.get(ticker).get("ask")
+        bid = currentPrices.get(ticker).get("bid")
+        vwap = currentPrices.get(ticker).get("vwap")
+        snapshots.append(models.Price(ticker, ask, bid, vwap))
 
-        # store relevant prices in database
-        priceModel = models.Price(ticker, ask, bid, vwap)
-        try:
-            mongodb.insert(priceModel)
-        except Exception as err:
-            logger.log("unable to add %s price snapshot to the database: %s" % (ticker, repr(err)))
+    # store relevant prices in database
+    mongodb.insertMany(snapshots)
 
 def stop_loss():
     """Close any declining open positions to limit losses."""
@@ -152,12 +142,22 @@ def stop_loss():
 def summarize():
     """Sends a daily activity summary notification."""
     assetBalances = assistant.getAssetBalances()
-    accountValue = assistant.getAccountValue()
-    marginLevel = assistant.getMarginLevel()
+    accountBalances = assistant.getAccountBalances()
+    accountValue = accountBalances.get("equivalent_balance") + accountBalances.get("unrealized_net_profit")
+    marginLevel = accountBalances.get("margin_level")
 
-    # fetch trades that were executed in the past day
+    # fetch positions opened in the past day
+    openPositions = {}
     datetimeDayAgo = datetime.datetime.utcnow() - datetime.timedelta(days=1)
-    tradesExecuted = assistant.getTradeHistory(startDatetime=datetimeDayAgo)
+    for position in assistant.getOpenPositions(startingDatetime=datetimeDayAgo):
+        ticker = position.get("ticker")
+        position = {prop: str(position[prop]) for prop in position
+                    if prop not in constants.MONGODB_EXCLUDE_PROPS}
+
+        # group positions by ticker
+        if ticker not in openPositions:
+            openPositions[ticker] = []
+        openPositions[ticker].append(position)
 
     # notify via email
     emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
@@ -167,21 +167,23 @@ def summarize():
     emailBody += "\n%.2f%%" % marginLevel
     emailBody += "\n\nAsset balances:"
     emailBody += "\n" + json.dumps(assetBalances, indent=6)
-    emailBody += "\n\nTrades executed:"
-    emailBody += "\n" + json.dumps(tradesExecuted, indent=6)
+    emailBody += "\n\nPositions opened:"
+    emailBody += "\n" + json.dumps(openPositions, indent=6)
     notifier.email(emailSubject, emailBody)
 
 def trade():
     """Open cryptocurrency trading positions."""
     # analyze price deviation from the mean for all supported cryptos
     tickersTraded = []
+    currentPrices = assistant.getPrices()
     logger.log("found %i tradeable cryptocurrencies" % len(constants.SUPPORTED_CRYPTOS))
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
-            currentPrices = assistant.getAllPrices(ticker)
+            _currentPrices = currentPrices.get(ticker)
             priceHistory = assistant.getPriceHistory(ticker)
-            analysis = mean_reversion.MeanReversion(currentPrices, priceHistory).analyze()
+            analysis = mean_reversion.MeanReversion(_currentPrices, priceHistory).analyze()
         except Exception as err:
+            logger.log("unable to analyze %s mean reversion: %s" % (ticker, repr(err)))
             continue
 
         # consult trader on potential trade
@@ -215,19 +217,20 @@ def trade():
 def analyzeOpenPositions():
     """Get analysis (eg. unrealized profit, etc.) on open positions."""
     openPositionAnalysis = []
+    currentPrices = assistant.getPrices()
 
     # fetch open positions from the database
-    positions = mongodb.find("open_position")
-    for position in positions:
+    transactionIds = []
+    openPositions = assistant.getOpenPositions()
+    for position in openPositions:
+        transactionIds.append(position.get("transaction_id"))
+
+    # fetch information on orders that opened positions
+    orders = assistant.getOrders(transactionIds)
+    for position in openPositions:
         ticker = position.get("ticker")
         transactionId = position.get("transaction_id")
-
-        # fetch information on order that opened the position
-        try:
-            order = assistant.getOrder(transactionId)
-        except Exception as err:
-            logger.log("unable to fetch information on order %s: %s" % (transactionId, repr(err)))
-            continue
+        order = orders.get(transactionId)
 
         # determine if action needs to be taken on the order
         # possible order statuses: ["pending", "open", "closed", "cancelled", "expired"]
@@ -256,7 +259,7 @@ def analyzeOpenPositions():
 
         # analyze trailing stop-loss order potential
         try:
-            currentPrice = assistant.getPrice(ticker, "bid") if initialOrderType == "buy" else assistant.getPrice(ticker, "ask")
+            currentPrice = currentPrices.get(ticker).get("bid") if initialOrderType == "buy" else currentPrices.get(ticker).get("ask")
             priceHistory = assistant.getPriceHistory(ticker, startingDatetime=initialOrderDatetime, verify=False)
             analysis = trailing_stop_loss.TrailingStopLoss(ticker,
                                                            initialOrderType,
