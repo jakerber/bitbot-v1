@@ -241,10 +241,11 @@ def analyzeOpenPositions():
         # gather relevant position information
         initialOrderType = order.get("descr").get("type")
         initialPrice = float(order.get("price"))
-        volume = float(order.get("vol"))
-        leverage = int(order.get("descr").get("leverage")[0])
         initialOrderTimestamp = order.get("closetm")
         initialOrderDatetime = datetime.datetime.utcfromtimestamp(initialOrderTimestamp)
+        volume = float(order.get("vol"))
+        leverage = order.get("descr").get("leverage")
+        leverage = None if leverage == "none" else int(leverage[0])
 
         # verify order type
         if initialOrderType not in ["buy", "sell"]:
