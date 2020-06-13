@@ -219,7 +219,6 @@ def trade():
 def analyzeOpenPositions():
     """Get analysis (e.g. unrealized profit, etc.) on open positions."""
     openPositionAnalysis = []
-    currentPrices = assistant.getPrices()
 
     # fetch open positions from the database
     transactionIds = []
@@ -232,6 +231,7 @@ def analyzeOpenPositions():
         return []
 
     # fetch information on orders that opened positions
+    currentPrices = assistant.getPrices()
     orders = assistant.getOrders(transactionIds)
     for position in openPositions:
         ticker = position.get("ticker")
