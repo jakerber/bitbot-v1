@@ -67,7 +67,7 @@ def positions():
         positions[ticker].append({"transaction_id": transactionId, "analysis": analysis.__dict__})
         total += 1
         combinedProfit += analysis.unrealized_profit_usd
-    return _successResp({"positions": positions, "total": total, "combined_unrealized_profit_usd": combinedProfit})
+    return _successResp({"positions": positions, "total": total, "net_unrealized_profit_usd": combinedProfit})
 
 @app.route("%s/visualize/<ticker>" % constants.API_ROOT)
 def visualize(ticker):
