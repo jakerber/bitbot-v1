@@ -58,6 +58,16 @@ def equity():
         return _failedResp(err)
     return _successResp({"balances": balances, "value_usd": value, "margin_level_percent": marginLevel})
 
+@app.route("%s/positions" % constants.API_ROOT)
+def positions():
+    """Analyze the trailing stop-loss of open positions."""
+    positions = {}
+    for ticker, transactionId, analysis in analyzeOpenPositions():
+        if ticker not in positions:
+            positions[ticker] = []
+        positions[ticker].append({"transaction_id": transactionId, "analysis": analysis.__dict__})
+    return _successResp(positions)
+
 @app.route("%s/visualize/<ticker>" % constants.API_ROOT)
 def visualize(ticker):
     """View visualization of current price prediction."""
@@ -109,59 +119,10 @@ def snapshot():
             logger.log("unable to add %s price snapshot to the database: %s" % (ticker, repr(err)))
 
 def stop_loss():
-    """Close any open positions to limit losses."""
-    # fetch open positons from the database
+    """Close any declining open positions to limit losses."""
+    # fetch analysis on all open positions
     tickersClosed = []
-    positions = mongodb.find("open_position")
-    for position in positions:
-        ticker = position.get("ticker")
-        transactionId = position.get("transaction_id")
-
-        # fetch position information
-        try:
-            order = assistant.getOrder(transactionId)
-        except Exception as err:
-            logger.log("unable to fetch information on order %s: %s" % (transactionId, repr(err)))
-            continue
-
-        # determine if action needs to be taken on the order
-        # order statuses: ["pending", "open", "closed", "cancelled", "expired"]
-        orderStatus = order.get("status")
-        logger.log("%s order status: %s" % (transactionId, orderStatus))
-
-        # delete open positions for failed orders
-        if orderStatus == "cancelled" or orderStatus == "expired":
-            mongodb.delete("open_position", filter={"transaction_id": transactionId})
-            continue
-        elif orderStatus != "closed":
-            continue
-
-        # gather relevant position information
-        initialOrderType = order.get("descr").get("type")
-        initialPrice = float(order.get("price"))
-        volume = float(order.get("vol"))
-        leverage = int(order.get("descr").get("leverage")[0])
-        initialOrderTimestamp = order.get("closetm")
-        initialOrderDatetime = datetime.datetime.utcfromtimestamp(initialOrderTimestamp)
-
-        # verify order type
-        if initialOrderType not in ["buy", "sell"]:
-            logger.log("unknown initial order type for %s: %s" % (transactionId, initialOrderType))
-
-        # analyze trailing stop-loss order potential
-        try:
-            currentPrice = assistant.getPrice(ticker, "bid") if initialOrderType == "buy" else assistant.getPrice(ticker, "ask")
-            priceHistory = assistant.getPriceHistory(ticker, startingDatetime=initialOrderDatetime)
-            analysis = trailing_stop_loss.TrailingStopLoss(ticker,
-                                                           initialOrderType,
-                                                           leverage,
-                                                           volume,
-                                                           currentPrice,
-                                                           initialPrice,
-                                                           priceHistory).analyze()
-        except Exception as err:
-            logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))
-            continue
+    for ticker, transactionId, analysis in analyzeOpenPositions():
 
         # consult closer on the potential close of position
         _closer = closer.Closer(ticker, analysis, assistant)
@@ -181,7 +142,7 @@ def stop_loss():
     numCloses = len(tickersClosed)
     sessionSummary = "closed %i position%s" % (numCloses, "" if numCloses == 1 else "s")
     if numCloses:
-        sessionSummary += ": %s" % str(numCloses)
+        sessionSummary += ": %s" % str(tickersClosed)
     logger.log(sessionSummary)
 
 def summarize():
@@ -207,7 +168,7 @@ def summarize():
     notifier.email(emailSubject, emailBody)
 
 def trade():
-    """Trade cryptocurrency to achieve profit."""
+    """Open cryptocurrency trading positions."""
     # analyze price deviation from the mean for all supported cryptos
     tickersTraded = []
     for ticker in constants.SUPPORTED_CRYPTOS:
@@ -241,6 +202,72 @@ def trade():
     if numTrades:
         sessionSummary += ": %s" % str(tickersTraded)
     logger.log(sessionSummary)
+
+###############################
+##  Helper methods
+###############################
+
+def analyzeOpenPositions():
+    """Get analysis (eg. unrealized profit, etc.) on open positions."""
+    openPositionAnalysis = []
+
+    # fetch open positions from the database
+    positions = mongodb.find("open_position")
+    for position in positions:
+        ticker = position.get("ticker")
+        transactionId = position.get("transaction_id")
+
+        # fetch information on order that opened the position
+        try:
+            order = assistant.getOrder(transactionId)
+        except Exception as err:
+            logger.log("unable to fetch information on order %s: %s" % (transactionId, repr(err)))
+            continue
+
+        # determine if action needs to be taken on the order
+        # order statuses: ["pending", "open", "closed", "cancelled", "expired"]
+        orderStatus = order.get("status")
+        logger.log("%s order status: %s" % (transactionId, orderStatus))
+
+        # delete open positions for failed orders
+        if orderStatus == "cancelled" or orderStatus == "expired":
+            mongodb.delete("open_position", filter={"transaction_id": transactionId})
+            continue
+        elif orderStatus != "closed":
+            continue
+
+        # gather relevant position information
+        initialOrderType = order.get("descr").get("type")
+        initialPrice = float(order.get("price"))
+        volume = float(order.get("vol"))
+        leverage = int(order.get("descr").get("leverage")[0])
+        initialOrderTimestamp = order.get("closetm")
+        initialOrderDatetime = datetime.datetime.utcfromtimestamp(initialOrderTimestamp)
+
+        # verify order type
+        if initialOrderType not in ["buy", "sell"]:
+            logger.log("unknown initial order type for %s: %s" % (transactionId, initialOrderType))
+            continue
+
+        # analyze trailing stop-loss order potential
+        try:
+            currentPrice = assistant.getPrice(ticker, "bid") if initialOrderType == "buy" else assistant.getPrice(ticker, "ask")
+            priceHistory = assistant.getPriceHistory(ticker, startingDatetime=initialOrderDatetime)
+            analysis = trailing_stop_loss.TrailingStopLoss(ticker,
+                                                           initialOrderType,
+                                                           leverage,
+                                                           volume,
+                                                           currentPrice,
+                                                           initialPrice,
+                                                           priceHistory).analyze()
+        except Exception as err:
+            logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))
+            continue
+        else:
+            openPositionAnalysis.append((ticker, transactionId, analysis))
+
+    # return analysis on open positions
+    return openPositionAnalysis
 
 ###############################
 ##  Response formatting

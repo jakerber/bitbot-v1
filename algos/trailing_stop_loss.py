@@ -11,7 +11,7 @@ class TrailingStopLossAnalysis:
         self.initial_price = initialPrice
         self.percent_difference = percentDifference
         self.actionable_price = actionablePrice
-        self.actionable_datetime = str(actionableDatetime)
+        self.actionable_datetime = actionableDatetime
         self.unrealized_profit = unrealizedProfit
 
 class TrailingStopLoss:
@@ -30,7 +30,7 @@ class TrailingStopLoss:
         # determine actionable price
         # actionable price: most profitable price since position was opened
         actionablePrice = self.initialPrice
-        actionableDatetime = "initial"
+        actionableDatetime = None
         for price in self.priceHistory:
 
             # if initial buy: actionable price = peak since buy
@@ -39,7 +39,7 @@ class TrailingStopLoss:
                 _datetime = price.get("utc_datetime")
                 if not actionablePrice or _price > actionablePrice:
                     actionablePrice = _price
-                    actionableDatetime = _datetime
+                    actionableDatetime = str(_datetime)
 
             # if initial sell: actionable price = valley since sell
             else:
@@ -47,7 +47,7 @@ class TrailingStopLoss:
                 _datetime = price.get("utc_datetime")
                 if not actionablePrice or _price < actionablePrice:
                     actionablePrice = _price
-                    actionableDatetime = _datetime
+                    actionableDatetime = str(_datetime)
 
         # calulate different between current and actionable prices
         # if initial buy: percent difference = how much price has fallen from max

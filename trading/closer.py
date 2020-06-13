@@ -22,8 +22,8 @@ class Closer:
         _approval = self.analysis.percent_difference >= constants.PERCENT_DEVIATION_CLOSE_THRESHOLD
 
         # return approval
-        self.logger.log(self.analysis.__dict__)
         if _approval:
+            self.logger.log(self.analysis.__dict__)
             self.logger.log("%s close approved!" % self.ticker)
         return _approval
 
