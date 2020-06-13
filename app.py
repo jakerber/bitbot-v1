@@ -121,7 +121,7 @@ def snapshot():
 def stop_loss():
     """Close any declining open positions to limit losses."""
     # fetch analysis on all open positions
-    tickersClosed = []
+    tickersClosed = set()
     for ticker, transactionId, analysis in analyzeOpenPositions():
 
         # consult closer on the potential close of position
@@ -132,7 +132,7 @@ def stop_loss():
             # close position
             success, order, profit = _closer.execute()
             if success:
-                tickersClosed.append(ticker)
+                tickersClosed.add(ticker)
                 logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
 
                 # delete open position from the database

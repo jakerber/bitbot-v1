@@ -132,7 +132,7 @@ class Assistant:
 
     def getOrder(self, transactionId):
         """Get order information."""
-        self.logger.log("fetching order information for transaction %s" % transactionId)
+        self.logger.log("fetching order information for transaction: %s" % transactionId)
         return kraken.getOrder(transactionId)
 
     ############################
