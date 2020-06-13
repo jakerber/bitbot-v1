@@ -225,9 +225,8 @@ def analyzeOpenPositions():
             continue
 
         # determine if action needs to be taken on the order
-        # order statuses: ["pending", "open", "closed", "cancelled", "expired"]
+        # possible order statuses: ["pending", "open", "closed", "cancelled", "expired"]
         orderStatus = order.get("status")
-        logger.log("%s order status: %s" % (transactionId, orderStatus))
 
         # delete open positions for failed orders
         if orderStatus == "cancelled" or orderStatus == "expired":
