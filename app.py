@@ -122,7 +122,9 @@ def stop_loss():
     """Close any declining open positions to limit losses."""
     # fetch analysis on all open positions
     transactionsClosed = []
-    for ticker, transactionId, analysis in analyzeOpenPositions():
+    openPositions = analyzeOpenPositions()
+    logger.log("found %i open positions" % len(openPositions))
+    for ticker, transactionId, analysis in openPositions:
 
         # consult closer on the potential close of position
         _closer = closer.Closer(ticker, analysis, assistant)
@@ -171,6 +173,7 @@ def trade():
     """Open cryptocurrency trading positions."""
     # analyze price deviation from the mean for all supported cryptos
     tickersTraded = []
+    logger.log("found %i tradeable cryptocurrencies" % len(constants.SUPPORTED_CRYPTOS))
     for ticker in constants.SUPPORTED_CRYPTOS:
         try:
             currentPrices = assistant.getAllPrices(ticker)
