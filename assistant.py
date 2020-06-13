@@ -18,7 +18,7 @@ class Assistant:
 
     def getPrices(self):
         """Get all current prices of all supported cryptocurrencies."""
-        self.logger.log("fetching all prices")
+        self.logger.log("fetching current prices")
         _prices = kraken.getPrices()
 
         # parse supported price types out of response
@@ -77,7 +77,7 @@ class Assistant:
 
     def getAssetBalances(self):
         """Get current balance of all assets."""
-        self.logger.log("fetching all asset balances")
+        self.logger.log("fetching asset balances")
         assetBalances = kraken.getAssetBalances()
 
         # convert assets to tickers and omit balances under minimum

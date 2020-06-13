@@ -150,8 +150,7 @@ def summarize():
 
     # fetch positions opened in the past day
     openPositions = {}
-    datetimeDayAgo = datetime.datetime.utcnow() - datetime.timedelta(days=1)
-    for position in assistant.getOpenPositions(startingDatetime=datetimeDayAgo):
+    for position in assistant.getOpenPositions():
         ticker = position.get("ticker")
         position = {prop: str(position[prop]) for prop in position
                     if prop not in constants.MONGODB_EXCLUDE_PROPS}
@@ -166,10 +165,10 @@ def summarize():
     emailBody = "Account value:"
     emailBody += "\n$%.2f" % accountValue
     emailBody += "\n\nMargin level:"
-    emailBody += "\n%.2f%%" % marginLevel
+    emailBody += "\n%.2f%%" % marginLevel if marginLevel else "\nNone"
     emailBody += "\n\nAsset balances:"
     emailBody += "\n" + json.dumps(assetBalances, indent=6)
-    emailBody += "\n\nPositions opened:"
+    emailBody += "\n\nOpen positions:"
     emailBody += "\n" + json.dumps(openPositions, indent=6)
     notifier.email(emailSubject, emailBody)
 
