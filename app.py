@@ -10,7 +10,7 @@ import notifier
 import visualizer
 from algos import mean_reversion
 from algos import trailing_stop_loss
-from trading import trader
+from trading import opener
 from trading import closer
 from db import db
 from db import models
@@ -113,32 +113,33 @@ def snapshot():
     mongodb.insertMany(snapshots)
 
 def stop_loss():
-    """Close any declining open positions to limit losses."""
+    """Close qualified cryptocurrency trading positions."""
+    tickersClosed = set()
+
     # fetch analysis on all open positions
-    transactionsClosed = []
     openPositions = analyzeOpenPositions()
     logger.log("found %i open positions" % len(openPositions))
     for ticker, transactionId, analysis in openPositions:
 
         # consult closer on the potential close of position
-        _closer = closer.Closer(ticker, analysis, assistant)
+        _trader = closer.Closer(ticker, analysis, assistant)
         logger.log("consulting closer on potential %s close" % ticker)
-        if _closer.approves:
+        if _trader.approves:
 
             # close position
-            success, order, profit = _closer.execute()
+            success, order, profit = _trader.execute()
             if success:
-                transactionsClosed.append(order.get("description").get("order"))
+                tickersClosed.add(ticker)
                 logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
 
                 # delete open position from the database
                 mongodb.delete("position", filter={"transaction_id": transactionId})
 
     # log clossing session summary
-    numCloses = len(transactionsClosed)
-    sessionSummary = "closed %i position%s" % (numCloses, "" if numCloses == 1 else "s")
+    numCloses = len(tickersClosed)
+    sessionSummary = "closed positions for %i cryptocurrenc%s" % (numCloses, "y" if numCloses == 1 else "s")
     if numCloses:
-        sessionSummary += ": %s" % str(transactionsClosed)
+        sessionSummary += ": %s" % str(list(tickersClosed))
     logger.log(sessionSummary)
 
 def summarize():
@@ -173,12 +174,13 @@ def summarize():
     notifier.email(emailSubject, emailBody)
 
 def trade():
-    """Open cryptocurrency trading positions."""
-    # analyze price deviation from the mean for all supported cryptos
-    tickersTraded = []
+    """Open qualified cryptocurrency trading positions."""
+    tickersOpened = set()
     currentPrices = assistant.getPrices()
     logger.log("found %i tradeable cryptocurrencies" % len(constants.SUPPORTED_CRYPTOS))
     for ticker in constants.SUPPORTED_CRYPTOS:
+
+        # analyze price deviation from the mean for all supported cryptos
         try:
             _currentPrices = currentPrices.get(ticker)
             priceHistory = assistant.getPriceHistory(ticker)
@@ -187,16 +189,16 @@ def trade():
             logger.log("unable to analyze %s mean reversion: %s" % (ticker, repr(err)))
             continue
 
-        # consult trader on potential trade
-        _trader = trader.Trader(ticker, analysis, assistant)
-        logger.log("consulting trader on potential %s trade" % ticker)
+        # consult trader on potential position
+        _trader = opener.Opener(ticker, analysis, assistant)
+        logger.log("consulting opener on potential %s position" % ticker)
         if _trader.approves:
 
             # execute trade
             success, position = _trader.execute()
             if success:
-                tickersTraded.append(ticker)
-                logger.log("trade executed successfully", moneyExchanged=True)
+                tickersOpened.add(ticker)
+                logger.log("position opened successfully", moneyExchanged=True)
 
                 # add new position to the database
                 transactionId = position.get("transaction_id")
@@ -205,10 +207,10 @@ def trade():
                 mongodb.insert(openPositionModel)
 
     # log trading session summary
-    numTrades = len(tickersTraded)
-    sessionSummary = "traded %i cryptocurrenc%s" % (numTrades, "y" if numTrades == 1 else "ies")
+    numTrades = len(tickersOpened)
+    sessionSummary = "opened positions for %i cryptocurrenc%s" % (numTrades, "y" if numTrades == 1 else "ies")
     if numTrades:
-        sessionSummary += ": %s" % str(tickersTraded)
+        sessionSummary += ": %s" % str(list(tickersOpened))
     logger.log(sessionSummary)
 
 ###############################

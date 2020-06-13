@@ -1,15 +1,10 @@
 """BitBot position closer module."""
 import constants
 import datetime
-import logger
+from trading import trader
 
-class Closer:
+class Closer(trader.BitBotTrader):
     """Object to close open trade positions."""
-    def __init__(self, ticker, analysis, assistant):
-        self.logger = logger.BitBotLogger("Closer")
-        self.ticker = ticker
-        self.analysis = analysis
-        self.assistant = assistant
 
     ############################
     ##  Close approval
@@ -32,7 +27,7 @@ class Closer:
     ############################
 
     def execute(self):
-        """Close a trade position."""
+        """Close a position."""
         # determine trading method
         if self.analysis.initial_order_type == "buy":
             tradingMethod = self.assistant.sell
