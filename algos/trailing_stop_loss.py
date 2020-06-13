@@ -28,8 +28,9 @@ class TrailingStopLoss:
     def analyze(self):
         """Determine price deviation from extreme (peak / valley)."""
         # determine actionable price
-        actionablePrice = None
-        actionableDatetime = None
+        # actionable price: most profitable price since position was opened
+        actionablePrice = self.initialPrice
+        actionableDatetime = "initial"
         for price in self.priceHistory:
 
             # if initial buy: actionable price = peak since buy

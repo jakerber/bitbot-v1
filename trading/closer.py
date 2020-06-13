@@ -43,7 +43,7 @@ class Closer:
         self.logger.log("executing %s %s" % (self.ticker, tradingMethod.__name__))
         try:
             success, order = tradingMethod(ticker=self.ticker,
-                                           volume=self.analysis.trade_volume,
+                                           volume=self.analysis.volume,
                                            leverage=self.analysis.leverage)
         except Exception as err:
             self.logger.log("unable to close %s position: %s" % (self.ticker, str(err)))

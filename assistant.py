@@ -155,7 +155,7 @@ class Assistant:
             raise RuntimeError("unable to buy %s: margin trading is not allowed" % ticker)
 
         # buy cryptocurrency
-        return self._executeTrade(kraken.buy, ticker, volume, price, leveragee)
+        return self._executeTrade(kraken.buy, ticker, volume, price, leverage)
 
     def sell(self, ticker, volume, price=None, leverage=None):
         """Sell a cryptocurrency."""

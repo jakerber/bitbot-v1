@@ -165,7 +165,7 @@ def stop_loss():
 
         # consult closer on the potential close of position
         _closer = closer.Closer(ticker, analysis, assistant)
-        logger.log("consulting closer on potential %s position close" % ticker)
+        logger.log("consulting closer on potential %s close" % ticker)
         if _closer.approves:
 
             # close position
