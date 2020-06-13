@@ -62,11 +62,13 @@ def equity():
 def positions():
     """Analyze the trailing stop-loss of open positions."""
     positions = {}
+    total = 0
     for ticker, transactionId, analysis in analyzeOpenPositions():
         if ticker not in positions:
             positions[ticker] = []
         positions[ticker].append({"transaction_id": transactionId, "analysis": analysis.__dict__})
-    return _successResp(positions)
+        total += 1
+    return _successResp({"open_positions": positions, "total": total})
 
 @app.route("%s/visualize/<ticker>" % constants.API_ROOT)
 def visualize(ticker):
