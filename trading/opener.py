@@ -61,7 +61,8 @@ class Opener(trader.BitBotTrader):
 
         # calculate volume based on current price deviation
         deviationAboveThreshold = self.analysis.current_percent_deviation - constants.PERCENT_DEVIATION_TRADE_THRESHOLD
-        multiplier = min(deviationAboveThreshold, constants.MAXIMUM_TRADE_VOLUME_MULTIPLIER)
+        multiplier = deviationAboveThreshold / constants.PERCENT_DEVIATION_TRADE_THRESHOLD
+        multiplier = min(multiplier, constants.MAXIMUM_TRADE_VOLUME_MULTIPLIER)  # limit volume multiplier
         costUSD = constants.BASE_BUY_USD + (constants.BASE_BUY_USD * multiplier)
         volume = costUSD / self.analysis.current_price
 
