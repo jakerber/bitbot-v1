@@ -252,7 +252,7 @@ def analyzeOpenPositions():
         # analyze trailing stop-loss order potential
         try:
             currentPrice = assistant.getPrice(ticker, "bid") if initialOrderType == "buy" else assistant.getPrice(ticker, "ask")
-            priceHistory = assistant.getPriceHistory(ticker, startingDatetime=initialOrderDatetime)
+            priceHistory = assistant.getPriceHistory(ticker, startingDatetime=initialOrderDatetime, verify=False)
             analysis = trailing_stop_loss.TrailingStopLoss(ticker,
                                                            initialOrderType,
                                                            leverage,

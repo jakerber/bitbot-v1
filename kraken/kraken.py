@@ -133,9 +133,6 @@ def buy(ticker, volume, price=None, leverage=None):
 
     # add leverage if buying on margin
     if leverage:
-        price = price or float(getPrices(ticker).get("a")[0])
-        if not sufficientMargin(volume * price, leverage):
-            raise RuntimeError("insufficient margin available: buy would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
         requestData["leverage"] = leverage
 
     # execute buy order
@@ -163,9 +160,6 @@ def sell(ticker, volume, price=None, leverage=None):
 
     # add leverage if selling on margin
     if leverage:
-        price = price or float(getPrices(ticker).get("b")[0])
-        if not sufficientMargin(volume * price, leverage):
-            raise RuntimeError("insufficient margin available: sell would reduce margin level below %.2f%%" % constants.MARGIN_LEVEL_LIMIT)
         requestData["leverage"] = leverage
 
     # execute sell order
@@ -175,14 +169,6 @@ def sell(ticker, volume, price=None, leverage=None):
 ############################
 ##  Helper methods
 ############################
-
-def sufficientMargin(tradeCostUSD, leverage):
-    """Determine if there is enough margin available to open a position."""
-    equity = getAccountBalances().get("e")
-    marginUsed = getAccountBalances().get("m")
-    marginUsed += tradeCostUSD / leverage  # estimated margin cost
-    marginLevel = (equity / marginUsed) * 100
-    return marginLevel > constants.MARGIN_LEVEL_LIMIT
 
 def _executeRequest(api, requestName, requestData={}):
     """Execute a request to the Kraken API."""

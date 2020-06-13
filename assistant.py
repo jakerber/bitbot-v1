@@ -56,13 +56,13 @@ class Assistant:
         # return all prices
         return allPrices
 
-    def getPriceHistory(self, ticker, startingDatetime=None):
+    def getPriceHistory(self, ticker, startingDatetime=None, verify=True):
         """Get the historical price data of a cryptocurrency."""
         self.logger.log("fetching price history of %s" % (ticker))
         if ticker not in constants.SUPPORTED_CRYPTOS:
             raise RuntimeError("ticker not supported: %s" % ticker)
 
-        # get starting datetime based on lookback days if not provided
+        # get starting datetime based on lookback days if none provided
         if not startingDatetime:
             now = datetime.datetime.utcnow()
             delta = datetime.timedelta(days=constants.LOOKBACK_DAYS)
@@ -74,7 +74,7 @@ class Assistant:
         priceHistory = self.mongodb.find("price", filter=queryFilter, sort=querySort)
 
         # verify price history exists
-        if not priceHistory:
+        if not priceHistory and verify:
             raise RuntimeError("%s price history is empty" % ticker)
 
         # return price history
