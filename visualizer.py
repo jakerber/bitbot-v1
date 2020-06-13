@@ -7,6 +7,7 @@ from algos import mean_reversion
 from algos import linear_regression
 
 SECONDS_IN_DAY = 3600 * 24
+CHROME_IMAGE_BACKGROUND_COLOR_HEX = "#0e0e0e"
 
 # ensure Flask doesn't try to create GUI windows
 matplotlib.use("Agg")
@@ -25,6 +26,14 @@ def visualize(ticker, currentPrices, priceHistory):
     pyplot.cla()
     pyplot.close()
 
+    # dark theme
+    pyplot.rc("text", color="lightgrey")
+    pyplot.rc("axes", facecolor=CHROME_IMAGE_BACKGROUND_COLOR_HEX)
+    pyplot.rc("axes", edgecolor=CHROME_IMAGE_BACKGROUND_COLOR_HEX)
+    pyplot.rc("axes", labelcolor="lightgrey")
+    pyplot.rc("xtick", color="lightgrey")
+    pyplot.rc("ytick", color="lightgrey")
+
     # generate historical price visualization
     pyplot.title("%s History" % ticker)
     pyplot.ylabel("Price ($)")
@@ -33,12 +42,12 @@ def visualize(ticker, currentPrices, priceHistory):
 
     # plot price history with VWAP and trend line
     pyplot.plot(regression.timestamps, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
-    pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1, linestyle="--", label="price trend")
+    pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1.25, linestyle="--", label="price trend")
     pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="VWAP ($%.3f)" % currentVWAP)
 
     # plot present day
     currentTimestamp = datetime.datetime.utcnow().timestamp()
-    pyplot.axvline(x=currentTimestamp, color="black", label="now")
+    pyplot.axvline(x=currentTimestamp, color="grey", label="now")
 
     # set x-axis ticks to incrementing hours
     labels = []
@@ -53,4 +62,5 @@ def visualize(ticker, currentPrices, priceHistory):
     # generate visualization
     pyplot.legend()
     figure = pyplot.gcf()
+    figure.patch.set_facecolor(CHROME_IMAGE_BACKGROUND_COLOR_HEX)  # dark theme
     return matplotlib.backends.backend_agg.FigureCanvasAgg(figure)
