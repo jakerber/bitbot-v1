@@ -132,7 +132,7 @@ def stop_loss():
                 logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
 
                 # delete open position from the database
-                mongodb.delete("open_position", filter={"transaction_id": transactionId})
+                mongodb.delete("position", filter={"transaction_id": transactionId})
 
     # log clossing session summary
     numCloses = len(transactionsClosed)
@@ -240,7 +240,7 @@ def analyzeOpenPositions():
 
         # delete open positions for failed orders
         if orderStatus == "cancelled" or orderStatus == "expired":
-            mongodb.delete("open_position", filter={"transaction_id": transactionId})
+            mongodb.delete("position", filter={"transaction_id": transactionId})
             continue
         elif orderStatus != "closed":
             continue

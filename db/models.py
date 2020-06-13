@@ -11,8 +11,8 @@ class BitBotModel:
                     if prop not in constants.MONGODB_EXCLUDE_PROPS})
 
 class OpenPosition(BitBotModel):
-    """Object representing an entry in the open_position collection."""
-    collectionName = "open_position"
+    """Object representing an entry in the position collection."""
+    collectionName = "position"
 
     def __init__(self, ticker, transactionId, description):
         self.ticker = ticker

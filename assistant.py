@@ -97,11 +97,11 @@ class Assistant:
         """Get open positions."""
         if not startingDatetime:
             self.logger.log("fetching open positions")
-            return self.mongodb.find("open_position")
+            return self.mongodb.find("position")
 
         # filter positions by date if one provided
         self.logger.log("fetching positions opened %s UTC or later" % startingDatetime.strftime("%Y-%m-%d %H:%M"))
-        return self.mongodb.find("open_position", filter={"utc_datetime": {"$gte": startingDatetime}})
+        return self.mongodb.find("position", filter={"utc_datetime": {"$gte": startingDatetime}})
 
     def getOrders(self, transactionIds):
         """Get order information."""
