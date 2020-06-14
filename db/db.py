@@ -8,7 +8,7 @@ class BitBotDB:
     """Object to communication with the BitBot database."""
     def __init__(self, app):
         self.app = app
-        self.logger = logger.BitBotLogger("MongoDB")
+        self.logger = logger.Logger("MongoDB")
 
         # initialize mongo connection
         app.config["MONGO_URI"] = constants.MONGODB_URI

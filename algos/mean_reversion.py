@@ -18,7 +18,7 @@ class MeanReversionAnalysis:
 class MeanReversion:
     """Object to analyze price deviation from the mean."""
     def __init__(self, currentPrices, priceHistory):
-        self.logger = logger.BitBotLogger("MeanReversion")
+        self.logger = logger.Logger("MeanReversion")
         self.currentPrice = self.calculatePrice(currentPrices)
         self.currentVWAP = currentPrices.get("vwap")
         self.priceHistory = priceHistory

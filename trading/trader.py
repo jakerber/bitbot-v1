@@ -15,7 +15,7 @@ class BitBotTraderInterface(abc.ABC):
 class BitBotTrader(BitBotTraderInterface):
     """Base class for trading objects."""
     def __init__(self, ticker, analysis, assistant):
-        self.logger = logger.BitBotLogger("Trade%s" % type(self).__name__)
+        self.logger = logger.Logger("Trade%s" % type(self).__name__)
         self.ticker = ticker
         self.analysis = analysis
         self.assistant = assistant

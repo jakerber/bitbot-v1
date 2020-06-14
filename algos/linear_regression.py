@@ -9,7 +9,7 @@ from sklearn import linear_model
 class LinearRegression:
     """Object to represent a linear regression model."""
     def __init__(self, currentPrice, priceHistory):
-        self.logger = logger.BitBotLogger("LinearRegression")
+        self.logger = logger.Logger("LinearRegression")
         self.currentPrice = currentPrice
         self.priceHistory = priceHistory
 

@@ -18,7 +18,7 @@ class TrailingStopLossAnalysis:
 class TrailingStopLoss:
     """Object to perform trailing stop-loss analysis on open positons."""
     def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, priceHistory):
-        self.logger = logger.BitBotLogger("TrailingStopLoss")
+        self.logger = logger.Logger("TrailingStopLoss")
         self.ticker = ticker
         self.initialOrderType = initialOrderType
         self.leverage = leverage

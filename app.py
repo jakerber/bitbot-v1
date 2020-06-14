@@ -19,7 +19,7 @@ from db import models
 app = flask.Flask(__name__)
 
 # initialize logger
-logger = logger.BitBotLogger("BitBot")
+logger = logger.Logger("BitBot")
 
 # initialize mongodb connection
 mongodb = db.BitBotDB(app)
