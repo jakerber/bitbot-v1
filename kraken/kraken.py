@@ -31,7 +31,7 @@ def getPrices():
     """
     # gather support crypto asset pairs
     assetPairs = []
-    for ticker in constants.SUPPORTED_CRYPTOS:
+    for ticker in constants.SUPPORTED_TICKERS:
         assetPair = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("usd_pair")
         assetPairs.append(assetPair)
 
@@ -41,7 +41,7 @@ def getPrices():
 
     # convert results from asset pairs back to tickers
     prices = {}
-    for ticker in constants.SUPPORTED_CRYPTOS:
+    for ticker in constants.SUPPORTED_TICKERS:
         assetPair = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("usd_pair")
         prices[ticker] = resp.get("result").get(assetPair)
 

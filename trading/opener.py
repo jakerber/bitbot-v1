@@ -13,7 +13,7 @@ class Opener(trader.BitBotTrader):
     def approves(self):
         """Determine if positon should be opened."""
         # verify trade exceeds price deviation threshold
-        _approval = self.analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_TRADE_THRESHOLD
+        _approval = self.analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_OPEN_THRESHOLD
 
         # return approval
         if _approval:
@@ -60,9 +60,9 @@ class Opener(trader.BitBotTrader):
         minimumVolume = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
 
         # calculate volume based on current price deviation
-        deviationAboveThreshold = self.analysis.current_percent_deviation / constants.PERCENT_DEVIATION_TRADE_THRESHOLD
+        deviationAboveThreshold = self.analysis.current_percent_deviation / constants.PERCENT_DEVIATION_OPEN_THRESHOLD
         multiplier = min(deviationAboveThreshold, constants.MAXIMUM_TRADE_COST_MULTIPLIER)  # limit trade cost
-        costUSD = constants.BASE_BUY_USD * multiplier
+        costUSD = constants.BASE_COST_USD * multiplier
         volume = costUSD / self.analysis.current_price
 
         # override to minimum volume if minimum not met

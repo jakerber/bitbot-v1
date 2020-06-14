@@ -39,7 +39,7 @@ def analyze():
     """Analyze the price deviations of all supported cryptocurrencies."""
     currentPrices = assistant.getPrices()
     analysis = []
-    for ticker in constants.SUPPORTED_CRYPTOS:
+    for ticker in constants.SUPPORTED_TICKERS:
         _currentPrices = currentPrices.get(ticker)
         priceHistory = assistant.getPriceHistory(ticker)
         analysis.append({"ticker": ticker,
@@ -72,7 +72,7 @@ def positions():
 @app.route("%s/visualize/<ticker>" % constants.API_ROOT)
 def visualize(ticker):
     """View visualization of current price prediction."""
-    if ticker not in constants.SUPPORTED_CRYPTOS:
+    if ticker not in constants.SUPPORTED_TICKERS:
         return _failedResp("ticker not supported: %s" % ticker, statusCode=400)  # 400 bad request
 
     # generate visualization
@@ -103,7 +103,7 @@ def snapshot():
     """Store the relevant prices of all supported cryptocurrencies."""
     snapshots = []
     currentPrices = assistant.getPrices()
-    for ticker in constants.SUPPORTED_CRYPTOS:
+    for ticker in constants.SUPPORTED_TICKERS:
         ask = currentPrices.get(ticker).get("ask")
         bid = currentPrices.get(ticker).get("bid")
         vwap = currentPrices.get(ticker).get("vwap")
@@ -177,8 +177,8 @@ def trade():
     """Open qualified cryptocurrency trading positions."""
     tickersOpened = set()
     currentPrices = assistant.getPrices()
-    logger.log("found %i tradeable cryptocurrencies" % len(constants.SUPPORTED_CRYPTOS))
-    for ticker in constants.SUPPORTED_CRYPTOS:
+    logger.log("found %i tradeable cryptocurrencies" % len(constants.SUPPORTED_TICKERS))
+    for ticker in constants.SUPPORTED_TICKERS:
 
         # analyze price deviation from the mean for all supported cryptos
         try:

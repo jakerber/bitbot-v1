@@ -35,7 +35,7 @@ class Assistant:
 
     def getPriceHistory(self, ticker, startingDatetime=None, verify=True):
         """Get the historical price data of a cryptocurrency."""
-        if ticker not in constants.SUPPORTED_CRYPTOS:
+        if ticker not in constants.SUPPORTED_TICKERS:
             raise RuntimeError("ticker not supported: %s" % ticker)
 
         # get starting datetime based on lookback days if none provided
@@ -82,7 +82,7 @@ class Assistant:
 
         # convert assets to tickers and omit balances under minimum
         tickerBalances = {}
-        for ticker in constants.SUPPORTED_CRYPTOS:
+        for ticker in constants.SUPPORTED_TICKERS:
             asset = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("asset")
             balance = assetBalances.get(asset)
             balance = 0.0 if balance < MINIMUM_ASSET_BALANCE else balance
@@ -114,7 +114,7 @@ class Assistant:
 
     def buy(self, ticker, volume, price=None, leverage=None):
         """Buy a cryptocurrency."""
-        if ticker not in constants.SUPPORTED_CRYPTOS:
+        if ticker not in constants.SUPPORTED_TICKERS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         logMessage = "buying %.3f of %s" % (volume, ticker)
         if price:
@@ -132,7 +132,7 @@ class Assistant:
 
     def sell(self, ticker, volume, price=None, leverage=None):
         """Sell a cryptocurrency."""
-        if ticker not in constants.SUPPORTED_CRYPTOS:
+        if ticker not in constants.SUPPORTED_TICKERS:
             raise RuntimeError("ticker not supported: %s" % ticker)
         logMessage = "selling %.3f of %s" % (volume, ticker)
         if price:
