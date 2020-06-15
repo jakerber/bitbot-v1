@@ -4,11 +4,9 @@ import logger
 
 class BitBotTraderInterface(abc.ABC):
     """Interface to define trading classes."""
-
     @property
     def approves(self):
         """Determine if a trade should be executed."""
-
     def execute(self):
         """Execute trade."""
 

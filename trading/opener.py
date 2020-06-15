@@ -37,12 +37,17 @@ class Opener(trader.BitBotTrader):
             actionName = "short"
             leverage = constants.DEFAULT_LEVERAGE
 
+
+        # determine volume to trade
+        minimumVolume = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
+        volume = constants.OPEN_COST_USD / self.analysis.current_price
+        volume = max(volume, minimumVolume)
+
         # safely execute trade
-        tradeVolume = self._getVolume()
         self.logger.log("executing %s %s" % (self.ticker, actionName))
         try:
             success, order = tradingMethod(ticker=self.ticker,
-                                           volume=tradeVolume,
+                                           volume=volume,
                                            leverage=leverage)
         except Exception as err:
             self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
@@ -50,20 +55,3 @@ class Opener(trader.BitBotTrader):
 
         # return order confirmation if trade was successful
         return success, order
-
-    ############################
-    ##  Trade specifications
-    ############################
-
-    def _getVolume(self):
-        """Determine how much of the cryptocurrency should be traded."""
-        minimumVolume = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
-
-        # calculate volume based on current price deviation
-        deviationAboveThreshold = self.analysis.current_percent_deviation / constants.PERCENT_DEVIATION_OPEN_THRESHOLD
-        multiplier = min(deviationAboveThreshold, constants.MAXIMUM_TRADE_COST_MULTIPLIER)  # limit trade cost
-        costUSD = constants.BASE_COST_USD * multiplier
-        volume = costUSD / self.analysis.current_price
-
-        # override to minimum volume if minimum not met
-        return max(volume, minimumVolume)

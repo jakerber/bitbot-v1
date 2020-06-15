@@ -3,7 +3,6 @@ import constants
 import logger
 import math
 import statistics
-from algos import linear_regression
 
 class MeanReversionAnalysis:
     """Object to store results from price deviation analysis."""
