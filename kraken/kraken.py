@@ -1,11 +1,13 @@
 """BitBot Krakenex API wrapper module."""
 import constants
 import krakenex
+import math
 import time
 
 kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 DEFAULT_LEVERAGE = 2
+MAXIMUM_TRANSACTION_IDS = 50
 ORDER_EXPIRATION = "+%i" % constants.ORDER_EXPIRATION_SECONDS
 TRADE_VALUE_TEMPLATE = "%.{precision}f"
 
@@ -104,9 +106,21 @@ def getOrders(transactionIds):
             "oflags": "fciq"
         }
     """
-    requestData = {"txid": ",".join(transactionIds)}
-    resp = _executeRequest(kraken.query_private, "QueryOrders", requestData=requestData)
-    return resp.get("result")
+    orders = {}
+
+    # split up into seperate queries if maximum orders exceeded
+    queriesRequired = math.ceil(len(transactionIds) / MAXIMUM_TRANSACTION_IDS)
+    for query in range(queriesRequired):
+        startIndex = query * MAXIMUM_TRANSACTION_IDS
+        endIndex = (query + 1) * MAXIMUM_TRANSACTION_IDS
+
+        # query orders and combine results
+        requestData = {"txid": ",".join(transactionIds[startIndex:endIndex])}
+        resp = _executeRequest(kraken.query_private, "QueryOrders", requestData=requestData)
+        orders.update(resp.get("result"))
+
+    # return combined results
+    return orders
 
 ############################
 ##  Trading
