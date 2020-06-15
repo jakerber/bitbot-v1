@@ -156,5 +156,5 @@ class Assistant:
         """Execute trade and interpret order response."""
         confirmation = tradeMethod(ticker, volume, price=price, leverage=leverage)
         if confirmation:
-            return True, {"transaction_id": confirmation.get("txid")[0], "description": confirmation.get("descr")}
+            return True, {"transaction_id": confirmation.get("txid")[0], "description": confirmation.get("descr").get("order")}
         return False, {}

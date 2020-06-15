@@ -10,7 +10,7 @@ class BitBotModel:
         return str({prop: self.__dict__.get(prop) for prop in self.__dict__.keys()
                     if prop not in constants.MONGODB_EXCLUDE_PROPS})
 
-class OpenPosition(BitBotModel):
+class Position(BitBotModel):
     """Object representing an entry in the position collection."""
     collectionName = "position"
 

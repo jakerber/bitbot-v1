@@ -203,7 +203,7 @@ def trade():
                 # add new position to the database
                 transactionId = position.get("transaction_id")
                 description = position.get("description")
-                openPositionModel = models.OpenPosition(ticker, transactionId, description)
+                openPositionModel = models.Position(ticker, transactionId, description)
                 mongodb.insert(openPositionModel)
 
     # log trading session summary
