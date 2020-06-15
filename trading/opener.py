@@ -50,7 +50,7 @@ class Opener(trader.BitBotTrader):
                                            volume=volume,
                                            leverage=leverage)
         except Exception as err:
-            self.logger.log("unable to execute %s trade: %s" % (self.ticker, str(err)))
+            self.logger.log("unable to open %s position: %s" % (self.ticker, str(err)))
             return None, None
 
         # return order confirmation if trade was successful

@@ -137,7 +137,7 @@ def stop_loss():
 
     # log clossing session summary
     numCloses = len(tickersClosed)
-    sessionSummary = "closed positions for %i cryptocurrenc%s" % (numCloses, "y" if numCloses == 1 else "s")
+    sessionSummary = "closed positions for %i cryptocurrenc%s" % (numCloses, "y" if numCloses == 1 else "ies")
     if numCloses:
         sessionSummary += ": %s" % str(list(tickersClosed))
     logger.log(sessionSummary)
