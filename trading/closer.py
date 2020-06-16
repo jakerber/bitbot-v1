@@ -42,6 +42,7 @@ class Closer(trader.BitBotTrader):
         try:
             success, order = tradingMethod(ticker=self.ticker,
                                            volume=self.analysis.volume,
+                                           price=self.analysis.current_price,
                                            leverage=self.analysis.leverage)
         except Exception as err:
             self.logger.log("unable to close %s position: %s" % (self.ticker, str(err)))
