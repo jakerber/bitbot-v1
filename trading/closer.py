@@ -14,7 +14,8 @@ class Closer(trader.BitBotTrader):
     def approves(self):
         """Determine if positon should be closed."""
         # verify position is profitable or exceeds trailing stop-loss close threshold
-        profitWithFees = self.analysis.unrealized_profit_usd * (1 - constants.TRADING_FEE)
+        closingFees = (self.analysis.current_price * self.analysis.volume) * constants.TRADING_FEE
+        profitWithFees = self.analysis.unrealized_profit_usd - closingFees
         profitMet = profitWithFees > self.analysis.initial_fee
         stopLossMet = self.analysis.trailing_percentage >= constants.PERCENT_TRAILING_CLOSE_THRESHOLD
 
