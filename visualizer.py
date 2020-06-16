@@ -53,10 +53,14 @@ def visualize(ticker, currentPrices, priceHistory):
     labels = []
     startingTimestamp = regression.timestamps[0][0]
     ticks = numpy.arange(startingTimestamp, currentTimestamp, step=SECONDS_IN_DAY)
-    ticks = numpy.append(ticks, currentTimestamp)
     for tickTimestamp in ticks:
         daysFromStart = (tickTimestamp - startingTimestamp) / SECONDS_IN_DAY
-        labels.append("%.2f" % daysFromStart)
+        labels.append("%i" % daysFromStart)
+
+    # add tick for now and display labels
+    ticks = numpy.append(ticks, currentTimestamp)
+    currentDaysFromStart = (currentTimestamp - startingTimestamp) / SECONDS_IN_DAY
+    labels.append("%.2f" % currentDaysFromStart)
     pyplot.xticks(ticks, labels)
 
     # generate visualization
