@@ -47,5 +47,5 @@ class Closer(trader.BitBotTrader):
             self.logger.log("unable to close %s position: %s" % (self.ticker, str(err)))
             return None, None, None
 
-        # return order confirmation if close was successful
+        # return order confirmation if trade was successful
         return success, order, self.analysis.unrealized_profit_usd

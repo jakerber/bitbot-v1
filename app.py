@@ -112,36 +112,6 @@ def snapshot():
     # store relevant prices in database
     mongodb.insertMany(snapshots)
 
-def stop_loss():
-    """Close qualified cryptocurrency trading positions."""
-    tickersClosed = set()
-
-    # fetch analysis on all open positions
-    openPositions = analyzeOpenPositions()
-    logger.log("found %i open positions" % len(openPositions))
-    for ticker, transactionId, analysis in openPositions:
-
-        # consult closer on the potential close of position
-        _trader = closer.Closer(ticker, analysis, assistant)
-        logger.log("consulting closer on potential %s close" % ticker)
-        if _trader.approves:
-
-            # close position
-            success, order, profit = _trader.execute()
-            if success:
-                tickersClosed.add(ticker)
-                logger.log("position closed successfully (profit=$%.3f)" % profit, moneyExchanged=True)
-
-                # delete open position from the database
-                mongodb.delete("position", filter={"transaction_id": transactionId})
-
-    # log clossing session summary
-    numCloses = len(tickersClosed)
-    sessionSummary = "closed positions for %i cryptocurrenc%s" % (numCloses, "y" if numCloses == 1 else "ies")
-    if numCloses:
-        sessionSummary += ": %s" % str(list(tickersClosed))
-    logger.log(sessionSummary)
-
 def summarize():
     """Sends a daily activity summary notification."""
     assetBalances = assistant.getAssetBalances()
@@ -173,7 +143,37 @@ def summarize():
     emailBody += "\n" + json.dumps(openPositions, indent=6)
     notifier.email(emailSubject, emailBody)
 
-def trade():
+def trade_close():
+    """Close qualified cryptocurrency trading positions."""
+    tickersClosed = set()
+
+    # fetch analysis on all open positions
+    openPositions = analyzeOpenPositions()
+    logger.log("found %i open positions" % len(openPositions))
+    for ticker, transactionId, analysis in openPositions:
+
+        # consult closer on the potential close of position
+        _trader = closer.Closer(ticker, analysis, assistant)
+        logger.log("consulting closer on potential %s close" % ticker)
+        if _trader.approves:
+
+            # close position
+            success, order, profit = _trader.execute()
+            if success:
+                tickersClosed.add(ticker)
+                logger.log("position closed successfully (profit=$%.3f)" % profit, moneyExchanged=True)
+
+                # delete open position from the database
+                mongodb.delete("position", filter={"transaction_id": transactionId})
+
+    # log clossing session summary
+    numCloses = len(tickersClosed)
+    sessionSummary = "closed positions for %i cryptocurrenc%s" % (numCloses, "y" if numCloses == 1 else "ies")
+    if numCloses:
+        sessionSummary += ": %s" % str(list(tickersClosed))
+    logger.log(sessionSummary)
+
+def trade_open():
     """Open qualified cryptocurrency trading positions."""
     tickersOpened = set()
     currentPrices = assistant.getPrices()
