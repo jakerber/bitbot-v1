@@ -3,30 +3,30 @@ import logger
 
 class TrailingStopLossAnalysis:
     """Object to store results from trailing stop-loss analysis."""
-    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, trailingPercentage, actionablePrice, actionableDatetime, unrealizedProfit, initialFee):
+    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, currentVWAP, initialPrice, trailingPercentage, actionablePrice, actionableDatetime, unrealizedProfit):
         self.ticker = ticker
         self.initial_order_type = initialOrderType
         self.leverage = leverage
         self.volume = volume
         self.current_price = currentPrice
+        self.current_volume_weighted_average_price = currentVWAP
         self.initial_price = initialPrice
         self.trailing_percentage = trailingPercentage
         self.actionable_price = actionablePrice
         self.actionable_datetime_utc = actionableDatetime
         self.unrealized_profit_usd = unrealizedProfit
-        self.initial_fee = initialFee
 
 class TrailingStopLoss:
     """Object to perform trailing stop-loss analysis on open positons."""
-    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, initialFee, priceHistory):
+    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, currentVWAP, initialPrice, priceHistory):
         self.logger = logger.Logger("TrailingStopLoss")
         self.ticker = ticker
         self.initialOrderType = initialOrderType
         self.leverage = leverage
         self.volume = volume
         self.currentPrice = currentPrice
+        self.currentVWAP = currentVWAP
         self.initialPrice = initialPrice
-        self.initialFee = initialFee
         self.priceHistory = priceHistory
 
     def analyze(self):
@@ -70,9 +70,9 @@ class TrailingStopLoss:
                                         self.leverage,
                                         self.volume,
                                         self.currentPrice,
+                                        self.currentVWAP,
                                         self.initialPrice,
                                         trailingPercentage,
                                         actionablePrice,
                                         actionableDatetime,
-                                        unrealizedProfit,
-                                        self.initialFee)
+                                        unrealizedProfit)

@@ -253,12 +253,15 @@ def analyzeOpenPositions():
         # gather relevant position information
         initialOrderType = order.get("descr").get("type")
         initialPrice = float(order.get("price"))
-        initialFee = float(order.get("fee"))
         initialOrderTimestamp = order.get("closetm")
         initialOrderDatetime = datetime.datetime.utcfromtimestamp(initialOrderTimestamp)
         volume = float(order.get("vol"))
         leverage = order.get("descr").get("leverage")
         leverage = None if leverage == "none" else int(leverage[0])
+
+        # gather relevant price information
+        currentPrice = currentPrices.get(ticker).get("bid") if initialOrderType == "buy" else currentPrices.get(ticker).get("ask")
+        currentVWAP = currentPrices.get(ticker).get("vwap")
 
         # verify order type
         if initialOrderType not in ["buy", "sell"]:
@@ -267,15 +270,14 @@ def analyzeOpenPositions():
 
         # analyze trailing stop-loss order potential
         try:
-            currentPrice = currentPrices.get(ticker).get("bid") if initialOrderType == "buy" else currentPrices.get(ticker).get("ask")
             priceHistory = assistant.getPriceHistory(ticker, startingDatetime=initialOrderDatetime, verify=False)
             analysis = trailing_stop_loss.TrailingStopLoss(ticker,
                                                            initialOrderType,
                                                            leverage,
                                                            volume,
                                                            currentPrice,
+                                                           currentVWAP,
                                                            initialPrice,
-                                                           initialFee,
                                                            priceHistory).analyze()
         except Exception as err:
             logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))
