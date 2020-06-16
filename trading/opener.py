@@ -40,7 +40,7 @@ class Opener(trader.BitBotTrader):
 
         # determine volume to trade
         minimumVolume = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
-        volume = constants.OPEN_COST_USD / self.analysis.current_price
+        volume = constants.BASE_COST_USD / self.analysis.current_price
         volume = max(volume, minimumVolume)
 
         # safely execute trade
