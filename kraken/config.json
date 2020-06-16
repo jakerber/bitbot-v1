@@ -22,7 +22,7 @@
             "minimum_volume": 0.002
         },
         "ETH": {
-            "name": "Etherium",
+            "name": "Ethereum",
             "asset": "XETH",
             "usd_pair": "XETHZUSD",
             "price_decimal_precision": 2,

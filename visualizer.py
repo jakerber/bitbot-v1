@@ -1,4 +1,5 @@
 """BitBot data visualization module."""
+import constants
 import datetime
 import matplotlib
 import numpy
@@ -35,7 +36,8 @@ def visualize(ticker, currentPrices, priceHistory):
     pyplot.rc("ytick", color="lightgrey")
 
     # generate historical price visualization
-    pyplot.title("%s History" % ticker)
+    name = constants.KRAKEN_CRYPTO_CONFIGS.get(ticker).get("name")
+    pyplot.title("%s History" % name)
     pyplot.ylabel("Price ($)")
     pyplot.xlabel("Time (days)")
     pyplot.grid(color="silver", linestyle="--", linewidth=0.5, alpha=0.5)
