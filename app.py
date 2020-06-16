@@ -130,7 +130,7 @@ def stop_loss():
             success, order, profit = _trader.execute()
             if success:
                 tickersClosed.add(ticker)
-                logger.log("position closed successfully (proft=$%.3f)" % profit, moneyExchanged=True)
+                logger.log("position closed successfully (profit=$%.3f)" % profit, moneyExchanged=True)
 
                 # delete open position from the database
                 mongodb.delete("position", filter={"transaction_id": transactionId})
@@ -253,6 +253,7 @@ def analyzeOpenPositions():
         # gather relevant position information
         initialOrderType = order.get("descr").get("type")
         initialPrice = float(order.get("price"))
+        initialFee = float(order.get("fee"))
         initialOrderTimestamp = order.get("closetm")
         initialOrderDatetime = datetime.datetime.utcfromtimestamp(initialOrderTimestamp)
         volume = float(order.get("vol"))
@@ -274,6 +275,7 @@ def analyzeOpenPositions():
                                                            volume,
                                                            currentPrice,
                                                            initialPrice,
+                                                           initialFee,
                                                            priceHistory).analyze()
         except Exception as err:
             logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))

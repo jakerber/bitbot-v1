@@ -3,7 +3,7 @@ import logger
 
 class TrailingStopLossAnalysis:
     """Object to store results from trailing stop-loss analysis."""
-    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, trailingPercentage, actionablePrice, actionableDatetime, unrealizedProfit):
+    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, trailingPercentage, actionablePrice, actionableDatetime, unrealizedProfit, initialFee):
         self.ticker = ticker
         self.initial_order_type = initialOrderType
         self.leverage = leverage
@@ -14,10 +14,11 @@ class TrailingStopLossAnalysis:
         self.actionable_price = actionablePrice
         self.actionable_datetime_utc = actionableDatetime
         self.unrealized_profit_usd = unrealizedProfit
+        self.initial_fee = initialFee
 
 class TrailingStopLoss:
     """Object to perform trailing stop-loss analysis on open positons."""
-    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, priceHistory):
+    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, initialPrice, initialFee, priceHistory):
         self.logger = logger.Logger("TrailingStopLoss")
         self.ticker = ticker
         self.initialOrderType = initialOrderType
@@ -25,6 +26,7 @@ class TrailingStopLoss:
         self.volume = volume
         self.currentPrice = currentPrice
         self.initialPrice = initialPrice
+        self.initialFee = initialFee
         self.priceHistory = priceHistory
 
     def analyze(self):
@@ -72,4 +74,5 @@ class TrailingStopLoss:
                                         trailingPercentage,
                                         actionablePrice,
                                         actionableDatetime,
-                                        unrealizedProfit)
+                                        unrealizedProfit,
+                                        self.initialFee)
