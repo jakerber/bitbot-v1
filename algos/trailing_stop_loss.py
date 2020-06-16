@@ -63,6 +63,10 @@ class TrailingStopLoss:
             trailingPercentage = (self.currentPrice - actionablePrice) / actionablePrice
             unrealizedProfit = (self.initialPrice - self.currentPrice) * self.volume
 
+        # amplify net gain/loss of leveraged trades
+        if self.leverage:
+            unrealizedProfit *= self.leverage
+
         # price trailing stop-loss analysis
         self.logger.log("analyzed trailing stop-loss over %i prices" % len(self.priceHistory))
         return TrailingStopLossAnalysis(self.ticker,
