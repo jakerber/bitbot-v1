@@ -35,6 +35,12 @@ class Opener(trader.BitBotTrader):
             tradingMethod = self.assistant.sell
             leverage = constants.DEFAULT_LEVERAGE
 
+            # ensure sufficient margin before opening leveraged short
+            marginLevel = self.assistant.getAccountBalances().get("margin_level")
+            if marginLevel and marginLevel < constants.MARGIN_LEVEL_MINIMUM:
+                self.logger.log("unable to open %s position: insufficient margin" % self.ticker)
+                return False, None
+
         # determine volume to trade
         minimumVolume = constants.KRAKEN_CRYPTO_CONFIGS.get(self.ticker).get("minimum_volume")
         volume = constants.BASE_COST_USD / self.analysis.current_price
