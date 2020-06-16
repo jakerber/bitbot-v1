@@ -23,7 +23,7 @@ class MeanReversion:
         self.priceHistory = priceHistory
 
         # expose for visualizations
-        self.vwapPrices = []
+        self.vwaps = []
 
     def analyze(self):
         """Analyze the current price deviation from the mean."""
@@ -32,18 +32,18 @@ class MeanReversion:
         for historicalPrices in self.priceHistory:
             price = self.calculatePrice(historicalPrices)
             vwap = historicalPrices.get("vwap")
-            self.vwapPrices.append([vwap])  # aggregate for visualizations
+            self.vwaps.append([vwap])  # aggregate for visualizations
             priceDeviation = abs(price - vwap)
             deviationsSquaredSum += priceDeviation ** 2
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
 
         # calculate current price deviation from current weighted average
-        self.vwapPrices.append([self.currentVWAP])  # aggregate for visualizations
+        self.vwaps.append([self.currentVWAP])  # aggregate for visualizations
         currentDeviation = abs(self.currentPrice - self.currentVWAP)
         currentPercentDeviation = currentDeviation / standardDeviation
 
         # log and return analysis
-        self.logger.log("analyzed %i price deviations" % len(self.vwapPrices))
+        self.logger.log("analyzed %i price deviations" % len(self.vwaps))
         return MeanReversionAnalysis(self.currentVWAP,
                                      currentDeviation,
                                      currentPercentDeviation,

@@ -45,13 +45,13 @@ def visualize(ticker, currentPrices, priceHistory):
     # plot price history with VWAP and trend line
     pyplot.plot(regression.timestamps, regression.prices, linewidth=3, label=("price ($%.3f)" % currentPrice))
     pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1.25, linestyle="--", label="price trend")
-    pyplot.plot(regression.timestamps, meanReversion.vwapPrices, color="darkorange", label="VWAP ($%.3f)" % currentVWAP)
+    pyplot.plot(regression.timestamps, meanReversion.vwaps, color="darkorange", label="VWAP ($%.3f)" % currentVWAP)
 
     # plot present day
     currentTimestamp = datetime.datetime.utcnow().timestamp()
     pyplot.axvline(x=currentTimestamp, color="grey", label="now")
 
-    # set x-axis ticks to incrementing hours
+    # set x-axis ticks to incrementing days
     labels = []
     startingTimestamp = regression.timestamps[0][0]
     ticks = numpy.arange(startingTimestamp, currentTimestamp, step=SECONDS_IN_DAY)
