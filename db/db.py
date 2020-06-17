@@ -39,4 +39,4 @@ class BitBotDB:
         """Update an entry in the collection."""
         update = {"$set": update}
         self.mongo.db[collectionName].update_one(filter, update)
-        self.logger.log("update 1 entry in the %s collection" % collectionName)
+        self.logger.log("updated 1 entry in the %s collection" % collectionName)

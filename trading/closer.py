@@ -13,15 +13,13 @@ class Closer(trader.BitBotTrader):
     @property
     def approves(self):
         """Determine if positon should be closed."""
-        # verify mean reversion complete or trailing stop-loss close threshold exceeded
-        if self.analysis.initial_order_type == "buy":
-            meanReverted = self.analysis.current_price >= self.analysis.current_volume_weighted_average_price
+        # verify trailing stop-loss thresholds are met
+        if self.analysis.mean_reverted:
+            _approval = self.analysis.trailing_percentage >= constants.PERCENT_TRAILING_REVERTED_CLOSE_THRESHOLD
         else:
-            meanReverted = self.analysis.current_price <= self.analysis.current_volume_weighted_average_price
-        stopLossMet = self.analysis.trailing_percentage >= constants.PERCENT_TRAILING_CLOSE_THRESHOLD
+            _approval = self.analysis.trailing_percentage >= constants.PERCENT_TRAILING_CLOSE_THRESHOLD
 
         # return approval
-        _approval = meanReverted or stopLossMet
         if _approval:
             self.logger.log(self.analysis.__dict__)
             self.logger.log("%s close approved!" % self.ticker)

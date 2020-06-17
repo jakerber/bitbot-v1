@@ -18,6 +18,7 @@ class Position(BitBotModel):
         self.ticker = ticker
         self.transaction_id = transactionId
         self.description = description
+        self.mean_reverted = False
         self.utc_datetime = datetime.datetime.utcnow()
 
 class Price(BitBotModel):
