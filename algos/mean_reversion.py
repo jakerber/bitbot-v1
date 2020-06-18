@@ -24,21 +24,34 @@ class MeanReversion:
 
         # expose for visualizations
         self.vwaps = []
+        self.upperBollinger = []
+        self.lowerBollinger = []
 
     def analyze(self):
         """Analyze the current price deviation from the mean."""
-        # calculate standard deviation from volume-weighted average prices
+        # collect price deviations from the volume-weighted average price
         deviationsSquaredSum = 0.0
         for historicalPrices in self.priceHistory:
             price = self.calculatePrice(historicalPrices)
             vwap = historicalPrices.get("vwap")
-            self.vwaps.append([vwap])  # aggregate for visualizations
             priceDeviation = abs(price - vwap)
             deviationsSquaredSum += priceDeviation ** 2
+
+            # aggregate metrics for visualizations
+            self.vwaps.append([vwap])
+            movingStandardDeviation = math.sqrt(deviationsSquaredSum / len(self.vwaps))
+            self.upperBollinger.append([vwap + (movingStandardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
+            self.lowerBollinger.append([vwap - (movingStandardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
+
+        # calculate standard deviation
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
 
+        # aggregate final metrics for visualizations
+        self.vwaps.append([self.currentVWAP])
+        self.upperBollinger.append([self.currentVWAP + (standardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
+        self.lowerBollinger.append([self.currentVWAP - (standardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
+
         # calculate current price deviation from current weighted average
-        self.vwaps.append([self.currentVWAP])  # aggregate for visualizations
         currentDeviation = abs(self.currentPrice - self.currentVWAP)
         currentPercentDeviation = currentDeviation / standardDeviation
 

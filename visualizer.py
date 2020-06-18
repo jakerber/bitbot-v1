@@ -40,12 +40,16 @@ def visualize(ticker, currentPrices, priceHistory):
     pyplot.title("%s History" % name)
     pyplot.ylabel("Price ($)")
     pyplot.xlabel("Time (days)")
-    pyplot.grid(color="silver", linestyle="--", linewidth=0.5, alpha=0.35)
+    pyplot.grid(color="silver", linestyle="--", linewidth=0.65, alpha=0.2)
+
+    # plot bollinger bands
+    pyplot.plot(regression.timestamps, meanReversion.upperBollinger, color="dimgrey", linewidth=1.25, alpha=0.5, label="bollinger bands")
+    pyplot.plot(regression.timestamps, meanReversion.lowerBollinger, color="dimgrey", linewidth=1.25, alpha=0.5)
 
     # plot price history with VWAP and trend line
-    pyplot.plot(regression.timestamps, regression.prices, color="cornflowerblue", linewidth=1, label=("price ($%.3f)" % currentPrice))
     pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1, linestyle="--", label="price trend")
-    pyplot.plot(regression.timestamps, meanReversion.vwaps, color="orange", linewidth=1, label="VWAP ($%.3f)" % currentVWAP)
+    pyplot.plot(regression.timestamps, regression.prices, color="cornflowerblue", linewidth=1.5, label=("price ($%.3f)" % currentPrice))
+    pyplot.plot(regression.timestamps, meanReversion.vwaps, color="orange", linewidth=1.5, label="VWAP ($%.3f)" % currentVWAP)
 
     # set x-axis ticks to incrementing days
     labels = []
