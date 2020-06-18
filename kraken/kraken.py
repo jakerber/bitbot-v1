@@ -64,8 +64,8 @@ def getAccountBalances():
 def getAssetBalances():
     """Get all asset balances."""
     resp = _executeRequest(kraken.query_private, "Balance")
-    for balance in resp.get("result"):
-        resp["result"][balance] = float(resp.get("result").get(balance))
+    for asset in resp.get("result"):
+        resp["result"][asset] = float(resp.get("result").get(asset))
     return resp.get("result")
 
 ############################

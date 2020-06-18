@@ -48,8 +48,9 @@ def analyze():
 
 @app.route("%s/equity" % constants.API_ROOT)
 def equity():
-    """Get current account balance in USD."""
+    """Get current account balances."""
     balances = assistant.getAssetBalances()
+    balances = {asset: balance for asset, balance in balances.items() if balance}  # filter out empty balances
     accountBalances = assistant.getAccountBalances()
     accountValue = accountBalances.get("equivalent_balance") + accountBalances.get("unrealized_net_profit")
     marginLevel = accountBalances.get("margin_level")

@@ -87,6 +87,10 @@ class Assistant:
             balance = assetBalances.get(asset)
             balance = 0.0 if balance < MINIMUM_ASSET_BALANCE else balance
             tickerBalances[ticker] = balance
+
+        # return results with USD included
+        if "ZUSD" in assetBalances:
+            tickerBalances["USD"] = float(assetBalances.get("ZUSD"))
         return tickerBalances
 
     ############################
