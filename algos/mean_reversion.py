@@ -23,7 +23,6 @@ class MeanReversion:
         self.priceHistory = priceHistory
 
         # expose for visualizations
-        self.vwaps = []
         self.upperBollinger = []
         self.lowerBollinger = []
 
@@ -31,23 +30,21 @@ class MeanReversion:
         """Analyze the current price deviation from the mean."""
         # collect price deviations from the volume-weighted average price
         deviationsSquaredSum = 0.0
-        for historicalPrices in self.priceHistory:
+        for i, historicalPrices in enumerate(self.priceHistory, 1):
             price = self.calculatePrice(historicalPrices)
             vwap = historicalPrices.get("vwap")
             priceDeviation = abs(price - vwap)
             deviationsSquaredSum += priceDeviation ** 2
 
-            # aggregate metrics for visualizations
-            self.vwaps.append([vwap])
-            movingStandardDeviation = math.sqrt(deviationsSquaredSum / len(self.vwaps))
+            # aggregate bollinger bands for visualizations
+            movingStandardDeviation = math.sqrt(deviationsSquaredSum / i)
             self.upperBollinger.append([vwap + (movingStandardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
             self.lowerBollinger.append([vwap - (movingStandardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
 
         # calculate standard deviation
         standardDeviation = math.sqrt(deviationsSquaredSum / len(self.priceHistory))
 
-        # aggregate final metrics for visualizations
-        self.vwaps.append([self.currentVWAP])
+        # add final bollinger band
         self.upperBollinger.append([self.currentVWAP + (standardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
         self.lowerBollinger.append([self.currentVWAP - (standardDeviation * constants.PERCENT_DEVIATION_OPEN_THRESHOLD)])
 
@@ -56,7 +53,7 @@ class MeanReversion:
         currentPercentDeviation = currentDeviation / standardDeviation
 
         # log and return analysis
-        self.logger.log("analyzed %i price deviations" % len(self.vwaps))
+        self.logger.log("analyzed %i price deviations" % len(self.priceHistory))
         return MeanReversionAnalysis(self.currentVWAP,
                                      currentDeviation,
                                      currentPercentDeviation,

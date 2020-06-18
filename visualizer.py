@@ -5,7 +5,6 @@ import matplotlib
 import numpy
 from matplotlib import pyplot
 from algos import mean_reversion
-from algos import linear_regression
 
 CHROME_IMAGE_BACKGROUND_COLOR_HEX = "#0e0e0e"
 SECONDS_IN_DAY = 3600 * 24
@@ -17,10 +16,19 @@ def visualize(ticker, currentPrices, priceHistory):
     """Generate a visualization of cryptocurrency price analysis."""
     # analyze price data
     meanReversion = mean_reversion.MeanReversion(currentPrices, priceHistory)
+    analysis = meanReversion.analyze()
     currentPrice = meanReversion.currentPrice
     currentVWAP = meanReversion.currentVWAP
-    regression = linear_regression.LinearRegression(meanReversion.currentPrice, meanReversion.priceHistory)
-    analysis = meanReversion.analyze()
+
+    # aggregate metrics
+    prices, vwaps, timestamps = [], [], []
+    for historicalPrices in priceHistory:
+        vwaps.append([historicalPrices.get("vwap")])
+        prices.append([meanReversion.calculatePrice(historicalPrices)])
+        timestamps.append([historicalPrices.get("utc_datetime").timestamp()])
+    vwaps.append([currentVWAP])
+    prices.append([currentPrice])
+    timestamps.append([datetime.datetime.utcnow().timestamp()])
 
     # clear any previous visualizations
     pyplot.clf()
@@ -43,27 +51,21 @@ def visualize(ticker, currentPrices, priceHistory):
     pyplot.grid(color="silver", linestyle="--", linewidth=0.65, alpha=0.2)
 
     # plot bollinger bands
-    pyplot.plot(regression.timestamps, meanReversion.upperBollinger, color="dimgrey", linewidth=1.25, alpha=0.5, label="bollinger bands")
-    pyplot.plot(regression.timestamps, meanReversion.lowerBollinger, color="dimgrey", linewidth=1.25, alpha=0.5)
+    pyplot.plot(timestamps, meanReversion.upperBollinger, color="red", linewidth=1.25, alpha=0.5, label="Bollinger (+/- %.1f SD)" % constants.PERCENT_DEVIATION_OPEN_THRESHOLD)
+    pyplot.plot(timestamps, meanReversion.lowerBollinger, color="red", linewidth=1.25, alpha=0.5)
 
     # plot price history with VWAP and trend line
-    pyplot.plot(regression.timestamps, regression.trend, color="red", linewidth=1, linestyle="--", label="price trend")
-    pyplot.plot(regression.timestamps, regression.prices, color="cornflowerblue", linewidth=1.5, label=("price ($%.3f)" % currentPrice))
-    pyplot.plot(regression.timestamps, meanReversion.vwaps, color="orange", linewidth=1.5, label="VWAP ($%.3f)" % currentVWAP)
+    pyplot.plot(timestamps, prices, color="cornflowerblue", linewidth=1.5, label=("Price ($%.3f)" % currentPrice))
+    pyplot.plot(timestamps, vwaps, color="orange", linewidth=1.5, label="VWAP ($%.3f)" % currentVWAP)
 
     # set x-axis ticks to incrementing days
     labels = []
-    startingTimestamp = regression.timestamps[0][0]
+    startingTimestamp = timestamps[0][0]
     currentTimestamp = datetime.datetime.utcnow().timestamp()
-    ticks = numpy.arange(startingTimestamp, currentTimestamp, step=(SECONDS_IN_DAY * 2))
+    ticks = numpy.arange(startingTimestamp, currentTimestamp, step=SECONDS_IN_DAY)
     for tickTimestamp in ticks:
         daysFromStart = (tickTimestamp - startingTimestamp) / SECONDS_IN_DAY
         labels.append("%i" % daysFromStart)
-
-    # add tick for now and display labels
-    ticks = numpy.append(ticks, currentTimestamp)
-    currentDaysFromStart = (currentTimestamp - startingTimestamp) / SECONDS_IN_DAY
-    labels.append("%.1f (now)" % currentDaysFromStart)
     pyplot.xticks(ticks, labels)
 
     # generate visualization
