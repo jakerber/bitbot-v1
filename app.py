@@ -123,7 +123,7 @@ def snapshot_price():
     # store relevant prices in database
     mongodb.insertMany(snapshots)
 
-def summarize():
+def notify():
     """Sends a daily activity summary notification."""
     assetBalances = assistant.getAssetBalances()
     accountBalances = assistant.getAccountBalances()
