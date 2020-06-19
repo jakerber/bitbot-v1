@@ -9,8 +9,16 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise RuntimeError(USAGE)
 
-    # fetch requested API method and call with provided arguments
-    methodName = sys.argv[1].replace("-", "_")
+    # parse requested API method and arguments
+    commandName = sys.argv[1]
+    methodName = commandName.replace("-", "_")
     args = sys.argv[2:]
-    api = getattr(app, methodName)
-    api(*args)
+
+    # safely execute command
+    try:
+        api = getattr(app, methodName)
+    except AttributeError:
+        print("command not found: %s" % commandName)
+        sys.exit()
+    else:
+        api(*args)
