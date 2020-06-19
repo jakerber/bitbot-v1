@@ -56,7 +56,7 @@ def visualize(ticker, currentPrices, priceHistory):
 
     # plot price history with VWAP and trend line
     pyplot.plot(timestamps, prices, color="cornflowerblue", linewidth=1.5, label=("Price ($%.3f)" % currentPrice))
-    pyplot.plot(timestamps, vwaps, color="orange", linewidth=1.5, label="VWAP ($%.3f)" % currentVWAP)
+    pyplot.plot(timestamps, vwaps, color="darkorange", linewidth=1.5, label="VWAP ($%.3f)" % currentVWAP)
 
     # set x-axis ticks to incrementing days
     labels = []
