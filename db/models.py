@@ -5,13 +5,13 @@ import db
 import json
 
 class BitBotModel:
-    """Object representing base entry in all collections."""
+    """Object representing base entry in the database."""
     def __repr__(self):
         return str({prop: self.__dict__.get(prop) for prop in self.__dict__.keys()
                     if prop not in constants.MONGODB_EXCLUDE_PROPS})
 
 class Position(BitBotModel):
-    """Object representing an entry in the position collection."""
+    """Database entry representing a trade position."""
     collectionName = "position"
 
     def __init__(self, ticker, transactionId, description):
@@ -22,7 +22,7 @@ class Position(BitBotModel):
         self.utc_datetime = datetime.datetime.utcnow()
 
 class Price(BitBotModel):
-    """Object representing an entry in the price collection."""
+    """Database entry representing an asset price."""
     collectionName = "price"
 
     def __init__(self, ticker, ask, bid, vwap):
