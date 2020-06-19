@@ -22,12 +22,12 @@ class BitBotDB:
     def insert(self, model):
         """Insert single entry into a collection."""
         self.mongo.db[model.collectionName].insert_one(model.__dict__)
-        self.logger.log("inserted 1 entry into %s collection" % model.collectionName)
+        self.logger.log("inserted 1 entry into the %s collection" % model.collectionName)
 
     def insertMany(self, models):
         """Insert many entries into a collection."""
         self.mongo.db[models[0].collectionName].insert([model.__dict__ for model in models])
-        self.logger.log("inserted %i entries into %s collection" % (len(models), models[0].collectionName))
+        self.logger.log("inserted %i entries into the %s collection" % (len(models), models[0].collectionName))
 
     def find(self, collectionName, filter={}, sort=()):
         """Find an entry based on a data point."""
