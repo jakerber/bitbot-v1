@@ -8,7 +8,6 @@ kraken = krakenex.API(key=constants.KRAKEN_KEY, secret=constants.KRAKEN_SECRET)
 
 DEFAULT_LEVERAGE = 2
 MAXIMUM_TRANSACTION_IDS = 50
-ORDER_EXPIRATION = "+%i" % constants.ORDER_EXPIRATION_SECONDS
 TRADE_VALUE_TEMPLATE = "%.{precision}f"
 
 ############################
@@ -137,8 +136,7 @@ def buy(ticker, volume, price=None, leverage=None):
     requestData = {"pair": assetPair,
                    "type": "buy",
                    "ordertype": "market",
-                   "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % volume,
-                   "expiretm": ORDER_EXPIRATION}
+                   "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % volume}
 
     # specify limit if price provided
     if price:
@@ -164,8 +162,7 @@ def sell(ticker, volume, price=None, leverage=None):
     requestData = {"pair": assetPair,
                    "type": "sell",
                    "ordertype": "market",
-                   "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % volume,
-                   "expiretm": ORDER_EXPIRATION}
+                   "volume": TRADE_VALUE_TEMPLATE.format(precision=volumePrecision) % volume}
 
     # specify limit if price provided
     if price:
