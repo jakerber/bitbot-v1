@@ -1,7 +1,8 @@
 {
     "balances": {
-        "margin_level": "ml",
         "equivalent_balance": "eb",
+        "margin_level": "ml",
+        "margin_used": "m",
         "unrealized_net_profit": "n"
     },
     "cryptocurrencies": {

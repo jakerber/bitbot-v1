@@ -10,6 +10,17 @@ class BitBotModel:
         return str({prop: self.__dict__.get(prop) for prop in self.__dict__.keys()
                     if prop not in constants.MONGODB_EXCLUDE_PROPS})
 
+class Equity(BitBotModel):
+    """Database entry representing account equity."""
+    collectionName = "equity"
+
+    def __init__(self, balance, unrealizedNetProfit, marginUsed):
+        self.balance = balance
+        self.margin_used = marginUsed
+        self.unrealized_net_profit = unrealizedNetProfit
+        self.value = balance + unrealizedNetProfit
+        self.utc_datetime = datetime.datetime.utcnow()
+
 class Position(BitBotModel):
     """Database entry representing a trade position."""
     collectionName = "position"

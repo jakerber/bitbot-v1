@@ -100,7 +100,17 @@ def root_api():
 ##  Private APIs
 #################################
 
-def snapshot():
+def snapshot_equity():
+    """Store relevant account balances."""
+    currentBalances = assistant.getAccountBalances()
+    balance = currentBalances.get("equivalent_balance")
+    unrealizedNetProfit = currentBalances.get("unrealized_net_profit")
+    marginUsed = currentBalances.get("margin_used")
+
+    # store relevant account balances in database
+    mongodb.insert(models.Equity(balance, unrealizedNetProfit, marginUsed))
+
+def snapshot_price():
     """Store the relevant prices of all supported cryptocurrencies."""
     snapshots = []
     currentPrices = assistant.getPrices()
