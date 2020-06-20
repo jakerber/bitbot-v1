@@ -1,6 +1,7 @@
 """BitBot data visualization module."""
 import constants
 import datetime
+import math
 import matplotlib
 import numpy
 from matplotlib import pyplot
@@ -66,6 +67,11 @@ def visualize(ticker, currentPrices, priceHistory):
     for tickTimestamp in ticks:
         daysFromStart = (tickTimestamp - startingTimestamp) / SECONDS_IN_DAY
         labels.append("%i" % daysFromStart)
+
+    # add current day and display ticks
+    ticks = numpy.append(ticks, currentTimestamp)
+    currentDaysFromStart = (currentTimestamp - startingTimestamp) / SECONDS_IN_DAY
+    labels.append("%i" % math.ceil(currentDaysFromStart))
     pyplot.xticks(ticks, labels)
 
     # generate visualization
