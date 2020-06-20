@@ -47,12 +47,12 @@ class Assistant:
         else:
             self.logger.log("fetching %s price since %s UTC" % (ticker, startingDatetime.strftime("%Y-%m-%d %H:%M")))
 
-        # fetch prices within lookback
+        # fetch price history
         queryFilter = {"ticker": ticker, "utc_datetime": {"$gte": startingDatetime}}
         querySort = ("utc_datetime", constants.MONGODB_SORT_ASC)
         priceHistory = self.mongodb.find("price", filter=queryFilter, sort=querySort)
 
-        # verify price history exists
+        # verify history exists
         if not priceHistory and verify:
             raise RuntimeError("%s price history is empty" % ticker)
 
@@ -92,6 +92,29 @@ class Assistant:
         if "ZUSD" in assetBalances:
             tickerBalances["USD"] = float(assetBalances.get("ZUSD"))
         return tickerBalances
+
+    def getEquityHistory(self, startingDatetime=None, verify=True):
+        """Get the historical account equity balance."""
+        # get starting datetime from lookback days if none provided
+        if not startingDatetime:
+            now = datetime.datetime.utcnow()
+            delta = datetime.timedelta(days=constants.LOOKBACK_DAYS)
+            startingDatetime = now - delta
+            self.logger.log("fetching equity balance since %s UTC" % startingDatetime.strftime("%Y-%m-%d %H:%M"))
+        else:
+            self.logger.log("fetching equity history")
+
+        # fetch equity history
+        queryFilter = {"utc_datetime": {"$gte": startingDatetime}}
+        querySort = ("utc_datetime", constants.MONGODB_SORT_ASC)
+        equityHistory = self.mongodb.find("equity", filter=queryFilter, sort=querySort)
+
+        # verify history exists
+        if not equityHistory and verify:
+            raise RuntimeError("equity history is empty")
+
+        # return equity history
+        return equityHistory
 
     ############################
     ##  Order info

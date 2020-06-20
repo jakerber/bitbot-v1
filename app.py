@@ -70,16 +70,28 @@ def positions():
         combinedProfit += analysis.unrealized_profit_usd
     return _successResp({"positions": positions, "total": total, "net_unrealized_profit_usd": combinedProfit})
 
+@app.route("%s/visualize" % constants.API_ROOT)
+def visualize_equity():
+    """View visualization of account equity balance."""
+    # generate visualization
+    equityHistory = assistant.getEquityHistory()
+    visualization = visualizer.visualizeEquity(equityHistory)
+
+    # display visualization
+    image = io.BytesIO()
+    visualization.print_png(image)
+    return flask.Response(image.getvalue(), mimetype="image/png")
+
 @app.route("%s/visualize/<ticker>" % constants.API_ROOT)
-def visualize(ticker):
-    """View visualization of current price prediction."""
+def visualize_price(ticker):
+    """View visualization of price analysis."""
     if ticker not in constants.SUPPORTED_TICKERS:
         return _failedResp("ticker not supported: %s" % ticker, statusCode=400)  # 400 bad request
 
     # generate visualization
     currentPrices = assistant.getPrices().get(ticker)
     priceHistory = assistant.getPriceHistory(ticker)
-    visualization = visualizer.visualize(ticker, currentPrices, priceHistory)
+    visualization = visualizer.visualizePrice(ticker, currentPrices, priceHistory)
 
     # display visualization
     image = io.BytesIO()
