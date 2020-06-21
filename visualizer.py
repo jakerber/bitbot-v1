@@ -16,23 +16,23 @@ matplotlib.use("Agg")
 def visualizeEquity(equityHistory):
     """Generate a visualization of account equity balance."""
     # aggregate data
-    balance, value, netProfitPositions, marginUsed, timestamps = [], [], [], [], []
-    for equity in equityHistory:
-        balance.append([equity.get("balance")])
-        value.append([equity.get("value")])
-        timestamps.append([equity.get("utc_datetime").timestamp()])
+    balanceUSD, equity, timestamps = [], [], []
+    for entry in equityHistory:
+        balanceUSD.append([entry.get("usd_balance")])
+        equity.append([entry.get("equity")])
+        timestamps.append([entry.get("utc_datetime").timestamp()])
 
     # reset visualization
     _reset()
 
     # generate historical equity balance visualization
     pyplot.title("Account History")
-    pyplot.ylabel("Equity ($)")
+    pyplot.ylabel("Value ($)")
     pyplot.xlabel("Time (days)")
 
     # plot equity history
-    pyplot.plot(timestamps, value, color="cornflowerblue", label="Value")
-    pyplot.plot(timestamps, balance, color="darkorange", label="Balance", alpha=0.65)
+    pyplot.plot(timestamps, equity, color="cornflowerblue", label="Equity")
+    pyplot.plot(timestamps, balanceUSD, color="darkorange", label="Balance (USD)", alpha=0.65)
 
     # add day ticks to the x-axis
     _tick(timestamps)
@@ -50,10 +50,10 @@ def visualizePrice(ticker, currentPrices, priceHistory):
 
     # aggregate metrics
     prices, vwaps, timestamps = [], [], []
-    for historicalPrices in priceHistory:
-        vwaps.append([historicalPrices.get("vwap")])
-        prices.append([meanReversion.calculatePrice(historicalPrices)])
-        timestamps.append([historicalPrices.get("utc_datetime").timestamp()])
+    for entry in priceHistory:
+        vwaps.append([entry.get("vwap")])
+        prices.append([meanReversion.calculatePrice(entry)])
+        timestamps.append([entry.get("utc_datetime").timestamp()])
     vwaps.append([currentVWAP])
     prices.append([currentPrice])
     timestamps.append([datetime.datetime.utcnow().timestamp()])

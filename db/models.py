@@ -14,11 +14,10 @@ class Equity(BitBotModel):
     """Database entry representing account equity."""
     collectionName = "equity"
 
-    def __init__(self, balance, unrealizedNetProfit, marginUsed):
-        self.balance = balance
+    def __init__(self, balanceUSD, equity, marginUsed):
+        self.usd_balance = balanceUSD
+        self.equity = equity
         self.margin_used = marginUsed
-        self.unrealized_net_profit = unrealizedNetProfit
-        self.value = balance + unrealizedNetProfit
         self.utc_datetime = datetime.datetime.utcnow()
 
 class Position(BitBotModel):

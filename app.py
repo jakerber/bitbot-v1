@@ -52,9 +52,9 @@ def equity():
     balances = assistant.getAssetBalances()
     balances = {asset: balance for asset, balance in balances.items() if balance}  # filter out empty balances
     accountBalances = assistant.getAccountBalances()
-    accountValue = accountBalances.get("equivalent_balance") + accountBalances.get("unrealized_net_profit")
+    equity = accountBalances.get("equivalent_balance") + accountBalances.get("unrealized_net_profit")
     marginLevel = accountBalances.get("margin_level")
-    return _successResp({"balances": balances, "value_usd": accountValue, "margin_level_percent": marginLevel})
+    return _successResp({"balances": balances, "equity_usd": equity, "margin_level_percent": marginLevel})
 
 @app.route("%s/positions" % constants.API_ROOT)
 def positions():
@@ -115,12 +115,13 @@ def root_api():
 def snapshot_equity():
     """Store relevant account balances."""
     currentBalances = assistant.getAccountBalances()
-    balance = currentBalances.get("equivalent_balance")
-    unrealizedNetProfit = currentBalances.get("unrealized_net_profit")
+    currentAssetBalances = assistant.getAssetBalances()
+    balanceUSD = currentAssetBalances.get("USD")
+    equity = currentBalances.get("equivalent_balance") + currentBalances.get("unrealized_net_profit")
     marginUsed = currentBalances.get("margin_used")
 
     # store relevant account balances in database
-    mongodb.insert(models.Equity(balance, unrealizedNetProfit, marginUsed))
+    mongodb.insert(models.Equity(balanceUSD, equity, marginUsed))
 
 def snapshot_price():
     """Store the relevant prices of all supported cryptocurrencies."""
@@ -156,7 +157,7 @@ def notify():
 
     # notify via email
     emailSubject = "Daily Summary: %s" % datetime.datetime.now().strftime("%Y-%m-%d")
-    emailBody = "Account value:"
+    emailBody = "Account equity:"
     emailBody += "\n$%.2f" % accountValue
     emailBody += "\n\nMargin level:"
     emailBody += "\n%.2f%%" % marginLevel if marginLevel else "\nNone"
