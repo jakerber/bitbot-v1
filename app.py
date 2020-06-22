@@ -74,8 +74,11 @@ def positions():
 def visualize_equity():
     """View visualization of account equity balance."""
     # generate visualization
+    currentBalanceUSD = assistant.getAssetBalances().get("USD")
+    currentBalances = assistant.getAccountBalances()
+    currentEquity = currentBalances.get("equivalent_balance") + currentBalances.get("unrealized_net_profit")
     equityHistory = assistant.getEquityHistory()
-    visualization = visualizer.visualizeEquity(equityHistory)
+    visualization = visualizer.visualizeEquity(currentEquity, currentBalanceUSD, equityHistory)
 
     # display visualization
     image = io.BytesIO()

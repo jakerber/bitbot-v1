@@ -13,7 +13,7 @@ SECONDS_IN_DAY = 3600 * 24
 # ensure Flask doesn't try to create GUI windows
 matplotlib.use("Agg")
 
-def visualizeEquity(equityHistory):
+def visualizeEquity(currentEquity, currentBalanceUSD, equityHistory):
     """Generate a visualization of account equity balance."""
     # aggregate data
     balanceUSD, equity, timestamps = [], [], []
@@ -21,6 +21,11 @@ def visualizeEquity(equityHistory):
         balanceUSD.append([entry.get("usd_balance")])
         equity.append([entry.get("equity")])
         timestamps.append([entry.get("utc_datetime").timestamp()])
+
+    # add current valuations
+    balanceUSD.append([currentBalanceUSD])
+    equity.append([currentEquity])
+    timestamps.append([datetime.datetime.utcnow().timestamp()])
 
     # reset visualization
     _reset()
@@ -31,8 +36,8 @@ def visualizeEquity(equityHistory):
     pyplot.xlabel("Time (days)")
 
     # plot equity history
-    pyplot.plot(timestamps, equity, color="cornflowerblue", label="Equity")
-    pyplot.plot(timestamps, balanceUSD, color="darkorange", label="Balance (USD)", alpha=0.65)
+    pyplot.plot(timestamps, equity, color="cornflowerblue", label="Equity ($%.2f)" % currentEquity)
+    pyplot.plot(timestamps, balanceUSD, color="darkorange", label="USD Balance ($%.2f)" % currentBalanceUSD, alpha=0.65)
 
     # add day ticks to the x-axis
     _tick(timestamps)
