@@ -143,7 +143,7 @@ class Assistant:
         """Buy a cryptocurrency."""
         if ticker not in constants.SUPPORTED_TICKERS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        logMessage = "buying %.3f of %s" % (volume, ticker)
+        logMessage = "buying %.3f %s" % (volume, ticker)
         if price:
             logMessage += " @ $%.3f" % price
         if leverage:
@@ -161,7 +161,7 @@ class Assistant:
         """Sell a cryptocurrency."""
         if ticker not in constants.SUPPORTED_TICKERS:
             raise RuntimeError("ticker not supported: %s" % ticker)
-        logMessage = "selling %.3f of %s" % (volume, ticker)
+        logMessage = "selling %.3f %s" % (volume, ticker)
         if price:
             logMessage += " @ $%.3f" % price
         if leverage:
