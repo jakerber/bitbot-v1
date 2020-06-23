@@ -35,9 +35,11 @@ class Price(BitBotModel):
     """Database entry representing an asset price."""
     collectionName = "price"
 
-    def __init__(self, ticker, ask, bid, vwap):
+    def __init__(self, ticker, ask, bid, high, low, vwap):
         self.ticker = ticker
         self.ask = ask
         self.bid = bid
+        self.high = high
+        self.low = low
         self.vwap = vwap
         self.utc_datetime = datetime.datetime.utcnow()

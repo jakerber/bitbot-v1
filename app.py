@@ -133,8 +133,10 @@ def snapshot_price():
     for ticker in constants.SUPPORTED_TICKERS:
         ask = currentPrices.get(ticker).get("ask")
         bid = currentPrices.get(ticker).get("bid")
+        high = currentPrices.get(ticker).get("high")
+        low = currentPrices.get(ticker).get("low")
         vwap = currentPrices.get(ticker).get("vwap")
-        snapshots.append(models.Price(ticker, ask, bid, vwap))
+        snapshots.append(models.Price(ticker, ask, bid, high, low, vwap))
 
     # store relevant prices in database
     mongodb.insertMany(snapshots)

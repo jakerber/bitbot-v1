@@ -96,6 +96,14 @@
             "code": "b",
             "api_index": 0
         },
+        "high": {
+            "code": "h",
+            "api_index": 1
+        },
+        "low": {
+            "code": "l",
+            "api_index": 1
+        },
         "vwap": {
             "code": "p",
             "api_index": 1
