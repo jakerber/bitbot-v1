@@ -15,6 +15,14 @@ class Opener(trader.BitBotTrader):
         # verify price deviation exceeds threshold
         _approval = self.analysis.current_percent_deviation >= constants.PERCENT_DEVIATION_OPEN_THRESHOLD
 
+        # ensure price is fluctuating more than vwap
+        if self.analysis.price_change_24_hours > 0:
+            _approval = _approval and self.analysis.price_change_24_hours > self.analysis.vwap_change_24_hours
+        elif self.analysis.price_change_24_hours < 0:
+            _approval = _approval and self.analysis.price_change_24_hours < self.analysis.vwap_change_24_hours
+        else:  # no 24-hour price change (unlikely)
+            _approval = False
+
         # return approval
         if _approval:
             self.logger.log(self.analysis.__dict__)
