@@ -115,6 +115,13 @@ def root_api():
 ##  Private APIs
 #################################
 
+def clean():
+    """Remove outdated database entries."""
+    retentionDatetime = datetime.datetime.utcnow() - datetime.timedelta(days=constants.HISTORY_RETENTION_DAYS)
+    filter = {"utc_datetime": {"$lt": retentionDatetime}}
+    mongodb.deleteMany("price", filter)
+    mongodb.deleteMany("equity", filter)
+
 def snapshot_equity():
     """Store relevant account balances."""
     currentBalances = assistant.getAccountBalances()
