@@ -36,8 +36,8 @@ def visualizeEquity(currentEquity, currentBalanceUSD, equityHistory):
     pyplot.xlabel("Time (days)")
 
     # plot equity history
-    pyplot.plot(timestamps, equity, color="cornflowerblue", label="Equity ($%.2f)" % currentEquity)
-    pyplot.plot(timestamps, balanceUSD, color="darkorange", label="USD Balance ($%.2f)" % currentBalanceUSD, alpha=0.65)
+    pyplot.plot(timestamps, equity, color="cornflowerblue", linewidth=2.5, label="Equity ($%.2f)" % currentEquity)
+    pyplot.plot(timestamps, balanceUSD, color="darkorange", label="USD Balance ($%.2f)" % currentBalanceUSD)
 
     # add day ticks to the x-axis
     _tick(timestamps)
