@@ -112,7 +112,7 @@ def _tick(timestamps):
     labels = []
     startingTimestamp = timestamps[0][0]
     currentTimestamp = datetime.datetime.utcnow().timestamp()
-    ticks = numpy.arange(startingTimestamp, currentTimestamp, step=SECONDS_IN_DAY)
+    ticks = numpy.arange(startingTimestamp, currentTimestamp, step=(SECONDS_IN_DAY * 2))  # two day steps
     for tickTimestamp in ticks:
         daysFromStart = (tickTimestamp - startingTimestamp) / SECONDS_IN_DAY
         labels.append("%i" % daysFromStart)
