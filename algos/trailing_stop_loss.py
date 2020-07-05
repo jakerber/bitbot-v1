@@ -3,7 +3,7 @@ import logger
 
 class TrailingStopLossAnalysis:
     """Object to store results from trailing stop-loss analysis."""
-    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, currentVWAP, initialPrice, trailingPercentage, actionablePrice, actionableDatetime, unrealizedProfit, meanReverted):
+    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, currentVWAP, initialPrice, trailingPercentage, actionablePrice, actionableDatetime, unrealizedProfit):
         self.ticker = ticker
         self.initial_order_type = initialOrderType
         self.leverage = leverage
@@ -15,11 +15,10 @@ class TrailingStopLossAnalysis:
         self.actionable_price = actionablePrice
         self.actionable_datetime_utc = actionableDatetime
         self.unrealized_profit_usd = unrealizedProfit
-        self.mean_reverted = meanReverted
 
 class TrailingStopLoss:
     """Object to perform trailing stop-loss analysis on open positons."""
-    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, currentVWAP, initialPrice, priceHistory, meanReverted):
+    def __init__(self, ticker, initialOrderType, leverage, volume, currentPrice, currentVWAP, initialPrice, priceHistory):
         self.logger = logger.Logger("TrailingStopLoss")
         self.ticker = ticker
         self.initialOrderType = initialOrderType
@@ -29,7 +28,6 @@ class TrailingStopLoss:
         self.currentVWAP = currentVWAP
         self.initialPrice = initialPrice
         self.priceHistory = priceHistory
-        self.meanReverted = meanReverted
 
     def analyze(self):
         """Determine price deviation from extreme (peak / valley)."""
@@ -61,14 +59,9 @@ class TrailingStopLoss:
         if self.initialOrderType == "buy":
             trailingPercentage = (actionablePrice - self.currentPrice) / actionablePrice
             unrealizedProfit = (self.currentPrice - self.initialPrice) * self.volume
-            meanReverted = self.currentVWAP <= self.currentPrice
         else:
             trailingPercentage = (self.currentPrice - actionablePrice) / actionablePrice
             unrealizedProfit = (self.initialPrice - self.currentPrice) * self.volume
-            meanReverted = self.currentVWAP >= self.currentPrice
-
-        # determine if the price has reverted back to the mean
-        self.meanReverted = self.meanReverted or meanReverted
 
         # price trailing stop-loss analysis
         self.logger.log("analyzed trailing stop-loss over %i prices" % len(self.priceHistory))
@@ -82,5 +75,4 @@ class TrailingStopLoss:
                                         trailingPercentage,
                                         actionablePrice,
                                         actionableDatetime,
-                                        unrealizedProfit,
-                                        self.meanReverted)
+                                        unrealizedProfit)

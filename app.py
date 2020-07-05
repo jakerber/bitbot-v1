@@ -272,7 +272,6 @@ def analyzeOpenPositions():
     orders = assistant.getOrders(transactionIds)
     for position in openPositions:
         ticker = position.get("ticker")
-        meanReverted = position.get("mean_reverted")
         transactionId = position.get("transaction_id")
         order = orders.get(transactionId)
 
@@ -315,19 +314,12 @@ def analyzeOpenPositions():
                                                            currentPrice,
                                                            currentVWAP,
                                                            initialPrice,
-                                                           priceHistory,
-                                                           meanReverted).analyze()
+                                                           priceHistory).analyze()
         except Exception as err:
             logger.log("unable to analyze %s trailing stop loss potential: %s" % (ticker, repr(err)))
             continue
         else:
             openPositionAnalysis.append((ticker, transactionId, analysis))
-
-            # update position if mean reversion status has changed
-            if analysis.mean_reverted and not meanReverted:
-                logger.log("%s mean reverted for transaction %s" % (ticker, transactionId))
-                update = {"mean_reverted": True}
-                mongodb.update("position", filter={"transaction_id": transactionId}, update=update)
 
     # return analysis on open positions
     return openPositionAnalysis
